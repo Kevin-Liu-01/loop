@@ -1,0 +1,53 @@
+---
+description: Prompting rules for frontend agents, UI generation, and asset generation workflows.
+globs: ["**/*.{md,mdx,txt}"]
+alwaysApply: false
+---
+
+# Frontend Prompting Rules
+
+When asked to design or generate frontend work, prompts should specify:
+
+- product and audience
+- methodology lens
+- art-direction thesis
+- palette
+- type pairing
+- material language
+- component inventory
+- tactic families
+- motion budget
+- runtime stack
+- performance constraints
+- banned defaults
+
+Good prompts ask for proposals first.
+
+Default exploration pattern:
+
+1. propose 3 distinct directions
+2. explain type, palette, layout, and motion thesis for each
+3. choose one direction
+4. implement with tokens and constraints
+
+When using screenshots:
+
+- decompose into background, UI, and texture layers
+- recreate assets separately
+- recompose in code
+
+Useful bans:
+
+- no generic SaaS gradients
+- no Inter/Roboto unless requested
+- no default shadcn look
+- no plain CSS animation architecture as the default
+- no motion without hierarchy
+- no centered-by-habit layouts
+
+When generating video or image backgrounds:
+
+- first frame must work as a poster
+- motion must loop cleanly
+- preserve negative space for copy
+- avoid noisy movement behind text

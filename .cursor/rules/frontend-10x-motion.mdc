@@ -1,0 +1,59 @@
+---
+description: Motion, parallax, 3D, shader, and performance rules for distinctive frontend work.
+globs: ["**/*.{ts,tsx,js,jsx,css,scss}"]
+alwaysApply: true
+---
+
+# Motion and 3D Rules
+
+Motion is a system with three layers:
+
+- ambient: slow loops, shader drift, environmental life
+- interaction: hover, press, open, focus
+- narrative: scroll and route choreography
+
+Apply these rules:
+
+- One strong hero move beats many small distractions.
+- If a page has a heavy 3D or shader hero, quiet the rest of the UI.
+- Do not propose plain CSS as the primary animation system by default.
+- Use CSS only for tiny hover/focus states, tokenized fallbacks, native progressive enhancement, and view-transition class styling.
+- Use Motion for component and layout animation.
+- Use GSAP for orchestration, mixed-surface sequences, and ScrollTrigger narratives.
+- Pair GSAP with Lenis when synchronized scroll is part of the concept.
+- Use React Three Fiber plus drei for React 3D scenes.
+- Use OGL or shader-first pipelines when the surface itself is the product.
+- Use shaders when the surface itself is the brand move, not as filler.
+- Prefer interruptible transitions for interaction states and keyframes for staged one-shot sequences.
+- Animate contextual icon swaps with small opacity, scale, and blur changes instead of hard replacing them.
+- Split enter animations into semantic chunks and stagger them lightly.
+- Make exit animations subtler than enter animations.
+- Treat sound, haptics, and toasts as optional feedback layers for the interaction system, not random garnish.
+- Use React `startTransition`, `useTransition`, `useDeferredValue`, and `useEffectEvent` to keep animated UIs responsive.
+- Use React or browser view transitions as progressive enhancement when the support matrix and framework version allow it.
+
+Performance rules:
+
+- Prefer animating `transform` and `opacity`.
+- Be careful with `filter`, `backdrop-filter`, large blur, and animated shadow.
+- Narrow `will-change` usage.
+- Ship a readable poster frame before heavy canvas or video fully hydrates.
+- Degrade aggressively on mobile and under `prefers-reduced-motion`.
+- Above-the-fold copy and CTA must remain readable while motion runs.
+- Do not animate large blur or shadow changes across big surfaces unless profiling says it is fine.
+- Do not hide expensive animation behavior behind giant CSS keyframe stacks.
+
+Parallax rules:
+
+- Keep pointer movement small and clamped.
+- Foreground moves more than background.
+- Do not put independent drift on every layer.
+- Never let text feel detached from its container.
+- Keep text and CTA zones on calmer layers than decorative motion.
+
+Scroll rules:
+
+- Every pinned or scrubbed section must explain something.
+- Avoid long scroll-jacking sequences.
+- Test touch devices before committing to choreography-heavy storytelling.
+- Do not drop Lenis into dense docs or dashboards just because it sounds premium.

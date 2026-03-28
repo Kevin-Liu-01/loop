@@ -1,0 +1,21 @@
+---
+description: Prefer live-browser Chrome DevTools MCP for localhost and manual debugging; keep Playwright as deterministic fallback.
+globs: ["**/*.{ts,tsx,js,jsx,md,mdx}"]
+alwaysApply: true
+---
+
+# Browser Debugging Preference
+
+When browser automation or debugging is needed:
+
+- Prefer `chrome-devtools-live` when the user already has Chrome open, is logged in, or wants the agent to inspect the current browser state.
+- Prefer `chrome-devtools-port` when testing localhost repeatedly or when a reusable dedicated debug browser is better than the user’s normal browsing session.
+- Use Playwright when isolation, deterministic repro, or fresh auth state is the actual goal.
+- Do not default to Playwright if the user clearly wants the current browser session or selected DevTools state.
+- For localhost work, favor going straight into the browser via Chrome DevTools MCP before spinning up a fresh browser automation lane.
+
+Operational rules:
+
+- `chrome-devtools-live` requires remote debugging enabled at `chrome://inspect/#remote-debugging` and a user approval prompt.
+- `chrome-devtools-port` assumes Chrome was launched with a remote debug port, for example via `/Users/kevinliu/.codex/bin/open-chrome-debug.sh http://localhost:3000`.
+- Playwright is fallback, not the first move, for manual browser debugging.

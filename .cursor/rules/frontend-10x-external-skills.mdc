@@ -1,0 +1,45 @@
+---
+description: Routing rules for imported animation, 3D, and design-engineering skills.
+globs: ["**/*.{ts,tsx,js,jsx,css,scss,md,mdx}"]
+alwaysApply: true
+---
+
+# External Frontend Skill Routing
+
+When frontend work becomes specialized, route to the imported skill that matches the problem instead of giving generic advice.
+
+Preferred routing:
+
+- use `modern-web-design` for broad contemporary design direction
+- use `motion-framer` for React component motion, layout transitions, menus, overlays, and most UI animation
+- use `gsap-scrolltrigger` for scrollytelling, pinning, scrubbed sections, and cross-surface choreography
+- use `react-three-fiber` for React-based 3D scenes
+- use `threejs-webgl` for lower-level or non-React Three.js work
+- use `web3d-integration-patterns` when multiple motion/3D libraries need to work together coherently
+- use `rive-interactive` for stateful designer-authored runtime animations
+- use `lottie-animations` for After Effects exported motion assets
+- use `pixijs-2d` for GPU-accelerated 2D graphics and particle layers
+- use `spline-interactive` when a visual-editor 3D workflow is the right fit
+- use `aframe-webxr` for browser VR/AR or WebXR work
+- use `lightweight-3d-effects` when decorative depth is enough and a full engine is overkill
+- use `animejs` for framework-agnostic timeline/SVG animation
+- use `barba-js` for multi-page transition systems
+- use `scroll-reveal-libraries` only for simple reveal-on-scroll work
+- use `blender-web-pipeline` and `substance-3d-texturing` for 3D asset and material pipelines
+- use `babylonjs-engine` or `playcanvas-engine` when the work is closer to game-engine style interactive 3D
+
+Routing priorities:
+
+- prefer `motion-framer` over ad hoc React animation code
+- prefer `gsap-scrolltrigger` over generic scroll-effect improvisation
+- prefer `react-three-fiber` over low-level Three.js in React unless low-level control is required
+- prefer `rive-interactive` over Lottie when runtime state and interactivity matter
+- prefer `lightweight-3d-effects` over full 3D engines when only mild decorative depth is needed
+
+Exceptions:
+
+- do not force imported skills when the existing codebase already standardizes on another well-chosen stack
+- do not use `locomotive-scroll` as a new default; prefer Lenis unless maintaining existing Locomotive work or explicitly requested
+- do not use `scroll-reveal-libraries` for brand-defining motion systems
+
+Repo-local mirrored references live in `/Users/kevinliu/Downloads/Dedalus/frontend-frontier-pack/third-party-skills/freshtechbro/` and the routing overview lives in `/Users/kevinliu/Downloads/Dedalus/frontend-frontier-pack/codex-skill/frontend-frontier/references/external-frontend-skill-map.md`.

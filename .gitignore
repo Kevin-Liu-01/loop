@@ -3,9 +3,9 @@
 node_modules
 .pnpm-store
 .playwright-cli
-.cursor
 output
 *.tsbuildinfo
+.cursor/.DS_Store
 content/generated/skillwire-snapshot.local.json
 content/generated/skillwire-snapshot.stdout.json
 content/generated/skillwire-search.local.json
