@@ -122,7 +122,9 @@ svg {
 }
 
 .markdown-shell--simple {
-  max-height: 720px;
+  max-height: 400px;
+  overflow: hidden;
+  position: relative;
 }
 
 /* --- Diff lines (dynamic template classes) --- */
