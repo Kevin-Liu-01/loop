@@ -168,6 +168,15 @@ export type DiffLine = {
   rightNumber?: number;
 };
 
+export type AgentReasoningStep = {
+  index: number;
+  reasoning: string;
+  toolCall?: { name: string; args: Record<string, unknown> };
+  toolResult?: string;
+  diffLines?: DiffLine[];
+  timestamp: string;
+};
+
 export type LoopUpdateSourceLog = {
   id: string;
   label: string;
@@ -197,6 +206,7 @@ export type LoopUpdateResult = {
   changedSections?: string[];
   bodyChanged?: boolean;
   editorModel?: string;
+  reasoningSteps?: AgentReasoningStep[];
 };
 
 export type LoopRunRecord = {
@@ -221,6 +231,7 @@ export type LoopRunRecord = {
   messages: string[];
   sources: LoopUpdateSourceLog[];
   diffLines: DiffLine[];
+  reasoningSteps?: AgentReasoningStep[];
   errorMessage?: string;
 };
 
@@ -241,6 +252,10 @@ export type LoopUpdateStreamEvent =
       type: "complete";
       result: LoopUpdateResult;
       sources: LoopUpdateSourceLog[];
+    }
+  | {
+      type: "reasoning-step";
+      step: AgentReasoningStep;
     }
   | {
       type: "error";
