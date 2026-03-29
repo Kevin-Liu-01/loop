@@ -1,4 +1,15 @@
 import { PulseIcon, SearchIcon, TimelineIcon } from "@/components/frontier-icons";
+import { EmptyCard } from "@/components/ui/empty-card";
+import { Panel, PanelHead } from "@/components/ui/panel";
+import {
+  SimpleList,
+  SimpleListBody,
+  SimpleListIcon,
+  SimpleListItem,
+  SimpleListMeta,
+  SimpleListRow
+} from "@/components/ui/simple-list";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { formatUsageEvent, type SkillUsageSummary, type UsageOverview } from "@/lib/usage";
 
@@ -10,6 +21,8 @@ type SkillObservabilityPanelProps = {
   usage: SkillUsageSummary;
 };
 
+const sectionKicker = "inline-block text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft";
+
 function formatEventDetail(details?: string) {
   if (!details) {
     return null;
@@ -20,201 +33,203 @@ function formatEventDetail(details?: string) {
 
 export function SystemObservabilityPanel({ overview }: SystemObservabilityPanelProps) {
   return (
-    <section className="surface-panel observability-panel">
-      <div className="surface-panel__head">
+    <Panel className="gap-[18px]">
+      <PanelHead>
         <div>
-          <span className="section-kicker">Observability</span>
-          <h2>Usage and route calls</h2>
+          <span className={sectionKicker}>Observability</span>
+          <h2 className="m-0 text-lg font-semibold tracking-[-0.03em]">Usage and route calls</h2>
+        </div>
+      </PanelHead>
+
+      <div className="grid max-lg:grid-cols-1 grid-cols-4 gap-3">
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">views</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{overview.totals.pageViews}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">interactions</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{overview.totals.interactions}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">api calls</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{overview.totals.apiCalls}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">avg api ms</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{overview.totals.avgApiDurationMs || "0"}</strong>
         </div>
       </div>
 
-      <div className="observability-stats">
-        <div>
-          <small>views</small>
-          <strong>{overview.totals.pageViews}</strong>
-        </div>
-        <div>
-          <small>interactions</small>
-          <strong>{overview.totals.interactions}</strong>
-        </div>
-        <div>
-          <small>api calls</small>
-          <strong>{overview.totals.apiCalls}</strong>
-        </div>
-        <div>
-          <small>avg api ms</small>
-          <strong>{overview.totals.avgApiDurationMs || "0"}</strong>
-        </div>
-      </div>
-
-      <div className="observability-grid">
-        <article className="observability-block">
-          <div className="observability-block__head">
+      <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+        <article className="grid gap-3.5 rounded-2xl border border-line bg-paper-3 p-4">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <span className="section-kicker">Routes</span>
-              <h3>Top route usage</h3>
+              <span className={sectionKicker}>Routes</span>
+              <h3 className="m-0 text-base font-semibold tracking-[-0.03em]">Top route usage</h3>
             </div>
           </div>
-          <div className="simple-list simple-list--tight">
+          <SimpleList tight>
             {overview.routeUsage.length > 0 ? (
               overview.routeUsage.map((entry) => (
-                <article className="simple-list__item" key={entry.route}>
-                  <div className="simple-list__icon">
+                <SimpleListItem key={entry.route}>
+                  <SimpleListIcon>
                     <SearchIcon />
-                  </div>
-                  <div className="simple-list__body">
-                    <div className="simple-list__row">
+                  </SimpleListIcon>
+                  <SimpleListBody>
+                    <SimpleListRow>
                       <strong>{entry.route}</strong>
                       <span>{entry.count} calls</span>
-                    </div>
-                    <div className="simple-list__meta">
+                    </SimpleListRow>
+                    <SimpleListMeta>
                       <span>{entry.avgDurationMs} ms avg</span>
                       <span>{entry.errorCount} errors</span>
                       <span>{formatDateTime(entry.lastAt)}</span>
-                    </div>
-                  </div>
-                </article>
+                    </SimpleListMeta>
+                  </SimpleListBody>
+                </SimpleListItem>
               ))
             ) : (
-              <div className="empty-card">No route data yet.</div>
+              <EmptyCard>No route data yet.</EmptyCard>
             )}
-          </div>
+          </SimpleList>
         </article>
 
-        <article className="observability-block">
-          <div className="observability-block__head">
+        <article className="grid gap-3.5 rounded-2xl border border-line bg-paper-3 p-4">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <span className="section-kicker">Activity</span>
-              <h3>What people do</h3>
+              <span className={sectionKicker}>Activity</span>
+              <h3 className="m-0 text-base font-semibold tracking-[-0.03em]">What people do</h3>
             </div>
           </div>
-          <div className="simple-list simple-list--tight">
+          <SimpleList tight>
             {overview.activityCounts.length > 0 ? (
               overview.activityCounts.map((entry) => (
-                <article className="simple-list__item" key={entry.label}>
-                  <div className="simple-list__body">
-                    <div className="simple-list__row">
+                <SimpleListItem className={cn("grid-cols-1")} key={entry.label}>
+                  <SimpleListBody>
+                    <SimpleListRow>
                       <strong>{entry.label}</strong>
                       <span>{entry.count}</span>
-                    </div>
-                  </div>
-                </article>
+                    </SimpleListRow>
+                  </SimpleListBody>
+                </SimpleListItem>
               ))
             ) : (
-              <div className="empty-card">No activity yet.</div>
+              <EmptyCard>No activity yet.</EmptyCard>
             )}
-          </div>
+          </SimpleList>
         </article>
       </div>
 
-      <article className="observability-block">
-        <div className="observability-block__head">
+      <article className="grid gap-3.5 rounded-2xl border border-line bg-paper-3 p-4">
+        <div className="flex items-end justify-between gap-3">
           <div>
-            <span className="section-kicker">Recent</span>
-            <h3>Recent activity</h3>
+            <span className={sectionKicker}>Recent</span>
+            <h3 className="m-0 text-base font-semibold tracking-[-0.03em]">Recent activity</h3>
           </div>
         </div>
-        <div className="simple-list simple-list--tight">
+        <SimpleList tight>
           {overview.recentEvents.length > 0 ? (
             overview.recentEvents.map((event) => (
-              <article className="simple-list__item" key={event.id}>
-                <div className="simple-list__icon">
+              <SimpleListItem key={event.id}>
+                <SimpleListIcon>
                   <TimelineIcon />
-                </div>
-                <div className="simple-list__body">
-                  <div className="simple-list__row">
+                </SimpleListIcon>
+                <SimpleListBody>
+                  <SimpleListRow>
                     <strong>{formatUsageEvent(event)}</strong>
                     <span>{formatDateTime(event.at)}</span>
-                  </div>
-                  <div className="simple-list__meta">
+                  </SimpleListRow>
+                  <SimpleListMeta>
                     <span>{event.kind}</span>
                     {event.status ? <span>{event.status}</span> : null}
                     {typeof event.durationMs === "number" ? <span>{event.durationMs} ms</span> : null}
-                    {event.skillSlug ? <span>${event.skillSlug}</span> : null}
-                  </div>
+                    {event.skillSlug ? <span>{event.skillSlug}</span> : null}
+                  </SimpleListMeta>
                   {formatEventDetail(event.details) ? <p>{formatEventDetail(event.details)}</p> : null}
-                </div>
-              </article>
+                </SimpleListBody>
+              </SimpleListItem>
             ))
           ) : (
-            <div className="empty-card">No events yet.</div>
+            <EmptyCard>No events yet.</EmptyCard>
           )}
-        </div>
+        </SimpleList>
       </article>
-    </section>
+    </Panel>
   );
 }
 
 export function SkillObservabilityPanel({ usage }: SkillObservabilityPanelProps) {
   return (
-    <article className="surface-panel surface-panel--compact observability-panel">
-      <div className="surface-panel__head">
+    <Panel compact className="gap-[18px]">
+      <PanelHead>
         <div>
-          <span className="section-kicker">Observability</span>
-          <h2>Usage for this skill</h2>
+          <span className={sectionKicker}>Observability</span>
+          <h2 className="m-0 text-lg font-semibold tracking-[-0.03em]">Usage for this skill</h2>
+        </div>
+      </PanelHead>
+
+      <div className="grid max-lg:grid-cols-1 grid-cols-6 gap-3">
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">views</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{usage.pageViews}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">copies</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{usage.copies}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">saves</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{usage.saves}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">refreshes</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{usage.refreshes}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">api calls</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">{usage.apiCalls}</strong>
+        </div>
+        <div className="grid gap-1 rounded-2xl border border-line p-4">
+          <small className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-ink-soft">last seen</small>
+          <strong className="text-base font-semibold tracking-[-0.03em] text-ink">
+            {usage.lastSeenAt ? formatDateTime(usage.lastSeenAt) : "none"}
+          </strong>
         </div>
       </div>
 
-      <div className="observability-stats observability-stats--skill">
-        <div>
-          <small>views</small>
-          <strong>{usage.pageViews}</strong>
-        </div>
-        <div>
-          <small>copies</small>
-          <strong>{usage.copies}</strong>
-        </div>
-        <div>
-          <small>saves</small>
-          <strong>{usage.saves}</strong>
-        </div>
-        <div>
-          <small>refreshes</small>
-          <strong>{usage.refreshes}</strong>
-        </div>
-        <div>
-          <small>api calls</small>
-          <strong>{usage.apiCalls}</strong>
-        </div>
-        <div>
-          <small>last seen</small>
-          <strong>{usage.lastSeenAt ? formatDateTime(usage.lastSeenAt) : "none"}</strong>
-        </div>
-      </div>
-
-      <article className="observability-block">
-        <div className="observability-block__head">
+      <article className="grid gap-3.5 rounded-2xl border border-line bg-paper-3 p-4">
+        <div className="flex items-end justify-between gap-3">
           <div>
-            <span className="section-kicker">Recent</span>
-            <h3>Latest usage</h3>
+            <span className={sectionKicker}>Recent</span>
+            <h3 className="m-0 text-base font-semibold tracking-[-0.03em]">Latest usage</h3>
           </div>
         </div>
-        <div className="simple-list simple-list--tight">
+        <SimpleList tight>
           {usage.recentEvents.length > 0 ? (
             usage.recentEvents.map((event) => (
-              <article className="simple-list__item" key={event.id}>
-                <div className="simple-list__icon">
+              <SimpleListItem key={event.id}>
+                <SimpleListIcon>
                   <PulseIcon />
-                </div>
-                <div className="simple-list__body">
-                  <div className="simple-list__row">
+                </SimpleListIcon>
+                <SimpleListBody>
+                  <SimpleListRow>
                     <strong>{formatUsageEvent(event)}</strong>
                     <span>{formatDateTime(event.at)}</span>
-                  </div>
-                  <div className="simple-list__meta">
+                  </SimpleListRow>
+                  <SimpleListMeta>
                     <span>{event.kind}</span>
                     {event.status ? <span>{event.status}</span> : null}
                     {typeof event.durationMs === "number" ? <span>{event.durationMs} ms</span> : null}
-                  </div>
+                  </SimpleListMeta>
                   {formatEventDetail(event.details) ? <p>{formatEventDetail(event.details)}</p> : null}
-                </div>
-              </article>
+                </SimpleListBody>
+              </SimpleListItem>
             ))
           ) : (
-            <div className="empty-card">No usage yet.</div>
+            <EmptyCard>No usage yet.</EmptyCard>
           )}
-        </div>
+        </SimpleList>
       </article>
-    </article>
+    </Panel>
   );
 }

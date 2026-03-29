@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+
 const SELECTION_KEY = "loop.admin.selected-loop";
 
 type TrackSkillButtonProps = {
@@ -50,12 +52,12 @@ export function TrackSkillButton({
   }
 
   return (
-    <div className="track-skill-button">
-      <button className="button button--ghost" disabled={isPending} onClick={handleClick} type="button">
+    <div className="grid content-start justify-items-end gap-2">
+      <Button disabled={isPending} onClick={handleClick} type="button" variant="ghost">
         {isPending ? "Setting up..." : label}
-      </button>
-      {showFeedback && message ? <p className="form-success">{message}</p> : null}
-      {showFeedback && error ? <p className="form-error">{error}</p> : null}
+      </Button>
+      {showFeedback && message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+      {showFeedback && error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

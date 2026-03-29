@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { Panel, PanelHead } from "@/components/ui/panel";
+import { Button } from "@/components/ui/button";
+import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
 import type { CategoryDefinition } from "@/lib/types";
 
 type UserSkillFormProps = {
@@ -145,141 +149,145 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
   }
 
   return (
-    <form className="surface-panel user-skill-form user-skill-form--single" id="create" onSubmit={handleSubmit}>
-      <div className="surface-panel__head">
-        <div>
-          <span className="section-kicker">Create</span>
-          <h2>Write one from scratch</h2>
+    <Panel className="grid gap-5 content-start">
+      <form className="contents" id="create" onSubmit={handleSubmit}>
+        <PanelHead>
+          <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Create</span>
+            <h2>Write one from scratch</h2>
+          </div>
+        </PanelHead>
+
+        <p className="text-ink-soft">Start with the text. Add the watchlist.</p>
+
+        <div className="grid grid-cols-4 gap-3 max-lg:grid-cols-1 max-md:grid-cols-1">
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">slug</small>
+            <strong className="text-sm font-semibold text-ink">/{slugPreview}</strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">sources</small>
+            <strong className="text-sm font-semibold text-ink">{sourceList.length}</strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">refresh</small>
+            <strong className="text-sm font-semibold text-ink">{state.cadence === "manual" ? "manual" : state.cadence}</strong>
+          </div>
         </div>
-      </div>
 
-      <p className="section-copy">Start with the text. Add the watchlist.</p>
-
-      <div className="setup-status">
-        <div>
-          <small>slug</small>
-          <strong>/{slugPreview}</strong>
-        </div>
-        <div>
-          <small>sources</small>
-          <strong>{sourceList.length}</strong>
-        </div>
-        <div>
-          <small>refresh</small>
-          <strong>{state.cadence === "manual" ? "manual" : state.cadence}</strong>
-        </div>
-      </div>
-
-      <label className="field-group">
-        <span>Title</span>
-        <input
-          className="text-field"
-          maxLength={80}
-          onChange={(event) => update("title", event.target.value)}
-          placeholder="Frontend research loop"
-          required
-          value={state.title}
-        />
-      </label>
-
-      <label className="field-group">
-        <span>Description</span>
-        <textarea
-          className="text-field text-field--area"
-          maxLength={220}
-          onChange={(event) => update("description", event.target.value)}
-          placeholder="What this skill does and what makes it useful."
-          required
-          value={state.description}
-        />
-      </label>
-
-      <div className="form-row">
-        <label className="field-group">
-          <span>Category</span>
-          <select
-            className="text-field text-field--select"
-            onChange={(event) => update("category", event.target.value)}
-            value={state.category}
-          >
-            {categories.map((category) => (
-              <option key={category.slug} value={category.slug}>
-                {category.title}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field-group">
-          <span>Tags</span>
+        <FieldGroup>
+          <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Title</span>
           <input
-            className="text-field"
-            onChange={(event) => update("tags", event.target.value)}
-            placeholder="seo, schema, frontend"
-            value={state.tags}
-          />
-        </label>
-      </div>
-
-      <label className="field-group">
-        <span>Source watchlist</span>
-        <textarea
-          className="text-field text-field--area"
-          onChange={(event) => update("sourceUrls", event.target.value)}
-          placeholder={"One URL per line\nhttps://react.dev/rss.xml\nhttps://vercel.com/blog/rss.xml"}
-          value={state.sourceUrls}
-        />
-      </label>
-
-      <div className="form-row">
-        <label className="field-group">
-          <span>Refresh cadence</span>
-          <select
-            className="text-field text-field--select"
-            onChange={(event) => update("cadence", event.target.value as FormState["cadence"])}
-            value={state.cadence}
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="manual">Manual</option>
-          </select>
-        </label>
-
-        <label className="field-group">
-          <span>Refresh prompt</span>
-          <input
-            className="text-field"
-            maxLength={240}
-            onChange={(event) => update("automationPrompt", event.target.value)}
-            placeholder="What should the updater prioritize?"
-            value={state.automationPrompt}
-          />
-        </label>
-      </div>
-
-      <details className="setup-editor-disclosure">
-        <summary>Edit skill markdown</summary>
-        <label className="field-group">
-          <span>Skill markdown</span>
-          <textarea
-            className="text-field text-field--code"
-            onChange={(event) => update("body", event.target.value)}
+            className={cn(textFieldBase)}
+            maxLength={80}
+            onChange={(event) => update("title", event.target.value)}
+            placeholder="Frontend research loop"
             required
-            value={state.body}
+            value={state.title}
           />
-        </label>
-      </details>
+        </FieldGroup>
 
-      {error ? <p className="form-error">{error}</p> : null}
+        <FieldGroup>
+          <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Description</span>
+          <textarea
+            className={cn(textFieldBase, textFieldArea)}
+            maxLength={220}
+            onChange={(event) => update("description", event.target.value)}
+            placeholder="What this skill does and what makes it useful."
+            required
+            value={state.description}
+          />
+        </FieldGroup>
 
-      <div className="hero-actions">
-        <button className="button" disabled={isPending} type="submit">
-          {isPending ? "Creating..." : "Create editable skill"}
-        </button>
-        <button className="button button--ghost" onClick={resetDraft} type="button">
-          Reset draft
-        </button>
-      </div>
-    </form>
+        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Category</span>
+            <select
+              className={cn(textFieldBase, textFieldSelect)}
+              onChange={(event) => update("category", event.target.value)}
+              value={state.category}
+            >
+              {categories.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {category.title}
+                </option>
+              ))}
+            </select>
+          </FieldGroup>
+
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Tags</span>
+            <input
+              className={cn(textFieldBase)}
+              onChange={(event) => update("tags", event.target.value)}
+              placeholder="seo, schema, frontend"
+              value={state.tags}
+            />
+          </FieldGroup>
+        </div>
+
+        <FieldGroup>
+          <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Source watchlist</span>
+          <textarea
+            className={cn(textFieldBase, textFieldArea)}
+            onChange={(event) => update("sourceUrls", event.target.value)}
+            placeholder={"One URL per line\nhttps://react.dev/rss.xml\nhttps://vercel.com/blog/rss.xml"}
+            value={state.sourceUrls}
+          />
+        </FieldGroup>
+
+        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
+            <select
+              className={cn(textFieldBase, textFieldSelect)}
+              onChange={(event) => update("cadence", event.target.value as FormState["cadence"])}
+              value={state.cadence}
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="manual">Manual</option>
+            </select>
+          </FieldGroup>
+
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh prompt</span>
+            <input
+              className={cn(textFieldBase)}
+              maxLength={240}
+              onChange={(event) => update("automationPrompt", event.target.value)}
+              placeholder="What should the updater prioritize?"
+              value={state.automationPrompt}
+            />
+          </FieldGroup>
+        </div>
+
+        <details className="grid gap-4 rounded-2xl border border-line bg-paper-3 p-4">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Edit skill markdown
+          </summary>
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Skill markdown</span>
+            <textarea
+              className={cn(textFieldBase, textFieldCode)}
+              onChange={(event) => update("body", event.target.value)}
+              required
+              value={state.body}
+            />
+          </FieldGroup>
+        </details>
+
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+        <div className="flex flex-wrap gap-3">
+          <Button disabled={isPending} type="submit">
+            {isPending ? "Creating..." : "Create editable skill"}
+          </Button>
+          <Button onClick={resetDraft} type="button" variant="ghost">
+            Reset draft
+          </Button>
+        </div>
+      </form>
+    </Panel>
   );
 }

@@ -4,16 +4,26 @@ import {
   Activity,
   ArrowRight,
   Boxes,
+  ChevronDown,
+  ChevronRight,
+  Code,
   Download,
+  FileCode,
   FilePenLine,
   Link2,
   ListTree,
   PencilLine,
+  Play,
+  Plus,
   Radar,
   RefreshCw,
   Search,
+  Send,
+  Settings,
   ShieldCheck,
   Sparkles,
+  Square,
+  Terminal,
   Wallet,
   Workflow,
   type LucideIcon
@@ -52,3 +62,13 @@ export const LinkIcon = wrapIcon(Link2);
 export const PencilIcon = wrapIcon(PencilLine);
 export const EditFileIcon = wrapIcon(FilePenLine);
 export const RefreshIcon = wrapIcon(RefreshCw);
+export const SettingsIcon = wrapIcon(Settings);
+export const PlusIcon = wrapIcon(Plus);
+export const TerminalIcon = wrapIcon(Terminal);
+export const CodeIcon = wrapIcon(Code);
+export const FileCodeIcon = wrapIcon(FileCode);
+export const PlayIcon = wrapIcon(Play);
+export const StopIcon = wrapIcon(Square);
+export const SendIcon = wrapIcon(Send);
+export const ChevronDownIcon = wrapIcon(ChevronDown);
+export const ChevronRightIcon = wrapIcon(ChevronRight);

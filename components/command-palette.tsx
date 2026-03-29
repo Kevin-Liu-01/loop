@@ -90,15 +90,15 @@ export function CommandPalette({ items }: CommandPaletteProps) {
     <>
       {isOpen ? (
         <>
-          <button className="palette-backdrop" onClick={() => setIsOpen(false)} type="button" />
-          <div className="palette-shell palette-shell--open">
-            <div className="palette-panel">
-              <div className="palette-header">
-                <span className="eyebrow">Command palette</span>
-                <span className="palette-shortcut">Esc</span>
+          <button className="fixed inset-0 z-80 border-0 bg-black/56" onClick={() => setIsOpen(false)} type="button" />
+          <div className="fixed inset-6 z-90 grid translate-y-0 place-items-[start_center] opacity-100 transition-all duration-200 pointer-events-auto">
+            <div className="w-[min(720px,calc(100vw-32px))] rounded-2xl border border-line bg-paper-3/88 p-7 shadow-none backdrop-blur-xl">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em]">Command palette</span>
+                <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Esc</span>
               </div>
               <input
-                className="palette-input"
+                className="min-h-[52px] w-full rounded-[14px] border border-line bg-paper-3 px-4 py-4 text-ink outline-none transition-all duration-200 focus:border-line-strong focus:shadow-[0_0_0_4px_rgba(244,244,245,1)]"
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && filteredItems[0]) {
@@ -110,17 +110,17 @@ export function CommandPalette({ items }: CommandPaletteProps) {
                 ref={inputRef}
                 value={query}
               />
-              <div className="palette-list">
+              <div className="grid gap-3">
                 {filteredItems.map((item) => (
                   <button
-                    className="palette-item"
+                    className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-line bg-paper-3 p-4 text-left text-ink transition-all duration-200 hover:border-accent hover:bg-accent hover:text-white"
                     key={`${item.section}-${item.href}`}
                     onClick={() => openHref(item.href)}
                     type="button"
                   >
                     <span>
-                      <strong>{item.label}</strong>
-                      <small>{item.section}</small>
+                      <strong className="block font-semibold text-inherit">{item.label}</strong>
+                      <small className="block text-sm text-inherit opacity-60">{item.section}</small>
                     </span>
                     <span>{item.hint ?? "Open"}</span>
                   </button>

@@ -3,17 +3,27 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { CopyButton } from "@/components/copy-button";
-import { FlowIcon, PulseIcon } from "@/components/frontier-icons";
+import { FlowIcon, PlayIcon, PulseIcon } from "@/components/frontier-icons";
 import { SkillObservabilityPanel } from "@/components/observability-panels";
 import { SiteHeader } from "@/components/site-header";
 import { SkillSetupForm } from "@/components/skill-setup-form";
+import { SkillUpdateRunner } from "@/components/skill-update-runner";
 import { TrackSkillButton } from "@/components/track-skill-button";
 import { UsageBeacon } from "@/components/usage-beacon";
-import { buildSkillVersionHref, formatAutomationSchedule, formatDateTime } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { EmptyCard } from "@/components/ui/empty-card";
+import { LinkButton } from "@/components/ui/link-button";
+import { PageShell } from "@/components/ui/page-shell";
+import { Panel, PanelHead } from "@/components/ui/panel";
+import { SimpleList, SimpleListBody, SimpleListIcon, SimpleListItem, SimpleListRow } from "@/components/ui/simple-list";
+import { buildSkillVersionHref, formatAutomationSchedule, formatRelativeDate } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import { diffMultilineText } from "@/lib/text-diff";
 import { buildUpdateDigest } from "@/lib/update-digest";
 import type { SkillUsageSummary } from "@/lib/usage";
 import type { CategoryBrief, LoopRunRecord, SkillRecord } from "@/lib/types";
+
+const sectionTitle = "m-0 text-lg font-semibold tracking-tight text-ink";
 
 type SkillDetailPageProps = {
   skill: SkillRecord;
@@ -29,37 +39,51 @@ function buildAttachedAutomations(skill: SkillRecord) {
       {
         id: `built-in:${skill.slug}`,
         name: skill.automation.enabled ? `${skill.title} refresh` : "Manual refresh",
-        schedule: skill.automation.enabled ? `${skill.automation.cadence} ${skill.automation.status}` : "manual",
-        href: "/admin#automations"
+        schedule: skill.automation.enabled
+          ? `${skill.automation.cadence} ${skill.automation.status}`
+          : "manual"
       },
-      ...skill.automations.map((automation) => ({
-        id: automation.id,
-        name: automation.name,
-        schedule: formatAutomationSchedule(automation.schedule),
-        href: "/admin#automations"
+      ...skill.automations.map((a) => ({
+        id: a.id,
+        name: a.name,
+        schedule: formatAutomationSchedule(a.schedule)
       }))
     ];
   }
 
-  return skill.automations.map((automation) => ({
-    id: automation.id,
-    name: automation.name,
-    schedule: formatAutomationSchedule(automation.schedule),
-    href: "/admin#automations"
+  return skill.automations.map((a) => ({
+    id: a.id,
+    name: a.name,
+    schedule: formatAutomationSchedule(a.schedule)
   }));
 }
 
-export function SkillDetailPage({ skill, brief, previousSkill, latestRun, usage }: SkillDetailPageProps) {
-  const primaryAgentPrompt = skill.agents[0]?.defaultPrompt ?? `Use $${skill.slug} for this task.`;
-  const latestUpdate = skill.updates?.[0];
-  const trackedSources = skill.origin === "user" ? skill.sources ?? [] : skill.references;
+export function SkillDetailPage({
+  skill,
+  brief,
+  previousSkill,
+  latestRun,
+  usage
+}: SkillDetailPageProps) {
+  const primaryAgentPrompt =
+    skill.agents[0]?.defaultPrompt ?? `Use $${skill.slug} for this task.`;
+  const trackedSources =
+    skill.origin === "user" ? skill.sources ?? [] : skill.references;
   const attachedAutomations = buildAttachedAutomations(skill);
-  const versionCount = skill.availableVersions.length;
-  const updateCount = skill.updates?.length ?? 0;
-  const latestUpdateGeneratedAt = latestUpdate?.generatedAt ?? skill.updatedAt;
+  const latestUpdate = skill.updates?.[0];
+  const sourceCount =
+    skill.origin === "user"
+      ? (skill.sources ?? []).length
+      : skill.references.length;
+  const visibleChangedSections =
+    latestUpdate?.changedSections ?? latestRun?.changedSections ?? [];
+
   const updateDigestDiff =
     latestUpdate || previousSkill?.updates?.[0]
-      ? diffMultilineText(buildUpdateDigest(previousSkill?.updates?.[0]), buildUpdateDigest(latestUpdate))
+      ? diffMultilineText(
+          buildUpdateDigest(previousSkill?.updates?.[0]),
+          buildUpdateDigest(latestUpdate)
+        )
       : [];
   const rawDiff =
     updateDigestDiff.length > 0
@@ -67,14 +91,7 @@ export function SkillDetailPage({ skill, brief, previousSkill, latestRun, usage 
       : previousSkill
         ? diffMultilineText(previousSkill.body, skill.body)
         : [];
-  const diffLines = rawDiff.length > 120 ? rawDiff.slice(0, 120) : rawDiff;
-  const sourceSignals =
-    skill.origin === "user" ? latestUpdate?.items ?? [] : brief?.items.slice(0, 5) ?? [];
-  const visibleSourceLogs = latestRun?.sources ?? [];
-  const visibleRunMessages = latestRun?.messages ?? [];
-  const visibleChangedSections = latestUpdate?.changedSections ?? latestRun?.changedSections ?? [];
-  const visibleBodyChanged = latestUpdate?.bodyChanged ?? latestRun?.bodyChanged;
-  const visibleEditorModel = latestUpdate?.editorModel ?? latestRun?.editorModel;
+  const diffLines = rawDiff.length > 80 ? rawDiff.slice(0, 80) : rawDiff;
 
   return (
     <>
@@ -86,28 +103,32 @@ export function SkillDetailPage({ skill, brief, previousSkill, latestRun, usage 
         path={skill.href}
         skillSlug={skill.slug}
       />
-      <SiteHeader
-        sections={[
-          { href: "/", label: "Catalog" },
-          { href: "/skills/new", label: "Add" },
-          { href: "/admin", label: "Updates" },
-          { href: skill.href, label: skill.versionLabel }
-        ]}
-      />
+      <SiteHeader />
 
-      <main className="page-shell page-shell--narrow skill-page-shell">
-        <section className="skill-summary">
-          <div className="skill-summary__main">
-            <div className="skill-summary__meta">
-              <span>{skill.category}</span>
-              <span>{skill.origin}</span>
-              <span>{skill.versionLabel}</span>
-            </div>
-            <h1>{skill.title}</h1>
-            <p className="lede">{skill.description}</p>
+      <PageShell narrow className="grid gap-8 pt-8 pb-16">
+        {/* ── Header ── */}
+        <header className="grid gap-3">
+          <Link
+            className="text-sm text-ink-soft hover:text-ink"
+            href="/"
+          >
+            &larr; Back to skills
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>{skill.category}</Badge>
+            <Badge muted>{skill.origin}</Badge>
+            <Badge muted>{skill.versionLabel}</Badge>
+            <Badge muted>{trackedSources.length} sources</Badge>
+            <Badge muted>{formatRelativeDate(skill.updatedAt)}</Badge>
           </div>
 
-          <div className="skill-summary__actions">
+          <h1 className="m-0 text-2xl font-semibold tracking-tight text-ink">
+            {skill.title}
+          </h1>
+          <p className="m-0 text-sm text-ink-soft">{skill.description}</p>
+
+          <div className="flex flex-wrap items-center gap-2">
             <CopyButton
               label="Copy prompt"
               usageEvent={{
@@ -130,407 +151,280 @@ export function SkillDetailPage({ skill, brief, previousSkill, latestRun, usage 
               }}
               value={skill.href}
             />
-            {skill.origin === "user" ? (
-              <Link className="button button--ghost" href="/admin#updates">
-                Open updates
-              </Link>
-            ) : (
-              <TrackSkillButton label="Set up skill" redirectTo="detail" slug={skill.slug} />
-            )}
+            {skill.origin !== "user" ? (
+              <TrackSkillButton
+                label="Track skill"
+                redirectTo="detail"
+                slug={skill.slug}
+              />
+            ) : null}
+            <LinkButton
+              href={`/sandbox?skill=${skill.slug}`}
+              size="sm"
+              variant="ghost"
+            >
+              <PlayIcon className="h-3 w-3" />
+              Run in sandbox
+            </LinkButton>
           </div>
-        </section>
+        </header>
 
-        <section className="surface-panel skill-use-panel">
-          <div className="surface-panel__head">
-            <div>
-              <span className="section-kicker">Use</span>
-              <h2>Use this skill</h2>
-            </div>
-          </div>
+        {/* ── Section 1: Content ── */}
+        <section id="content" className="grid gap-5">
+          <h2 className={sectionTitle}>Content</h2>
 
-          <div className="skill-flow">
-            <div className="skill-flow__step">
-              <small>1</small>
-              <strong>Copy prompt</strong>
-              <span>Use this version.</span>
-            </div>
-            <div className="skill-flow__divider" aria-hidden="true" />
-            <div className="skill-flow__step">
-              <small>2</small>
-              <strong>Run it</strong>
-              <span>Reference ${skill.slug}.</span>
-            </div>
-            <div className="skill-flow__divider" aria-hidden="true" />
-            <div className="skill-flow__step">
-              <small>3</small>
-              <strong>Check changes</strong>
-              <span>Read the latest diff.</span>
-            </div>
-          </div>
-
-          <div className="prompt-shell">
-            <code>{primaryAgentPrompt}</code>
-          </div>
-
-          <div className="inline-stats inline-stats--wide">
-            <div>
-              <small>version</small>
-              <strong>{skill.versionLabel}</strong>
-            </div>
-            <div>
-              <small>versions</small>
-              <strong>{versionCount}</strong>
-            </div>
-            <div>
-              <small>updates</small>
-              <strong>{updateCount}</strong>
-            </div>
-            <div>
-              <small>sources</small>
-              <strong>{trackedSources.length}</strong>
-            </div>
-            <div>
-              <small>automations</small>
-              <strong>{attachedAutomations.length}</strong>
-            </div>
-            <div>
-              <small>updated</small>
-              <strong>{formatDateTime(skill.updatedAt)}</strong>
-            </div>
-          </div>
-        </section>
-
-        {skill.origin === "user" ? (
-          <SkillSetupForm
-            automation={skill.automation}
-            body={skill.body}
-            category={skill.category}
-            description={skill.description}
-            ownerName={skill.ownerName}
-            slug={skill.slug}
-            sources={skill.sources ?? []}
-            tags={skill.tags}
-            title={skill.title}
-            updatedAt={skill.updatedAt}
-            versionLabel={skill.versionLabel}
-          />
-        ) : (
-          <section className="surface-panel skill-setup-cta">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Setup</span>
-                <h2>Make this editable</h2>
-              </div>
-            </div>
-            <p className="section-copy">Create your copy. Then add sources and refresh it.</p>
-            <div className="workflow-hint">
-              <span className="workflow-hint__icon">
-                <FlowIcon />
+          <div className="rounded-2xl border border-line bg-paper-3 p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium uppercase tracking-wider text-ink-soft">
+                Agent prompt
               </span>
-              <div>
-                <strong>What happens</strong>
-                <p>Loop copies this skill. Then setup opens.</p>
-              </div>
+              <CopyButton
+                label="Copy"
+                usageEvent={{
+                  kind: "copy_prompt",
+                  label: "Copied prompt",
+                  path: skill.href,
+                  skillSlug: skill.slug,
+                  categorySlug: skill.category
+                }}
+                value={primaryAgentPrompt}
+              />
             </div>
-            <div className="hero-actions">
-              <TrackSkillButton label="Create editable copy" redirectTo="detail" slug={skill.slug} />
-            </div>
-          </section>
-        )}
+            <code className="block whitespace-pre-wrap wrap-break-word font-mono text-sm text-ink">
+              {primaryAgentPrompt}
+            </code>
+          </div>
 
-        <section className="skill-detail-stack">
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Latest</span>
-                <h2>Latest update</h2>
-              </div>
-            </div>
+          <div className="markdown-shell markdown-shell--simple">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {skill.body}
+            </ReactMarkdown>
+          </div>
+        </section>
 
-            <div className="update-summary__head">
-              <div>
-                <small>refresh</small>
-                <strong>{formatDateTime(latestUpdateGeneratedAt)}</strong>
-              </div>
-              <div>
-                <small>signals</small>
-                <strong>{latestUpdate?.items.length ?? sourceSignals.length}</strong>
-              </div>
-              <div>
-                <small>body edits</small>
-                <strong>{visibleBodyChanged === undefined ? "pending" : visibleBodyChanged ? "yes" : "no"}</strong>
-              </div>
-              <div>
-                <small>sections</small>
-                <strong>{visibleChangedSections.length || 0}</strong>
-              </div>
-              <div>
-                <small>editor</small>
-                <strong>{visibleEditorModel ?? "heuristic"}</strong>
-              </div>
-              <div>
-                <small>next step</small>
-                <strong>{skill.origin === "user" ? "refresh again" : "set up"}</strong>
-              </div>
-            </div>
+        {/* ── Section 2: Sources & Config ── */}
+        <section id="sources" className="grid gap-5">
+          <h2 className={sectionTitle}>Sources &amp; Config</h2>
 
-            {latestUpdate ? (
-              <div className="update-summary__copy">
-                <p>{latestUpdate.summary}</p>
-                {latestUpdate.whatChanged ? <p>{latestUpdate.whatChanged}</p> : null}
-                {visibleChangedSections.length > 0 ? <p>Changed: {visibleChangedSections.join(", ")}</p> : null}
+          {skill.origin === "user" ? (
+            <SkillSetupForm
+              automation={skill.automation}
+              body={skill.body}
+              category={skill.category}
+              description={skill.description}
+              ownerName={skill.ownerName}
+              slug={skill.slug}
+              sources={skill.sources ?? []}
+              tags={skill.tags}
+              title={skill.title}
+              updatedAt={skill.updatedAt}
+              versionLabel={skill.versionLabel}
+            />
+          ) : (
+            <Panel>
+              <h3 className={sectionTitle}>Track this skill</h3>
+              <p className="text-ink-soft">
+                Create an editable copy to add sources, configure refresh, and
+                keep it updated.
+              </p>
+              <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-2xl border border-line bg-paper-3 p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-paper-3 text-ink-soft">
+                  <FlowIcon />
+                </span>
+                <div>
+                  <strong className="text-ink">What happens</strong>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Loop copies this skill into your tracked set. You can then
+                    edit sources and run refreshes.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="empty-card">No update summary yet.</div>
-            )}
-          </article>
+              <TrackSkillButton
+                label="Create editable copy"
+                redirectTo="detail"
+                slug={skill.slug}
+              />
+            </Panel>
+          )}
 
-          <SkillObservabilityPanel usage={usage} />
+          {trackedSources.length > 0 ? (
+            <Panel compact>
+              <PanelHead>
+                <h3 className={sectionTitle}>Tracked sources</h3>
+                <Badge>{trackedSources.length}</Badge>
+              </PanelHead>
+              <SimpleList tight>
+                {trackedSources.map((ref) =>
+                  "url" in ref ? (
+                    <a
+                      className="grid grid-cols-1 border-t border-line bg-transparent py-3 first:border-t-0 first:pt-0 transition-colors hover:bg-transparent"
+                      href={ref.url}
+                      key={ref.url}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <SimpleListBody>
+                        <strong className="text-ink">{ref.label}</strong>
+                        <p className="m-0 text-sm text-ink-soft">
+                          {ref.tags.join(" · ") || ref.kind}
+                        </p>
+                      </SimpleListBody>
+                    </a>
+                  ) : (
+                    <SimpleListItem className="grid-cols-1" key={ref.path}>
+                      <SimpleListBody>
+                        <strong className="text-ink">{ref.title}</strong>
+                        <p className="m-0 text-sm text-ink-soft">
+                          {ref.excerpt}
+                        </p>
+                      </SimpleListBody>
+                    </SimpleListItem>
+                  )
+                )}
+              </SimpleList>
+            </Panel>
+          ) : null}
 
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Sources</span>
-                <h2>Sources searched</h2>
-              </div>
-            </div>
-
-            {visibleSourceLogs.length > 0 ? (
-              <div className="loop-source-grid">
-                {visibleSourceLogs.map((source) => (
-                  <article className="loop-source-card" key={source.id}>
-                    <div className="loop-source-card__head">
-                      <span className="loop-source-card__logo">
-                        {source.logoUrl ? <img alt="" height={28} src={source.logoUrl} width={28} /> : null}
-                      </span>
-                      <div>
-                        <strong>{source.label}</strong>
-                        <small>{source.status}</small>
-                      </div>
-                    </div>
-                    <p>{source.note ?? `${source.itemCount} items found.`}</p>
-                    <div className="loop-source-card__items">
-                      {source.items.slice(0, 3).map((item) => (
-                        <a href={item.url} key={item.url} rel="noreferrer" target="_blank">
-                          {item.title}
-                        </a>
-                      ))}
-                    </div>
-                  </article>
+          {attachedAutomations.length > 0 ? (
+            <Panel compact>
+              <PanelHead>
+                <h3 className={sectionTitle}>Automations</h3>
+              </PanelHead>
+              <SimpleList tight>
+                {attachedAutomations.map((auto) => (
+                  <SimpleListItem className="grid-cols-1" key={auto.id}>
+                    <SimpleListBody>
+                      <SimpleListRow>
+                        <strong className="text-ink">{auto.name}</strong>
+                        <span className="text-sm text-ink-soft">
+                          {auto.schedule}
+                        </span>
+                      </SimpleListRow>
+                    </SimpleListBody>
+                  </SimpleListItem>
                 ))}
-              </div>
-            ) : sourceSignals.length > 0 ? (
-              <div className="detail-signal-list">
-                {sourceSignals.map((item) => (
-                  <a className="detail-signal-item" href={item.url} key={item.url} rel="noreferrer" target="_blank">
-                    <strong>{item.title}</strong>
-                    <span>
-                      {item.source} · {formatDateTime(item.publishedAt)}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-card">No source log yet.</div>
-            )}
-          </article>
+              </SimpleList>
+            </Panel>
+          ) : null}
+        </section>
 
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Log</span>
-                <h2>Agent log</h2>
-              </div>
-            </div>
+        {/* ── Section 3: Activity ── */}
+        <section id="activity" className="grid gap-5">
+          <h2 className={sectionTitle}>Activity</h2>
 
-            <div className="frontier-log-list">
-              {visibleRunMessages.length > 0 ? (
-                visibleRunMessages.map((message, index) => (
-                  <article className="frontier-log-item" key={`${message}-${index}`}>
-                    <div className="frontier-log-item__icon">
-                      <FlowIcon />
-                    </div>
-                    <div>
-                      <strong>Step {index + 1}</strong>
-                      <span>{message}</span>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className="empty-card">No stored run log yet.</div>
-              )}
-            </div>
-          </article>
+          <SkillUpdateRunner
+            latestRun={latestRun}
+            origin={skill.origin === "user" ? "user" : "remote"}
+            slug={skill.slug}
+            sourceCount={sourceCount}
+          />
 
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Diff</span>
-                <h2>Latest diff</h2>
-              </div>
-            </div>
+          {latestUpdate ? (
+            <Panel compact>
+              <PanelHead>
+                <h3 className={sectionTitle}>Latest refresh</h3>
+                <Badge>
+                  {formatRelativeDate(latestUpdate.generatedAt)}
+                </Badge>
+              </PanelHead>
+              <p className="text-ink-soft">{latestUpdate.summary}</p>
+              {latestUpdate.whatChanged ? (
+                <p className="text-ink-soft">{latestUpdate.whatChanged}</p>
+              ) : null}
+              {visibleChangedSections.length > 0 ? (
+                <p className="text-ink-soft">
+                  Sections changed: {visibleChangedSections.join(", ")}
+                </p>
+              ) : null}
+            </Panel>
+          ) : null}
 
-            {previousSkill ? (
+          {diffLines.length > 0 ? (
+            <Panel compact>
+              <PanelHead>
+                <h3 className={sectionTitle}>Diff</h3>
+              </PanelHead>
               <div className="loop-diff-shell loop-diff-shell--compact">
                 {diffLines.map((line, index) => (
-                  <div className={`loop-diff-line loop-diff-line--${line.type}`} key={`${line.type}-${index}`}>
+                  <div
+                    className={`loop-diff-line loop-diff-line--${line.type}`}
+                    key={`${line.type}-${index}`}
+                  >
                     <span>{line.leftNumber ?? ""}</span>
                     <span>{line.rightNumber ?? ""}</span>
-                    <code>{line.type === "added" ? "+" : line.type === "removed" ? "-" : " "}</code>
+                    <code>
+                      {line.type === "added"
+                        ? "+"
+                        : line.type === "removed"
+                          ? "-"
+                          : " "}
+                    </code>
                     <code>{line.value || " "}</code>
                   </div>
                 ))}
-                {rawDiff.length > diffLines.length ? <p className="detail-note">Showing the first {diffLines.length} lines.</p> : null}
+                {rawDiff.length > diffLines.length ? (
+                  <p className="mt-3 text-sm text-ink-soft">
+                    Showing first {diffLines.length} of {rawDiff.length} lines.
+                  </p>
+                ) : null}
               </div>
-            ) : (
-              <div className="empty-card">No previous version yet.</div>
-            )}
-          </article>
+            </Panel>
+          ) : null}
 
-          <div className="skill-detail-grid">
-            <article className="surface-panel">
-              <div className="surface-panel__head">
-                <div>
-                  <span className="section-kicker">Versions</span>
-                  <h2>Version history</h2>
-                </div>
-              </div>
-
-              <div className="version-track">
-                {skill.availableVersions.map((version) => (
-                  <Link
-                    className={version.version === skill.version ? "version-pill version-pill--active" : "version-pill"}
-                    href={buildSkillVersionHref(skill.slug, version.version)}
-                    key={version.version}
-                  >
-                    {version.label}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="simple-list simple-list--tight">
-                {skill.availableVersions.map((version) => (
-                  <Link
-                    className="simple-list__item simple-list__item--link"
-                    href={buildSkillVersionHref(skill.slug, version.version)}
-                    key={version.version}
-                  >
-                    <div className="simple-list__body">
-                      <div className="simple-list__row">
-                        <strong>{version.label}</strong>
-                        <span>{formatDateTime(version.updatedAt)}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </article>
-
-            <article className="surface-panel">
-              <div className="surface-panel__head">
-                <div>
-                  <span className="section-kicker">Sources</span>
-                  <h2>Tracked watchlist</h2>
-                </div>
-              </div>
-
-              <div className="simple-list simple-list--tight">
-                {trackedSources.length > 0 ? (
-                  trackedSources.map((reference) =>
-                    "url" in reference ? (
-                      <a className="simple-list__item simple-list__item--link" href={reference.url} key={reference.url} rel="noreferrer" target="_blank">
-                        <div className="simple-list__body">
-                          <strong>{reference.label}</strong>
-                          <p>{reference.tags.join(" · ") || reference.kind}</p>
-                        </div>
-                      </a>
-                    ) : (
-                      <article className="simple-list__item" key={reference.path}>
-                        <div className="simple-list__body">
-                          <strong>{reference.title}</strong>
-                          <p>{reference.excerpt}</p>
-                        </div>
-                      </article>
-                    )
-                  )
-                ) : (
-                  <div className="empty-card">No sources listed yet.</div>
-                )}
-              </div>
-            </article>
-
-            <article className="surface-panel">
-              <div className="surface-panel__head">
-                <div>
-                  <span className="section-kicker">Automations</span>
-                  <h2>Schedules</h2>
-                </div>
-              </div>
-
-              <div className="simple-list simple-list--tight">
-                {attachedAutomations.length > 0 ? (
-                  attachedAutomations.map((automation) => (
-                    <Link className="simple-list__item simple-list__item--link" href={automation.href} key={automation.id}>
-                      <div className="simple-list__body">
-                        <div className="simple-list__row">
-                          <strong>{automation.name}</strong>
-                          <span>{automation.schedule}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="empty-card">No automation yet.</div>
-                )}
-              </div>
-            </article>
-          </div>
-
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">Reference</span>
-                <h2>Full skill</h2>
-              </div>
-            </div>
-
-            <div className="markdown-shell markdown-shell--simple">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{skill.body}</ReactMarkdown>
-            </div>
-          </article>
-
-          <article className="surface-panel">
-            <div className="surface-panel__head">
-              <div>
-                <span className="section-kicker">History</span>
-                <h2>Update history</h2>
-              </div>
-            </div>
-
-            <div className="simple-list">
-              {skill.updates && skill.updates.length > 0 ? (
-                skill.updates.map((entry) => (
-                  <article className="simple-list__item" key={entry.generatedAt}>
-                    <div className="simple-list__icon">
+          {skill.updates && skill.updates.length > 1 ? (
+            <Panel compact>
+              <PanelHead>
+                <h3 className={sectionTitle}>Update history</h3>
+              </PanelHead>
+              <SimpleList tight>
+                {skill.updates.map((entry) => (
+                  <SimpleListItem key={entry.generatedAt}>
+                    <SimpleListIcon>
                       <PulseIcon />
-                    </div>
-                    <div className="simple-list__body">
-                      <div className="simple-list__row">
-                        <strong>{formatDateTime(entry.generatedAt)}</strong>
-                        <span>{entry.items.length} sources</span>
-                      </div>
-                      <p>{entry.summary}</p>
-                      {entry.whatChanged ? <p>{entry.whatChanged}</p> : null}
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className="empty-card">No update history yet.</div>
-              )}
+                    </SimpleListIcon>
+                    <SimpleListBody>
+                      <SimpleListRow>
+                        <strong className="text-ink">
+                          {formatRelativeDate(entry.generatedAt)}
+                        </strong>
+                        <span className="text-sm text-ink-soft">
+                          {entry.items.length} sources
+                        </span>
+                      </SimpleListRow>
+                      <p className="m-0 text-sm text-ink-soft">
+                        {entry.summary}
+                      </p>
+                    </SimpleListBody>
+                  </SimpleListItem>
+                ))}
+              </SimpleList>
+            </Panel>
+          ) : null}
+
+          <Panel compact>
+            <PanelHead>
+              <h3 className={sectionTitle}>Versions</h3>
+            </PanelHead>
+            <div className="flex flex-wrap gap-2">
+              {skill.availableVersions.map((version) => (
+                <Link
+                  className={cn(
+                    "inline-flex items-center rounded-full border border-line bg-paper-3 px-3 py-1.5 text-sm text-ink-soft transition-colors",
+                    version.version === skill.version &&
+                      "border-accent bg-accent text-white"
+                  )}
+                  href={buildSkillVersionHref(skill.slug, version.version)}
+                  key={version.version}
+                >
+                  {version.label} · {formatRelativeDate(version.updatedAt)}
+                </Link>
+              ))}
             </div>
-          </article>
+          </Panel>
+
+          <SkillObservabilityPanel usage={usage} />
         </section>
-      </main>
+      </PageShell>
     </>
   );
 }

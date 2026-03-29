@@ -3,6 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { Badge, EyebrowPill } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { FieldGroup, textFieldBase } from "@/components/ui/field";
+import { Panel } from "@/components/ui/panel";
+
 type RefreshResponse = {
   error?: string;
   generatedAt?: string;
@@ -94,48 +99,47 @@ export function AdminUpdateControls({ currentAdminEmail, primaryAdminEmail }: Ad
   }
 
   return (
-    <div className="card admin-update-card">
-      <div className="section-head section-head--compact">
+    <Panel className="gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="eyebrow-pill">Access</span>
-          <h2>Manual refresh</h2>
+          <EyebrowPill>Access</EyebrowPill>
+          <h2 className="m-0 text-[1.15rem] font-semibold tracking-[-0.03em]">Manual refresh</h2>
         </div>
-        <small>{hasAccess ? currentAdminEmail : primaryAdminEmail}</small>
+        <small className="text-sm text-ink-soft">{hasAccess ? currentAdminEmail : primaryAdminEmail}</small>
       </div>
 
       {hasAccess ? (
-        <div className="admin-update-card__stack">
-          <div className="admin-pill-row">
-            <span className="badge badge--signal-blue">signed in</span>
-            <span className="admin-update-card__hint">This session can run a full refresh.</span>
+        <div className="grid gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-ink-soft">
+            <Badge>signed in</Badge>
+            <span className="text-ink-soft leading-7">This session can run a full refresh.</span>
           </div>
-          <div className="hero-actions">
-            <button
-              className="button"
+          <div className="flex flex-wrap gap-3">
+            <Button
               disabled={isRefreshPending || isClaimPending || isSignOutPending}
               onClick={handleRefresh}
               type="button"
             >
               {isRefreshPending ? "Running..." : "Run refresh"}
-            </button>
-            <button
-              className="button button--ghost"
+            </Button>
+            <Button
               disabled={isRefreshPending || isClaimPending || isSignOutPending}
               onClick={handleSignOut}
               type="button"
+              variant="ghost"
             >
               {isSignOutPending ? "Clearing..." : "Sign out"}
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
-        <form className="admin-update-card__stack" onSubmit={handleClaim}>
-          <label className="field-group">
+        <form className="grid gap-4" onSubmit={handleClaim}>
+          <FieldGroup>
             <span>Admin email</span>
             <input
               autoCapitalize="off"
               autoComplete="email"
-              className="text-field"
+              className={textFieldBase}
               inputMode="email"
               onChange={(event) => setEmail(event.target.value)}
               placeholder={primaryAdminEmail}
@@ -143,17 +147,17 @@ export function AdminUpdateControls({ currentAdminEmail, primaryAdminEmail }: Ad
               type="email"
               value={email}
             />
-          </label>
-          <div className="hero-actions">
-            <button className="button" disabled={isClaimPending || isRefreshPending || isSignOutPending} type="submit">
+          </FieldGroup>
+          <div className="flex flex-wrap gap-3">
+            <Button disabled={isClaimPending || isRefreshPending || isSignOutPending} type="submit">
               {isClaimPending ? "Claiming..." : "Claim access"}
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
-      {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-      {statusMessage ? <p className="admin-update-card__status">{statusMessage}</p> : null}
-    </div>
+      {errorMessage ? <p className="text-sm text-danger">{errorMessage}</p> : null}
+      {statusMessage ? <p className="text-ink-soft leading-7">{statusMessage}</p> : null}
+    </Panel>
   );
 }

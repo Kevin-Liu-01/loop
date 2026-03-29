@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { FlowIcon, TimelineIcon } from "@/components/frontier-icons";
+import { Badge, EyebrowPill } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyCard } from "@/components/ui/empty-card";
+import { FieldGroup, textFieldArea, textFieldBase, textFieldSelect } from "@/components/ui/field";
+import { Panel, PanelHead } from "@/components/ui/panel";
+import { cn } from "@/lib/cn";
 import { formatAutomationSchedule } from "@/lib/format";
 import type { AutomationSummary, SkillRecord } from "@/lib/types";
 
@@ -90,28 +96,28 @@ export function AutomationManager({ automations, skills }: AutomationManagerProp
   }
 
   return (
-    <section className="ops-section">
-      <div className="section-head section-head--compact">
+    <section>
+      <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="eyebrow-pill">Automations</span>
+          <EyebrowPill>Automations</EyebrowPill>
           <h2>Automations</h2>
         </div>
-        <small>{automations.length} total</small>
+        <small className="text-ink-soft">{automations.length} total</small>
       </div>
 
-      <div className="ops-automation-grid">
-        <div className="card simple-panel">
-          <label className="field-group">
-            <span>Filter</span>
+      <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+        <Panel>
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Filter</span>
             <input
-              className="text-field"
+              className={cn(textFieldBase)}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="frontend, refresh, weekly"
               value={query}
             />
-          </label>
+          </FieldGroup>
 
-          <div className="simple-list">
+          <div className="grid gap-0">
             {filteredAutomations.length > 0 ? (
               filteredAutomations.map((automation) => {
                 const linkedSkill = automation.matchedSkillSlugs[0]
@@ -119,23 +125,24 @@ export function AutomationManager({ automations, skills }: AutomationManagerProp
                   : null;
 
                 return (
-                  <article className="simple-list__item" key={automation.id}>
-                    <div className="simple-list__icon">
+                  <article
+                    className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4 border-t border-line py-4 first:border-t-0 first:pt-0"
+                    key={automation.id}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-paper-3 text-ink-soft [&>svg]:h-4 [&>svg]:w-4">
                       <TimelineIcon />
                     </div>
-                    <div className="simple-list__body">
-                      <div className="simple-list__row">
+                    <div className="grid min-w-0 flex-1 gap-1.5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
                         <strong>{automation.name}</strong>
-                        <span className={`badge ${automation.status === "ACTIVE" ? "badge--signal-blue" : ""}`}>
-                          {automation.status.toLowerCase()}
-                        </span>
+                        <Badge muted={automation.status !== "ACTIVE"}>{automation.status.toLowerCase()}</Badge>
                       </div>
-                      <div className="simple-list__meta">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-ink-soft">
                         <span>{formatAutomationSchedule(automation.schedule)}</span>
                         <span>{linkedSkill ? linkedSkill.versionLabel : "unlinked"}</span>
                       </div>
                       {linkedSkill ? (
-                        <Link className="link-inline" href={linkedSkill.href}>
+                        <Link className="text-sm font-medium text-ink hover:text-ink-soft" href={linkedSkill.href}>
                           {linkedSkill.title}
                         </Link>
                       ) : null}
@@ -144,97 +151,99 @@ export function AutomationManager({ automations, skills }: AutomationManagerProp
                 );
               })
             ) : (
-              <div className="empty-card">No automations match this filter.</div>
+              <EmptyCard>No automations match this filter.</EmptyCard>
             )}
           </div>
-        </div>
+        </Panel>
 
-        <form className="card simple-panel automation-form" onSubmit={handleSubmit}>
-          <div className="section-head section-head--compact">
-            <div>
-              <span className="eyebrow-pill">
-                <FlowIcon className="frontier-inline-icon" />
-                New automation
-              </span>
-              <h3>Add a schedule</h3>
-            </div>
-          </div>
+        <form className="contents" onSubmit={handleSubmit}>
+          <Panel className="grid gap-5 content-start">
+            <PanelHead className="mb-1 items-start">
+              <div>
+                <EyebrowPill>
+                  <FlowIcon className="h-4 w-4" />
+                  New automation
+                </EyebrowPill>
+                <h3>Add a schedule</h3>
+              </div>
+            </PanelHead>
 
-          <label className="field-group">
-            <span>Skill</span>
-            <select
-              className="text-field text-field--select"
-              onChange={(event) => handleSkillChange(event.target.value)}
-              value={selectedSkillSlug}
-            >
-              {skills.map((skill) => (
-                <option key={skill.slug} value={skill.slug}>
-                  {skill.title}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field-group">
-            <span>Name</span>
-            <input
-              className="text-field"
-              maxLength={80}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Frontend refresh"
-              required
-              value={name}
-            />
-          </label>
-
-          <div className="form-row">
-            <label className="field-group">
-              <span>Schedule</span>
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Skill</span>
               <select
-                className="text-field text-field--select"
-                onChange={(event) => setCadence(event.target.value as (typeof CADENCE_OPTIONS)[number]["value"])}
-                value={cadence}
+                className={cn(textFieldBase, textFieldSelect)}
+                onChange={(event) => handleSkillChange(event.target.value)}
+                value={selectedSkillSlug}
               >
-                {CADENCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {skills.map((skill) => (
+                  <option key={skill.slug} value={skill.slug}>
+                    {skill.title}
                   </option>
                 ))}
               </select>
-            </label>
+            </FieldGroup>
 
-            <label className="field-group">
-              <span>Status</span>
-              <select
-                className="text-field text-field--select"
-                onChange={(event) => setStatus(event.target.value as "ACTIVE" | "PAUSED")}
-                value={status}
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="PAUSED">Paused</option>
-              </select>
-            </label>
-          </div>
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Name</span>
+              <input
+                className={cn(textFieldBase)}
+                maxLength={80}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Frontend refresh"
+                required
+                value={name}
+              />
+            </FieldGroup>
 
-          <label className="field-group">
-            <span>Instruction</span>
-            <textarea
-              className="text-field text-field--area"
-              maxLength={240}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="What should this run look for?"
-              value={note}
-            />
-          </label>
+            <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+              <FieldGroup>
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Schedule</span>
+                <select
+                  className={cn(textFieldBase, textFieldSelect)}
+                  onChange={(event) => setCadence(event.target.value as (typeof CADENCE_OPTIONS)[number]["value"])}
+                  value={cadence}
+                >
+                  {CADENCE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </FieldGroup>
 
-          {error ? <p className="form-error">{error}</p> : null}
-          {message ? <p className="form-success">{message}</p> : null}
+              <FieldGroup>
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Status</span>
+                <select
+                  className={cn(textFieldBase, textFieldSelect)}
+                  onChange={(event) => setStatus(event.target.value as "ACTIVE" | "PAUSED")}
+                  value={status}
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="PAUSED">Paused</option>
+                </select>
+              </FieldGroup>
+            </div>
 
-          <div className="hero-actions">
-            <button className="button" disabled={isPending || !selectedSkillSlug} type="submit">
-              {isPending ? "Creating..." : "Create automation"}
-            </button>
-          </div>
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Instruction</span>
+              <textarea
+                className={cn(textFieldBase, textFieldArea)}
+                maxLength={240}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="What should this run look for?"
+                value={note}
+              />
+            </FieldGroup>
+
+            {error ? <p className="text-sm text-danger">{error}</p> : null}
+            {message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+
+            <div className="flex flex-wrap gap-3">
+              <Button disabled={isPending || !selectedSkillSlug} type="submit">
+                {isPending ? "Creating..." : "Create automation"}
+              </Button>
+            </div>
+          </Panel>
         </form>
       </div>
     </section>

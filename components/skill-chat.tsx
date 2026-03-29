@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 
+import { Button } from "@/components/ui/button";
+import { textFieldArea, textFieldBase } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
+
 const DRAFT_KEY = "skillwire.chat.draft";
 
 type SkillChatProps = {
@@ -41,13 +45,13 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
   }, [input]);
 
   return (
-    <div className="chat-shell">
-      <div className="section-head">
+    <div className="grid gap-5 rounded-2xl border border-line bg-paper-3/92 p-7">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="eyebrow">In-house copilot</span>
+          <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">In-house copilot</span>
           <h2>Interrogate the desk.</h2>
         </div>
-        <small>{enabled ? "AI SDK online" : "Add OPENAI_API_KEY to enable answers"}</small>
+        <small className="text-ink-soft">{enabled ? "AI SDK online" : "Add OPENAI_API_KEY to enable answers"}</small>
       </div>
 
       <div className="chat-transcript">
@@ -70,7 +74,7 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
       </div>
 
       <form
-        className="chat-form"
+        className="grid gap-4"
         onSubmit={(event) => {
           if (!enabled) {
             event.preventDefault();
@@ -85,20 +89,20 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
         }}
       >
         <textarea
-          className="chat-input"
+          className={cn(textFieldBase, textFieldArea)}
           disabled={!enabled}
           onChange={(event) => setInput(event.target.value)}
           placeholder="How should I use the SEO + GEO skill on a pricing page?"
           rows={4}
           value={input}
         />
-        <div className="chat-actions">
-          <button className="button button--ghost" onClick={() => setInput(starterPrompt)} type="button">
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => setInput(starterPrompt)} type="button" variant="ghost">
             Reset prompt
-          </button>
-          <button className="button" disabled={!enabled || status === "submitted"} type="submit">
+          </Button>
+          <Button disabled={!enabled || status === "submitted"} type="submit">
             {status === "submitted" ? "Thinking" : "Ask Loop"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

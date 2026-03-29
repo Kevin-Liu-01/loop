@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { DefaultChatTransport } from "ai";
 import { useChat } from "@ai-sdk/react";
 
+import { Button, ButtonLink } from "@/components/ui/button";
+import { FieldGroup, FieldLabel, textFieldArea, textFieldBase, textFieldSelect } from "@/components/ui/field";
+import { Panel } from "@/components/ui/panel";
+import { cn } from "@/lib/cn";
 import type { AgentProviderPreset, ImportedMcpDocument, SkillRecord } from "@/lib/types";
 
 type AgentStudioProps = {
@@ -179,31 +183,34 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
     window.localStorage.removeItem(INPUT_KEY);
   }
 
+  const selectionChipClass =
+    "grid min-h-[60px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-start gap-4 rounded-2xl border border-line p-4";
+
   return (
-    <div className="agent-studio">
-      <section className="card">
-        <div className="section-head">
+    <div className="grid gap-6">
+      <Panel className="p-7">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="eyebrow">Agent lab</span>
-            <h2>Run any agent, pick any model.</h2>
+            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Agent lab</span>
+            <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Run any agent, pick any model.</h2>
           </div>
-          <small>{selectedPreset?.label ?? "Custom runtime"}</small>
+          <small className="text-sm text-ink-soft">{selectedPreset?.label ?? "Custom runtime"}</small>
         </div>
 
-        <div className="form-row">
-          <label className="field-group">
-            <span>Agent name</span>
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <FieldGroup>
+            <FieldLabel>Agent name</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               onChange={(event) => update("agentName", event.target.value)}
               value={config.agentName}
             />
-          </label>
+          </FieldGroup>
 
-          <label className="field-group">
-            <span>Provider</span>
+          <FieldGroup>
+            <FieldLabel>Provider</FieldLabel>
             <select
-              className="text-field text-field--select"
+              className={cn(textFieldBase, textFieldSelect)}
               onChange={(event) => {
                 const preset = presets.find((entry) => entry.id === event.target.value);
                 update("providerId", event.target.value);
@@ -221,14 +228,14 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                 </option>
               ))}
             </select>
-          </label>
+          </FieldGroup>
         </div>
 
-        <div className="form-row">
-          <label className="field-group">
-            <span>Model</span>
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <FieldGroup>
+            <FieldLabel>Model</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               list="skillwire-model-suggestions"
               onChange={(event) => update("model", event.target.value)}
               value={config.model}
@@ -240,159 +247,158 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                 </option>
               ))}
             </datalist>
-          </label>
+          </FieldGroup>
 
-          <label className="field-group">
-            <span>API key env var</span>
+          <FieldGroup>
+            <FieldLabel>API key env var</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               onChange={(event) => update("apiKeyEnvVar", event.target.value)}
               placeholder="AI_GATEWAY_API_KEY"
               value={config.apiKeyEnvVar}
             />
-          </label>
+          </FieldGroup>
         </div>
 
-        <div className="form-row">
-          <label className="field-group">
-            <span>Compatible base URL</span>
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <FieldGroup>
+            <FieldLabel>Compatible base URL</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               onChange={(event) => update("compatibleBaseUrl", event.target.value)}
               placeholder="https://ai-gateway.vercel.sh/v1/ai"
               value={config.compatibleBaseUrl}
             />
-          </label>
+          </FieldGroup>
 
-          <label className="field-group">
-            <span>Extra headers JSON</span>
+          <FieldGroup>
+            <FieldLabel>Extra headers JSON</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               onChange={(event) => update("headersJson", event.target.value)}
               placeholder='{"HTTP-Referer":"https://skillwire.local"}'
               value={config.headersJson}
             />
-          </label>
+          </FieldGroup>
         </div>
 
-        <label className="field-group">
-          <span>System prompt</span>
+        <FieldGroup>
+          <FieldLabel>System prompt</FieldLabel>
           <textarea
-            className="text-field text-field--area"
+            className={cn(textFieldBase, textFieldArea)}
             onChange={(event) => update("systemPrompt", event.target.value)}
             value={config.systemPrompt}
           />
-        </label>
+        </FieldGroup>
 
-        <div className="section-head">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="eyebrow">Attachments</span>
-            <h2>Skills and MCPs</h2>
+            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Attachments</span>
+            <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Skills and MCPs</h2>
           </div>
-          <small>
+          <small className="text-sm text-ink-soft">
             {config.selectedSkillSlugs.length} skills · {config.selectedMcpIds.length} MCPs
           </small>
         </div>
 
-        <div className="grid-two">
-          <div className="selection-panel">
-            <strong>Skill pack</strong>
-            <div className="selection-stack">
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <div className="grid content-start gap-4">
+            <strong className="text-base font-semibold text-ink">Skill pack</strong>
+            <div className="grid max-h-[360px] gap-3 overflow-auto">
               {skills.slice(0, 32).map((skill) => (
-                <label className="selection-chip" key={skill.slug}>
+                <label className={selectionChipClass} key={skill.slug}>
                   <input
                     checked={config.selectedSkillSlugs.includes(skill.slug)}
                     onChange={() => toggleListValue("selectedSkillSlugs", skill.slug)}
                     type="checkbox"
                   />
-                  <span>
+                  <span className="grid min-w-0 gap-1">
                     {skill.title}
-                    <small>{skill.category}</small>
+                    <small className="text-xs text-ink-soft">{skill.category}</small>
                   </span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="selection-panel">
-            <strong>MCP registry</strong>
-            <div className="selection-stack">
+          <div className="grid content-start gap-4">
+            <strong className="text-base font-semibold text-ink">MCP registry</strong>
+            <div className="grid max-h-[360px] gap-3 overflow-auto">
               {mcps.length > 0 ? (
                 mcps.map((mcp) => (
-                  <label className="selection-chip" key={mcp.id}>
+                  <label className={selectionChipClass} key={mcp.id}>
                     <input
                       checked={config.selectedMcpIds.includes(mcp.id)}
                       onChange={() => toggleListValue("selectedMcpIds", mcp.id)}
                       type="checkbox"
                     />
-                    <span>
+                    <span className="grid min-w-0 gap-1">
                       {mcp.name}
-                      <small>
+                      <small className="text-xs text-ink-soft">
                         {mcp.transport} · {["stdio", "http"].includes(mcp.transport) ? "runtime ready" : "metadata only"}
                       </small>
                     </span>
                   </label>
                 ))
               ) : (
-                <div className="signal-item signal-item--static">
-                  <strong>No MCP imported yet</strong>
-                  <span>Pull one in from a public manifest URL below.</span>
+                <div className="grid gap-2 rounded-2xl border border-line p-4">
+                  <strong className="text-base font-semibold text-ink">No MCP imported yet</strong>
+                  <span className="text-sm text-ink-soft">Pull one in from a public manifest URL below.</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="hero-actions">
-          <button className="button button--ghost" onClick={resetConfig} type="button">
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={resetConfig} type="button" variant="ghost">
             Reset lab
-          </button>
+          </Button>
           {selectedPreset?.docsUrl ? (
-            <a className="button button--ghost" href={selectedPreset.docsUrl} rel="noreferrer" target="_blank">
+            <ButtonLink href={selectedPreset.docsUrl} rel="noreferrer" target="_blank" variant="ghost">
               Provider docs
-            </a>
+            </ButtonLink>
           ) : null}
         </div>
-      </section>
+      </Panel>
 
-      <section className="card">
-        <div className="section-head">
+      <Panel className="p-7">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="eyebrow">Remote import</span>
-            <h2>Pull skills and MCPs from the web.</h2>
+            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Remote import</span>
+            <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Pull skills and MCPs from the web.</h2>
           </div>
-          <small>{isImportPending ? "Importing" : "GitHub raw, markdown, JSON, YAML"}</small>
+          <small className="text-sm text-ink-soft">{isImportPending ? "Importing" : "GitHub raw, markdown, JSON, YAML"}</small>
         </div>
 
-        <div className="form-row">
-          <label className="field-group">
-            <span>Import type</span>
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <FieldGroup>
+            <FieldLabel>Import type</FieldLabel>
             <select
-              className="text-field text-field--select"
+              className={cn(textFieldBase, textFieldSelect)}
               onChange={(event) => setImportKind(event.target.value as "skill" | "mcp")}
               value={importKind}
             >
               <option value="skill">Skill</option>
               <option value="mcp">MCP manifest</option>
             </select>
-          </label>
+          </FieldGroup>
 
-          <label className="field-group">
-            <span>Remote URL</span>
+          <FieldGroup>
+            <FieldLabel>Remote URL</FieldLabel>
             <input
-              className="text-field"
+              className={textFieldBase}
               onChange={(event) => setImportUrl(event.target.value)}
               placeholder="https://github.com/org/repo/blob/main/SKILL.md"
               value={importUrl}
             />
-          </label>
+          </FieldGroup>
         </div>
 
-        {importError ? <p className="form-error">{importError}</p> : null}
+        {importError ? <p className="text-sm text-danger">{importError}</p> : null}
 
-        <div className="hero-actions">
-          <button
-            className="button"
+        <div className="flex flex-wrap gap-3">
+          <Button
             disabled={!importUrl.trim() || isImportPending}
             onClick={() => {
               setImportError(null);
@@ -420,31 +426,34 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
             type="button"
           >
             {isImportPending ? "Importing..." : `Import ${importKind}`}
-          </button>
+          </Button>
         </div>
 
-        <div className="grid-two">
-          <div className="selection-panel">
-            <strong>Imported skills</strong>
-            <div className="signal-stack">
-              {skills.filter((skill) => skill.origin === "remote").slice(0, 8).map((skill) => (
-                <div className="signal-item signal-item--static" key={skill.slug}>
-                  <strong>{skill.title}</strong>
-                  <span>
-                    {skill.versionLabel} · {skill.path}
-                  </span>
-                </div>
-              ))}
+        <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
+          <div className="grid content-start gap-4">
+            <strong className="text-base font-semibold text-ink">Imported skills</strong>
+            <div className="grid gap-3">
+              {skills
+                .filter((skill) => skill.origin === "remote")
+                .slice(0, 8)
+                .map((skill) => (
+                  <div className="grid gap-2 rounded-2xl border border-line p-4" key={skill.slug}>
+                    <strong className="text-base font-semibold text-ink">{skill.title}</strong>
+                    <span className="text-sm text-ink-soft">
+                      {skill.versionLabel} · {skill.path}
+                    </span>
+                  </div>
+                ))}
             </div>
           </div>
 
-          <div className="selection-panel">
-            <strong>Imported MCPs</strong>
-            <div className="signal-stack">
+          <div className="grid content-start gap-4">
+            <strong className="text-base font-semibold text-ink">Imported MCPs</strong>
+            <div className="grid gap-3">
               {mcps.slice(0, 8).map((mcp) => (
-                <div className="signal-item signal-item--static" key={mcp.id}>
-                  <strong>{mcp.name}</strong>
-                  <span>
+                <div className="grid gap-2 rounded-2xl border border-line p-4" key={mcp.id}>
+                  <strong className="text-base font-semibold text-ink">{mcp.name}</strong>
+                  <span className="text-sm text-ink-soft">
                     {mcp.versionLabel} · {mcp.transport} · {mcp.manifestUrl}
                   </span>
                 </div>
@@ -452,15 +461,15 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
             </div>
           </div>
         </div>
-      </section>
+      </Panel>
 
-      <section className="card">
-        <div className="section-head">
+      <Panel className="p-7">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="eyebrow">Run</span>
-            <h2>Live transcript</h2>
+            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Run</span>
+            <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Live transcript</h2>
           </div>
-          <small>{status === "submitted" ? "Thinking" : selectedPreset?.label ?? "Ready"}</small>
+          <small className="text-sm text-ink-soft">{status === "submitted" ? "Thinking" : selectedPreset?.label ?? "Ready"}</small>
         </div>
 
         <div className="chat-transcript">
@@ -472,9 +481,10 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
 
           {messages.map((message) => (
             <div
-              className={`chat-message ${
+              className={cn(
+                "chat-message",
                 message.role === "user" ? "chat-message--user" : "chat-message--assistant"
-              }`}
+              )}
               key={message.id}
             >
               {messageToText(message)}
@@ -482,7 +492,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
           ))}
         </div>
 
-        {error ? <p className="form-error">{error.message}</p> : null}
+        {error ? <p className="text-sm text-danger">{error.message}</p> : null}
 
         <form
           className="chat-form"
@@ -504,19 +514,15 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
             value={input}
           />
           <div className="chat-actions">
-            <button
-              className="button button--ghost"
-              onClick={() => setInput("Summarize the attached skills and tell me the next 3 actions.")}
-              type="button"
-            >
+            <Button onClick={() => setInput("Summarize the attached skills and tell me the next 3 actions.")} type="button" variant="ghost">
               Reset prompt
-            </button>
-            <button className="button" disabled={status === "submitted"} type="submit">
+            </Button>
+            <Button disabled={status === "submitted"} type="submit">
               {status === "submitted" ? "Running..." : "Run agent"}
-            </button>
+            </Button>
           </div>
         </form>
-      </section>
+      </Panel>
     </div>
   );
 }

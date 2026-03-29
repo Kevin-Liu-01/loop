@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { postUsageEvent } from "@/components/usage-beacon";
 import type { CategorySlug, UsageEventKind } from "@/lib/types";
 
@@ -31,8 +32,8 @@ export function CopyButton({ value, label = "Copy", usageEvent }: CopyButtonProp
   }
 
   return (
-    <button className="copy-button" onClick={handleCopy} type="button">
+    <Button variant="ghost" onClick={handleCopy} type="button">
       <span>{copied ? "Copied" : label}</span>
-    </button>
+    </Button>
   );
 }

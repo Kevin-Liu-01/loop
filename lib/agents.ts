@@ -125,7 +125,7 @@ export function resolveLanguageModel(input: AgentRunInput): LanguageModel {
   return provider(input.model);
 }
 
-function serializeSkill(skill: SkillRecord): string {
+export function serializeSkill(skill: SkillRecord): string {
   return [
     `Skill: ${skill.title} ($${skill.slug})`,
     `Version: ${skill.versionLabel}`,

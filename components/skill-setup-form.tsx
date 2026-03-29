@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { EditFileIcon, RefreshIcon } from "@/components/frontier-icons";
+import { Panel, PanelHead } from "@/components/ui/panel";
+import { Button } from "@/components/ui/button";
+import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
 import type { LoopUpdateStreamEvent, SkillAutomationState, SourceDefinition } from "@/lib/types";
 
 type SkillSetupFormProps = {
@@ -216,136 +220,135 @@ export function SkillSetupForm(props: SkillSetupFormProps) {
   }
 
   return (
-    <form className="surface-panel skill-setup-card" onSubmit={handleSubmit}>
-      <div className="surface-panel__head">
-        <div>
-          <span className="section-kicker">Setup</span>
-          <h2>Edit sources and refresh rules</h2>
+    <Panel className="grid gap-5 content-start">
+      <form className="contents" onSubmit={handleSubmit}>
+        <PanelHead>
+          <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Setup</span>
+            <h2>Edit sources and refresh rules</h2>
+          </div>
+        </PanelHead>
+
+        <p className="text-ink-soft">Edit the watchlist, prompt, or skill.</p>
+
+        <div className="grid grid-cols-4 gap-3 max-lg:grid-cols-1 max-md:grid-cols-1">
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">version</small>
+            <strong className="text-sm font-semibold text-ink">{props.versionLabel}</strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">sources</small>
+            <strong className="text-sm font-semibold text-ink">{sourceCount}</strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">refresh</small>
+            <strong className="text-sm font-semibold text-ink">{state.cadence === "manual" ? "manual" : state.cadence}</strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">status</small>
+            <strong className="text-sm font-semibold text-ink">{props.automation?.status ?? "paused"}</strong>
+          </div>
         </div>
-      </div>
 
-      <p className="section-copy">Edit the watchlist, prompt, or skill.</p>
-
-      <div className="setup-status">
-        <div>
-          <small>version</small>
-          <strong>{props.versionLabel}</strong>
-        </div>
-        <div>
-          <small>sources</small>
-          <strong>{sourceCount}</strong>
-        </div>
-        <div>
-          <small>refresh</small>
-          <strong>{state.cadence === "manual" ? "manual" : state.cadence}</strong>
-        </div>
-        <div>
-          <small>status</small>
-          <strong>{props.automation?.status ?? "paused"}</strong>
-        </div>
-      </div>
-
-      <div className="setup-form-grid">
-        <label className="field-group">
-          <span>Title</span>
-          <input
-            className="text-field"
-            maxLength={80}
-            onChange={(event) => update("title", event.target.value)}
-            required
-            value={state.title}
-          />
-        </label>
-
-        <label className="field-group">
-          <span>Description</span>
-          <textarea
-            className="text-field text-field--area"
-            maxLength={220}
-            onChange={(event) => update("description", event.target.value)}
-            required
-            value={state.description}
-          />
-        </label>
-
-        <label className="field-group">
-          <span>Source watchlist</span>
-          <textarea
-            className="text-field text-field--area"
-            onChange={(event) => update("sourceUrls", event.target.value)}
-            placeholder={"One URL per line\nhttps://react.dev/rss.xml"}
-            value={state.sourceUrls}
-          />
-        </label>
-
-        <div className="form-row">
-          <label className="field-group">
-            <span>Refresh cadence</span>
-            <select
-              className="text-field text-field--select"
-              onChange={(event) => update("cadence", event.target.value as SetupState["cadence"])}
-              value={state.cadence}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="manual">Manual</option>
-            </select>
-          </label>
-
-          <label className="field-group">
-            <span>Refresh prompt</span>
+        <div className="grid gap-6">
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Title</span>
             <input
-              className="text-field"
-              maxLength={240}
-              onChange={(event) => update("automationPrompt", event.target.value)}
-              placeholder="What should the refresh care about?"
-              value={state.automationPrompt}
-            />
-          </label>
-        </div>
-
-        <details className="setup-editor-disclosure">
-          <summary>Edit skill markdown</summary>
-          <label className="field-group">
-            <span>Skill markdown</span>
-            <textarea
-              className="text-field text-field--code"
-              onChange={(event) => update("body", event.target.value)}
+              className={cn(textFieldBase)}
+              maxLength={80}
+              onChange={(event) => update("title", event.target.value)}
               required
-              value={state.body}
+              value={state.title}
             />
-          </label>
-        </details>
-      </div>
+          </FieldGroup>
 
-      <div className="workflow-hint">
-        <span className="workflow-hint__icon">
-          <EditFileIcon />
-        </span>
-        <div>
-          <strong>Fast path</strong>
-          <p>Save. Then refresh.</p>
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Description</span>
+            <textarea
+              className={cn(textFieldBase, textFieldArea)}
+              maxLength={220}
+              onChange={(event) => update("description", event.target.value)}
+              required
+              value={state.description}
+            />
+          </FieldGroup>
+
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Source watchlist</span>
+            <textarea
+              className={cn(textFieldBase, textFieldArea)}
+              onChange={(event) => update("sourceUrls", event.target.value)}
+              placeholder={"One URL per line\nhttps://react.dev/rss.xml"}
+              value={state.sourceUrls}
+            />
+          </FieldGroup>
+
+          <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
+              <select
+                className={cn(textFieldBase, textFieldSelect)}
+                onChange={(event) => update("cadence", event.target.value as SetupState["cadence"])}
+                value={state.cadence}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="manual">Manual</option>
+              </select>
+            </FieldGroup>
+
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh prompt</span>
+              <input
+                className={cn(textFieldBase)}
+                maxLength={240}
+                onChange={(event) => update("automationPrompt", event.target.value)}
+                placeholder="What should the refresh care about?"
+                value={state.automationPrompt}
+              />
+            </FieldGroup>
+          </div>
+
+          <details className="grid gap-4 rounded-2xl border border-line bg-paper-3 p-4">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              Edit skill markdown
+            </summary>
+            <FieldGroup>
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Skill markdown</span>
+              <textarea
+                className={cn(textFieldBase, textFieldCode)}
+                onChange={(event) => update("body", event.target.value)}
+                required
+                value={state.body}
+              />
+            </FieldGroup>
+          </details>
         </div>
-      </div>
 
-      {runMessage ? <p className="form-success">{runMessage}</p> : null}
-      {notice ? <p className="form-success">{notice}</p> : null}
-      {error ? <p className="form-error">{error}</p> : null}
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-2xl border border-line bg-paper-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-paper-3 text-ink-soft">
+            <EditFileIcon />
+          </span>
+          <div>
+            <strong>Fast path</strong>
+            <p>Save. Then refresh.</p>
+          </div>
+        </div>
 
-      <div className="hero-actions">
-        <button className="button button--ghost" disabled={isPending || !isDirty} type="submit">
-          {isPending ? "Saving..." : "Save changes"}
-        </button>
-        <button
-          className="button"
-          disabled={isPending || sourceCount === 0}
-          onClick={handleSaveAndRefresh}
-          type="button"
-        >
-          <RefreshIcon />
-          {isPending ? "Working..." : "Save and refresh"}
-        </button>
-      </div>
-    </form>
+        {runMessage ? <p className="text-sm text-ink-soft">{runMessage}</p> : null}
+        {notice ? <p className="text-sm text-ink-soft">{notice}</p> : null}
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+        <div className="flex flex-wrap gap-3">
+          <Button disabled={isPending || !isDirty} type="submit" variant="ghost">
+            {isPending ? "Saving..." : "Save changes"}
+          </Button>
+          <Button disabled={isPending || sourceCount === 0} onClick={handleSaveAndRefresh} type="button">
+            <RefreshIcon />
+            {isPending ? "Working..." : "Save and refresh"}
+          </Button>
+        </div>
+      </form>
+    </Panel>
   );
 }

@@ -85,6 +85,27 @@ export type UserSkillRefreshCycle = {
 };
 
 const DEFAULT_SKILL_EDITOR_MODEL = process.env.SKILLWIRE_MODEL ?? "gpt-5-mini";
+const MAX_CONCURRENT_SKILL_REFRESHES = 3;
+
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<T>
+): Promise<T[]> {
+  const results: T[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const index = nextIndex++;
+      results[index] = await fn(items[index]);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
 
 function replaceManagedSection(body: string, sectionTitle: string, sectionBody: string): string {
   const trimmed = body.trim();
@@ -254,7 +275,9 @@ async function synthesizeBrief(slug: CategorySlug, title: string, items: DailySi
       items: items.slice(0, 4),
       generatedAt: new Date().toISOString()
     };
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown AI error";
+    console.warn(`[refresh] synthesizeBrief failed for "${title}": ${message}`);
     return fallbackBrief(slug, title, items);
   }
 }
@@ -340,7 +363,9 @@ export async function synthesizeSkillUpdate(skill: UserSkillDocument, items: Dai
       changedSections,
       editorModel: DEFAULT_SKILL_EDITOR_MODEL
     };
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown AI error";
+    console.warn(`[refresh] synthesizeSkillUpdate failed for "${skill.title}": ${message}`);
     return fallbackDraft;
   }
 }
@@ -484,23 +509,22 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<void> 
   let didChange = false;
   const loopRuns: LoopRunRecord[] = [];
 
-  const refreshedSkills = await Promise.all(
-    skills.map(async (skill) => {
-      const canRefresh = skill.automation.enabled && skill.automation.status === "active" && skill.sources.length > 0;
+  const eligibleSkills = skills.filter((skill) => {
+    const canRefresh = skill.automation.enabled && skill.automation.status === "active" && skill.sources.length > 0;
+    if (focusSet && !focusSet.has(skill.slug)) return false;
+    if ((focusSet && !canRefresh) || (!focusSet && !isUserSkillAutomationDue(skill, now))) return false;
+    return true;
+  });
 
-      if (focusSet && !focusSet.has(skill.slug)) {
-        return skill;
-      }
-
-      if ((focusSet && !canRefresh) || (!focusSet && !isUserSkillAutomationDue(skill, now))) {
-        return skill;
-      }
-
+  const eligibleSlugs = new Set(eligibleSkills.map((skill) => skill.slug));
+  const refreshedEligible = await runWithConcurrency(
+    eligibleSkills,
+    MAX_CONCURRENT_SKILL_REFRESHES,
+    async (skill) => {
       try {
         const cycle = await runTrackedUserSkillUpdate(skill, "automation");
         didChange = true;
         loopRuns.push(cycle.loopRun);
-
         return cycle.nextSkill;
       } catch (error) {
         loopRuns.push(
@@ -513,12 +537,19 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<void> 
         );
         return skill;
       }
-    })
+    }
+  );
+
+  const refreshedMap = new Map(refreshedEligible.map((skill) => [skill.slug, skill]));
+  const refreshedSkills = skills.map((skill) =>
+    eligibleSlugs.has(skill.slug) ? (refreshedMap.get(skill.slug) ?? skill) : skill
   );
 
   if (didChange || loopRuns.length > 0) {
     await saveUserSkillDocuments(refreshedSkills);
-    await Promise.all(loopRuns.map((run) => recordLoopRun(run)));
+    for (const run of loopRuns) {
+      await recordLoopRun(run);
+    }
   }
 }
 
@@ -655,7 +686,9 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
   }
 
   if (loopRuns.length > 0) {
-    await Promise.all(loopRuns.map((run) => recordLoopRun(run)));
+    for (const run of loopRuns) {
+      await recordLoopRun(run);
+    }
   }
 }
 

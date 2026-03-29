@@ -15,8 +15,8 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       {
         id: "vercel-blog",
         label: "Vercel Blog",
-        url: "https://vercel.com/blog/rss.xml",
-        kind: "rss",
+        url: "https://vercel.com/atom",
+        kind: "atom",
         tags: ["vercel", "next.js", "ai", "frontend"]
       },
       {
@@ -56,16 +56,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       {
         id: "google-search-central",
         label: "Google Search Central",
-        url: "https://developers.google.com/search/blog/rss.xml",
-        kind: "rss",
+        url: "https://developers.google.com/search/blog",
+        kind: "docs",
         tags: ["google", "search"]
       },
       {
-        id: "bing-webmaster",
-        label: "Bing Webmaster",
-        url: "https://blogs.bing.com/webmaster/rss",
+        id: "moz-blog",
+        label: "Moz Blog",
+        url: "https://moz.com/blog/feed",
         kind: "rss",
-        tags: ["bing", "search"]
+        tags: ["seo", "industry"]
       },
       {
         id: "search-engine-land",
@@ -124,8 +124,8 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       {
         id: "vercel-blog-infra",
         label: "Vercel Blog",
-        url: "https://vercel.com/blog/rss.xml",
-        kind: "rss",
+        url: "https://vercel.com/atom",
+        kind: "atom",
         tags: ["vercel", "infra"]
       },
       {
@@ -185,15 +185,15 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       {
         id: "anthropic-news",
         label: "Anthropic News",
-        url: "https://www.anthropic.com/news/rss.xml",
-        kind: "rss",
+        url: "https://www.anthropic.com/news",
+        kind: "docs",
         tags: ["agents", "llms"]
       },
       {
         id: "vercel-ai",
         label: "Vercel AI",
-        url: "https://vercel.com/blog/rss.xml",
-        kind: "rss",
+        url: "https://vercel.com/atom",
+        kind: "atom",
         tags: ["ai-sdk", "agents"]
       }
     ]
@@ -208,7 +208,29 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     accent: "signal-blue",
     status: "live",
     keywords: ["security", "threat", "auth", "abuse", "hardening"],
-    sources: []
+    sources: [
+      {
+        id: "github-advisory",
+        label: "GitHub Security Advisories",
+        url: "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm",
+        kind: "docs",
+        tags: ["security", "npm", "advisories"]
+      },
+      {
+        id: "portswigger-research",
+        label: "PortSwigger Research",
+        url: "https://portswigger.net/research/rss",
+        kind: "rss",
+        tags: ["security", "research", "web"]
+      },
+      {
+        id: "krebs-security",
+        label: "Krebs on Security",
+        url: "https://krebsonsecurity.com/feed/",
+        kind: "rss",
+        tags: ["security", "industry"]
+      }
+    ]
   },
   {
     slug: "ops",
@@ -220,7 +242,29 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     accent: "signal-gold",
     status: "live",
     keywords: ["ops", "github", "linear", "automation", "maintenance", "workflow"],
-    sources: []
+    sources: [
+      {
+        id: "github-blog",
+        label: "GitHub Blog",
+        url: "https://github.blog/feed/",
+        kind: "rss",
+        tags: ["github", "ops", "releases"]
+      },
+      {
+        id: "github-changelog",
+        label: "GitHub Changelog",
+        url: "https://github.blog/changelog/feed/",
+        kind: "rss",
+        tags: ["github", "changelog"]
+      },
+      {
+        id: "linear-changelog",
+        label: "Linear Changelog",
+        url: "https://linear.app/changelog",
+        kind: "docs",
+        tags: ["linear", "ops"]
+      }
+    ]
   }
 ];
 
