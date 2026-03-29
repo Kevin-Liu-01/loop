@@ -4,6 +4,7 @@ import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { FlowIcon, RefreshIcon } from "@/components/frontier-icons";
+import { RunLogModal } from "@/components/run-log-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
@@ -11,6 +12,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { cn } from "@/lib/cn";
 import { applySourceUpdate, streamLoopUpdate } from "@/lib/stream-loop-update";
 import type {
+  AgentReasoningStep,
   LoopRunRecord,
   LoopUpdateResult,
   LoopUpdateSourceLog,
@@ -188,14 +190,20 @@ export function SkillUpdateRunner({ slug, origin, sourceCount, latestRun }: Skil
   const [isRunning, startTransition] = useTransition();
   const [messages, setMessages] = useState<string[]>([]);
   const [sourceLogs, setSourceLogs] = useState<LoopUpdateSourceLog[]>([]);
+  const [reasoningSteps, setReasoningSteps] = useState<AgentReasoningStep[]>([]);
   const [result, setResult] = useState<LoopUpdateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const hasLiveState = messages.length > 0 || result !== null || error !== null;
 
   const visibleMessages = hasLiveState ? messages : latestRun?.messages ?? [];
   const visibleSourceLogs = hasLiveState ? sourceLogs : latestRun?.sources ?? [];
+  const visibleReasoningSteps = hasLiveState ? reasoningSteps : latestRun?.reasoningSteps ?? [];
   const visibleError = hasLiveState ? error : latestRun?.errorMessage ?? null;
+  const visibleDiffLines = hasLiveState
+    ? (result?.diffLines ?? [])
+    : latestRun?.diffLines ?? [];
   const visibleTrigger = hasLiveState
     ? "Manual"
     : latestRun
@@ -219,6 +227,7 @@ export function SkillUpdateRunner({ slug, origin, sourceCount, latestRun }: Skil
     setResult(null);
     setMessages(["Queued agent update."]);
     setSourceLogs([]);
+    setReasoningSteps([]);
 
     startTransition(async () => {
       try {
@@ -239,6 +248,9 @@ export function SkillUpdateRunner({ slug, origin, sourceCount, latestRun }: Skil
           },
           onMessage(message) {
             setMessages((prev) => [...prev, message]);
+          },
+          onReasoningStep(step) {
+            setReasoningSteps((prev) => [...prev, step]);
           },
           onComplete(completeResult, sources) {
             setResult(completeResult);
@@ -296,11 +308,21 @@ export function SkillUpdateRunner({ slug, origin, sourceCount, latestRun }: Skil
         <Panel compact>
           <PanelHead>
             <h2 className={panelTitleClass}>Run log</h2>
-            {visibleStatus === "running" ? (
-              <Badge>streaming</Badge>
-            ) : latestRun ? (
-              <Badge muted>{new Date(latestRun.finishedAt).toLocaleString()}</Badge>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {visibleStatus === "running" ? (
+                <Badge>streaming</Badge>
+              ) : latestRun ? (
+                <Badge muted>{new Date(latestRun.finishedAt).toLocaleString()}</Badge>
+              ) : null}
+              <Button
+                onClick={() => setModalOpen(true)}
+                size="sm"
+                type="button"
+                variant="soft"
+              >
+                View details
+              </Button>
+            </div>
           </PanelHead>
 
           <RunMetadataBar
@@ -354,6 +376,23 @@ export function SkillUpdateRunner({ slug, origin, sourceCount, latestRun }: Skil
       ) : latestRun === undefined || latestRun === null ? (
         <EmptyCard>No update runs yet. Trigger one above or wait for automation.</EmptyCard>
       ) : null}
+
+      <RunLogModal
+        diffLines={visibleDiffLines}
+        editorModel={visibleEditorModel}
+        error={visibleError}
+        finishedAt={visibleFinishedAt}
+        isLive={isRunning}
+        messages={visibleMessages}
+        onClose={() => setModalOpen(false)}
+        open={modalOpen}
+        reasoningSteps={visibleReasoningSteps}
+        result={result}
+        sourceLogs={visibleSourceLogs}
+        startedAt={visibleStartedAt}
+        status={visibleStatus}
+        trigger={visibleTrigger}
+      />
     </div>
   );
 }

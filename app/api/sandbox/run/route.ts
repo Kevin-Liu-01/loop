@@ -1,4 +1,4 @@
-import { stepCountIs, streamText } from "ai";
+import { convertToModelMessages, stepCountIs, streamText } from "ai";
 import { z } from "zod";
 
 import { resolveLanguageModel } from "@/lib/agents";
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: agentConfig.system,
-          messages: payload.messages,
+          messages: convertToModelMessages(payload.messages),
           tools: agentConfig.tools,
           stopWhen: stepCountIs(agentConfig.maxToolSteps)
         });
