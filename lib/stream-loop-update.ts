@@ -1,4 +1,5 @@
 import type {
+  AgentReasoningStep,
   LoopUpdateResult,
   LoopUpdateSourceLog,
   LoopUpdateStreamEvent,
@@ -9,6 +10,7 @@ export type StreamLoopCallbacks = {
   onStart: (loop: LoopUpdateTarget) => void;
   onSource: (source: LoopUpdateSourceLog) => void;
   onMessage: (message: string) => void;
+  onReasoningStep?: (step: AgentReasoningStep) => void;
   onComplete: (result: LoopUpdateResult, sources: LoopUpdateSourceLog[]) => void;
   onError: (message: string) => void;
 };
@@ -80,6 +82,9 @@ function dispatchStreamEvent(event: LoopUpdateStreamEvent, callbacks: StreamLoop
       break;
     case "analysis":
       callbacks.onMessage(event.message);
+      break;
+    case "reasoning-step":
+      callbacks.onReasoningStep?.(event.step);
       break;
     case "complete":
       callbacks.onComplete(event.result, event.sources);

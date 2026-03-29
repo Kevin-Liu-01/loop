@@ -10,6 +10,7 @@ import { getLocalSnapshotBase, readLocalSnapshotFile, writeLocalSnapshotFile } f
 import { buildImportedSkillRecord, listImportedSkills, saveImportedSkills, syncImportedSkill } from "@/lib/imports";
 import { buildLoopUpdateSourceLog, buildLoopUpdateTarget } from "@/lib/loop-updates";
 import { persistSearchIndex } from "@/lib/search";
+import { runSkillEditorAgent } from "@/lib/skill-editor-agent";
 import { fetchSignals } from "@/lib/source-signals";
 import { recordLoopRun, recordRefreshRun } from "@/lib/system-state";
 import { diffMultilineText } from "@/lib/text-diff";
@@ -22,6 +23,7 @@ import {
   saveUserSkillDocuments
 } from "@/lib/user-skills";
 import type {
+  AgentReasoningStep,
   CategoryBrief,
   CategorySlug,
   DailySignal,
@@ -38,15 +40,6 @@ const SIGNAL_SCHEMA = z.object({
   summary: z.string(),
   whatChanged: z.string(),
   experiments: z.array(z.string()).min(2).max(3)
-});
-
-const SKILL_REVISION_SCHEMA = z.object({
-  summary: z.string(),
-  whatChanged: z.string(),
-  experiments: z.array(z.string()).min(2).max(3),
-  revisedDescription: z.string().min(16).max(220),
-  revisedBody: z.string().min(40),
-  changedSections: z.array(z.string()).min(1).max(6)
 });
 
 type RefreshOptions = {
@@ -73,6 +66,7 @@ type UserSkillRefreshHooks = {
   onStart?: (loop: LoopUpdateTarget) => void;
   onSource?: (source: LoopUpdateSourceLog) => void;
   onMessage?: (message: string) => void;
+  onReasoningStep?: (step: AgentReasoningStep) => void;
 };
 
 export type UserSkillRefreshCycle = {
@@ -282,16 +276,24 @@ async function synthesizeBrief(slug: CategorySlug, title: string, items: DailySi
   }
 }
 
-export async function synthesizeSkillUpdate(skill: UserSkillDocument, items: DailySignal[]): Promise<SkillRevisionDraft> {
+type SynthesizeResult = SkillRevisionDraft & {
+  reasoningSteps: AgentReasoningStep[];
+};
+
+export async function synthesizeSkillUpdate(
+  skill: UserSkillDocument,
+  items: DailySignal[],
+  sourceLogs: LoopUpdateSourceLog[] = [],
+  onReasoningStep?: (step: AgentReasoningStep) => void
+): Promise<SynthesizeResult> {
   const generatedAt = new Date().toISOString();
-  const topItems = items.slice(0, 4);
   const fallbackUpdate = fallbackSkillUpdate(skill, items);
   const fallbackEdit = applyFallbackSkillBodyEdit(skill, {
     ...fallbackUpdate,
     generatedAt
   });
   const fallbackBodyChanged = fallbackEdit.nextBody.trim() !== skill.body.trim();
-  const fallbackDraft: SkillRevisionDraft = {
+  const fallbackDraft: SynthesizeResult = {
     update: {
       ...fallbackUpdate,
       generatedAt,
@@ -303,7 +305,8 @@ export async function synthesizeSkillUpdate(skill: UserSkillDocument, items: Dai
     nextDescription: fallbackUpdate.summary,
     bodyChanged: fallbackBodyChanged,
     changedSections: fallbackEdit.changedSections,
-    editorModel: "heuristic-fallback"
+    editorModel: "heuristic-fallback",
+    reasoningSteps: []
   };
 
   if (items.length === 0 || !process.env.OPENAI_API_KEY) {
@@ -311,58 +314,14 @@ export async function synthesizeSkillUpdate(skill: UserSkillDocument, items: Dai
   }
 
   try {
-    const prompt = [
-      `You are operating an autonomous skill editor for a user-authored skill titled "${skill.title}".`,
-      "Your job is to inspect the latest external signals and rewrite the skill body where necessary.",
-      "Preserve the intent and existing structure unless the sources justify a concrete edit.",
-      "Do not add fake claims or fake sources.",
-      "Do not include update-engine, recent-log, or observability sections in the rewritten body. The product adds those automatically.",
-      "Keep the writing terse, operational, and copy-pasteable for agents.",
-      `Current skill description: ${skill.description}`,
-      `Automation instruction: ${skill.automation.prompt}`,
-      "Current skill body:",
-      skill.body,
-      "",
-      "Latest signals:",
-      ...items.map(
-        (item, index) =>
-          `${index + 1}. ${item.title} | ${item.source} | ${item.publishedAt} | ${item.summary || "No summary"}`
-      )
-    ].join("\n");
-
-    const result = await generateObject({
-      model: openai(DEFAULT_SKILL_EDITOR_MODEL),
-      schema: SKILL_REVISION_SCHEMA,
-      prompt
-    });
-
-    const normalizedBody = result.object.revisedBody.trim();
-    const normalizedDescription = result.object.revisedDescription.trim();
-    const normalizedSections = Array.from(
-      new Set(result.object.changedSections.map((section) => section.trim()).filter(Boolean))
-    ).slice(0, 6);
-    const bodyChanged = normalizedBody !== skill.body.trim();
-    const nextBody = bodyChanged ? normalizedBody : fallbackEdit.nextBody;
-    const changedSections = bodyChanged ? normalizedSections : fallbackEdit.changedSections;
-    const finalBodyChanged = nextBody.trim() !== skill.body.trim();
-
-    return {
-      update: {
-        generatedAt,
-        summary: result.object.summary,
-        whatChanged: result.object.whatChanged,
-        experiments: result.object.experiments,
-        items: topItems,
-        bodyChanged: finalBodyChanged,
-        changedSections,
-        editorModel: DEFAULT_SKILL_EDITOR_MODEL
-      },
-      nextBody,
-      nextDescription: normalizedDescription,
-      bodyChanged: finalBodyChanged,
-      changedSections,
-      editorModel: DEFAULT_SKILL_EDITOR_MODEL
-    };
+    const result = await runSkillEditorAgent(
+      skill,
+      items,
+      sourceLogs,
+      DEFAULT_SKILL_EDITOR_MODEL,
+      onReasoningStep
+    );
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown AI error";
     console.warn(`[refresh] synthesizeSkillUpdate failed for "${skill.title}": ${message}`);
@@ -413,7 +372,7 @@ export async function runTrackedUserSkillUpdate(
   hooks.onMessage?.(messages[messages.length - 1] ?? "");
 
   const flattened = sortSignals(sourceLogs.flatMap((entry) => entry.items));
-  const draft = await synthesizeSkillUpdate(skill, flattened);
+  const draft = await synthesizeSkillUpdate(skill, flattened, sourceLogs, hooks.onReasoningStep);
   const nextUpdatedAt = draft.update.generatedAt;
   const nextSkill = createNextUserSkillVersion(
     skill,
@@ -455,7 +414,8 @@ export async function runTrackedUserSkillUpdate(
     items: draft.update.items.slice(0, 4),
     changedSections: draft.changedSections,
     bodyChanged: draft.bodyChanged,
-    editorModel: draft.editorModel
+    editorModel: draft.editorModel,
+    reasoningSteps: draft.reasoningSteps
   };
 
   messages.push(
@@ -489,7 +449,8 @@ export async function runTrackedUserSkillUpdate(
       ...source,
       items: source.items.slice(0, 3)
     })),
-    diffLines: diffLines.slice(0, 120)
+    diffLines: diffLines.slice(0, 120),
+    reasoningSteps: draft.reasoningSteps.slice(0, 20)
   };
 
   return {

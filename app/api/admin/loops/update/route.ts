@@ -87,6 +87,12 @@ async function runUserLoopUpdate(
         type: "analysis",
         message
       });
+    },
+    onReasoningStep(step) {
+      sendEvent(controller, encoder, {
+        type: "reasoning-step",
+        step
+      });
     }
   });
 
