@@ -20,13 +20,14 @@ import { LinkButton } from "@/components/ui/link-button";
 import { PageShell } from "@/components/ui/page-shell";
 import { Panel } from "@/components/ui/panel";
 import { SimpleList, SimpleListBody, SimpleListItem } from "@/components/ui/simple-list";
-import { formatAutomationSchedule, formatRelativeDate } from "@/lib/format";
+import { formatRelativeDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { inlineSectionLabel, pageInsetPadX } from "@/lib/ui-layout";
 import { diffMultilineText } from "@/lib/text-diff";
 import { buildUpdateDigest } from "@/lib/update-digest";
+import { SkillIcon } from "@/components/ui/skill-icon";
 import type { SkillUsageSummary } from "@/lib/usage";
-import type { CategoryBrief, LoopRunRecord, SkillRecord } from "@/lib/types";
+import type { AutomationSummary, CategoryBrief, LoopRunRecord, SkillRecord } from "@/lib/types";
 
 const sectionH2 = "m-0 font-serif text-xl font-medium tracking-[-0.02em] text-ink";
 const promptSurface =
@@ -42,29 +43,27 @@ type SkillDetailPageProps = {
   purchased?: boolean;
 };
 
-function buildAttachedAutomations(skill: SkillRecord) {
-  if (skill.origin === "user" && skill.automation) {
-    return [
-      {
-        id: `built-in:${skill.slug}`,
-        name: skill.automation.enabled ? `${skill.title} refresh` : "Manual refresh",
-        schedule: skill.automation.enabled
-          ? `${skill.automation.cadence} ${skill.automation.status}`
-          : "manual"
-      },
-      ...skill.automations.map((a) => ({
-        id: a.id,
-        name: a.name,
-        schedule: formatAutomationSchedule(a.schedule)
-      }))
-    ];
-  }
+function buildAttachedAutomations(skill: SkillRecord): AutomationSummary[] {
+  const builtIn: AutomationSummary[] =
+    skill.origin === "user" && skill.automation
+      ? [
+          {
+            id: `built-in:${skill.slug}`,
+            name: skill.automation.enabled ? `${skill.title} refresh` : "Manual refresh",
+            prompt: skill.automation.prompt,
+            schedule: skill.automation.enabled
+              ? `${skill.automation.cadence} ${skill.automation.status}`
+              : "manual",
+            status: skill.automation.status === "paused" ? "PAUSED" : "ACTIVE",
+            path: "",
+            cwd: [],
+            matchedSkillSlugs: [skill.slug],
+            matchedCategorySlugs: []
+          }
+        ]
+      : [];
 
-  return skill.automations.map((a) => ({
-    id: a.id,
-    name: a.name,
-    schedule: formatAutomationSchedule(a.schedule)
-  }));
+  return [...builtIn, ...skill.automations];
 }
 
 function formatPrice(amount: number, currency: string): string {
@@ -141,6 +140,7 @@ export function SkillDetailPage({
             </div>
 
             <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <SkillIcon className="rounded-lg" iconUrl={skill.iconUrl} size={36} slug={skill.slug} />
               <h1 className="m-0 font-serif text-2xl font-medium tracking-[-0.03em] text-ink wrap-break-word">
                 {skill.title}
               </h1>

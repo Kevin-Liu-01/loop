@@ -1,5 +1,6 @@
 import { DiffViewer } from "@/components/diff-viewer";
 import { PulseIcon, RefreshIcon, SearchIcon, SparkIcon } from "@/components/frontier-icons";
+import { SidebarAutomationsPanel } from "@/components/sidebar-automations-panel";
 import { SkillObservabilityPanel } from "@/components/observability-panels";
 import { UseSkillPanel } from "@/components/use-skill-panel";
 import { VersionTimeline } from "@/components/version-timeline";
@@ -8,18 +9,12 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { SimpleList, SimpleListBody, SimpleListIcon, SimpleListItem, SimpleListRow } from "@/components/ui/simple-list";
 import { cn } from "@/lib/cn";
 import { formatRelativeDate } from "@/lib/format";
-import type { AgentDocs, DiffLine, LoopRunRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
+import type { AgentDocs, AutomationSummary, DiffLine, LoopRunRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
 import type { SkillUsageSummary } from "@/lib/usage";
 
 const sidebarTitle = "m-0 text-sm font-semibold tracking-tight text-ink";
 const metaLabel = "text-[0.65rem] font-medium uppercase tracking-[0.08em] text-ink-soft";
 const metaValue = "text-sm font-semibold tracking-[-0.03em]";
-
-type AttachedAutomation = {
-  id: string;
-  name: string;
-  schedule: string;
-};
 
 type SkillDetailSidebarProps = {
   slug: string;
@@ -34,7 +29,7 @@ type SkillDetailSidebarProps = {
   diffLines: DiffLine[];
   rawDiffLength: number;
   updates?: SkillUpdateEntry[];
-  automations: AttachedAutomation[];
+  automations: AutomationSummary[];
   usage: SkillUsageSummary;
 };
 
@@ -152,26 +147,7 @@ export function SkillDetailSidebar({
       ) : null}
 
       {automations.length > 0 ? (
-        <Panel compact square>
-          <div className="flex items-center gap-2">
-            <h3 className={sidebarTitle}>Automations</h3>
-            <Badge>{automations.length}</Badge>
-          </div>
-          <SimpleList tight>
-            {automations.map((auto) => (
-              <SimpleListItem className="grid-cols-1" key={auto.id}>
-                <SimpleListBody>
-                  <SimpleListRow>
-                    <strong className="text-ink text-sm">{auto.name}</strong>
-                    <span className="text-xs text-ink-soft">
-                      {auto.schedule}
-                    </span>
-                  </SimpleListRow>
-                </SimpleListBody>
-              </SimpleListItem>
-            ))}
-          </SimpleList>
-        </Panel>
+        <SidebarAutomationsPanel automations={automations} />
       ) : null}
     </aside>
   );

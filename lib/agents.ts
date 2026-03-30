@@ -184,9 +184,17 @@ export function buildAgentContext(snapshot: LoopSnapshot, input: AgentRunInput):
 
 const GATEWAY_EDITOR_MODEL = process.env.LOOP_MODEL ?? "openai/gpt-5-mini";
 
+let _gatewayKeyWarnedOnce = false;
+
 export function getGatewayEditorModel(): LanguageModel | null {
   const apiKey = process.env.AI_GATEWAY_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    if (!_gatewayKeyWarnedOnce) {
+      console.warn("[agents] AI_GATEWAY_API_KEY is not set — skill updates will use heuristic fallback (no AI)");
+      _gatewayKeyWarnedOnce = true;
+    }
+    return null;
+  }
   const provider = createGateway({ apiKey });
   return provider(GATEWAY_EDITOR_MODEL);
 }

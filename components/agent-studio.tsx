@@ -9,11 +9,11 @@ import { ChatMessageBubble } from "@/components/chat-message-bubble";
 import { ConversationHistory } from "@/components/conversation-history";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { FieldGroup, FieldLabel, textFieldArea, textFieldBase, textFieldSelect } from "@/components/ui/field";
-import { IconRefView } from "@/components/ui/icon-ref";
+
 import { Panel } from "@/components/ui/panel";
 import { messageToTextVerbose } from "@/lib/chat";
 import { cn } from "@/lib/cn";
-import { getMcpIcon } from "@/lib/skill-icons";
+import { McpIcon } from "@/components/ui/skill-icon";
 import type { AgentProviderPreset, ImportedMcpDocument, SkillRecord } from "@/lib/types";
 
 type AgentStudioProps = {
@@ -379,7 +379,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                       type="checkbox"
                     />
                     <span className="flex min-w-0 items-center gap-3">
-                      <IconRefView icon={getMcpIcon(mcp.name, mcp.homepageUrl)} size={24} />
+                      <McpIcon homepageUrl={mcp.homepageUrl} iconUrl={mcp.iconUrl} name={mcp.name} size={24} />
                       <span className="grid min-w-0 gap-1">
                         {mcp.name}
                         <small className="text-xs text-ink-soft">
@@ -501,7 +501,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
             <div className="grid gap-3">
               {mcps.slice(0, 8).map((mcp) => (
                 <div className="flex items-start gap-3 rounded-2xl border border-line p-4" key={mcp.id}>
-                  <IconRefView icon={getMcpIcon(mcp.name, mcp.homepageUrl)} size={28} className="mt-0.5" />
+                  <McpIcon className="mt-0.5" homepageUrl={mcp.homepageUrl} iconUrl={mcp.iconUrl} name={mcp.name} size={28} />
                   <div className="grid min-w-0 gap-1">
                     <strong className="text-base font-semibold text-ink">{mcp.name}</strong>
                     <span className="text-sm text-ink-soft">

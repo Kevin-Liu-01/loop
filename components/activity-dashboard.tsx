@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 import { ActivityUsageToolbar } from "@/components/activity-usage-toolbar";
 import { AutomationCalendar } from "@/components/automation-calendar";
+import { AutomationEditModal } from "@/components/automation-edit-modal";
 import { AreaChart } from "@/components/charts/area-chart";
 import { StatTile } from "@/components/charts/stat-tile";
 import { useUsageComparisonMode } from "@/components/usage-comparison-context";
@@ -33,6 +36,7 @@ type ActivitySidebarViewProps = {
   areaData: { label: string; value: number; secondary?: number }[];
   hasEvents: boolean;
   activeAutomations: AutomationSummary[];
+  onEditAutomation?: (automation: AutomationSummary) => void;
 };
 
 function truncateRouteLabel(route: string, max = 36): string {
@@ -53,6 +57,7 @@ function ActivitySidebarView({
   areaData,
   hasEvents,
   activeAutomations,
+  onEditAutomation,
 }: ActivitySidebarViewProps) {
   const peak = peakVolumeHour(overview.timeSeries);
   const totalRolling = sumBucketTotals(overview.timeSeries);
@@ -79,7 +84,7 @@ function ActivitySidebarView({
               {activeAutomations.length} active
             </span>
           </div>
-          <AutomationCalendar automations={automations} variant="sidebar" />
+          <AutomationCalendar automations={automations} onEditAutomation={onEditAutomation} variant="sidebar" />
         </section>
       ) : null}
 
@@ -263,6 +268,7 @@ export function ActivityDashboard({
   const mode = useUsageComparisonMode();
   const tileValues = usageStatTileValues(overview, mode);
   const deltas = overview.comparisons[mode];
+  const [editTarget, setEditTarget] = useState<AutomationSummary | null>(null);
 
   const viewsSpark = overview.timeSeries.map((b) => b.views);
   const interactionsSpark = overview.timeSeries.map((b) => b.interactions);
@@ -284,19 +290,29 @@ export function ActivityDashboard({
 
   if (isSidebar) {
     return (
-      <ActivitySidebarView
-        activeAutomations={activeAutomations}
-        apiSpark={apiSpark}
-        areaData={areaData}
-        automations={automations}
-        deltas={deltas}
-        hasEvents={hasEvents}
-        interactionsSpark={interactionsSpark}
-        latencySpark={latencySpark}
-        overview={overview}
-        tileValues={tileValues}
-        viewsSpark={viewsSpark}
-      />
+      <>
+        <ActivitySidebarView
+          activeAutomations={activeAutomations}
+          apiSpark={apiSpark}
+          areaData={areaData}
+          automations={automations}
+          deltas={deltas}
+          hasEvents={hasEvents}
+          interactionsSpark={interactionsSpark}
+          latencySpark={latencySpark}
+          onEditAutomation={setEditTarget}
+          overview={overview}
+          tileValues={tileValues}
+          viewsSpark={viewsSpark}
+        />
+        {editTarget && (
+          <AutomationEditModal
+            automation={editTarget}
+            onClose={() => setEditTarget(null)}
+            open
+          />
+        )}
+      </>
     );
   }
 
@@ -388,10 +404,18 @@ export function ActivityDashboard({
                 {activeAutomations.length} active
               </span>
             </div>
-            <AutomationCalendar automations={automations} />
+            <AutomationCalendar automations={automations} onEditAutomation={setEditTarget} />
           </article>
         ) : null}
       </div>
+
+      {editTarget && (
+        <AutomationEditModal
+          automation={editTarget}
+          onClose={() => setEditTarget(null)}
+          open
+        />
+      )}
     </Panel>
   );
 }

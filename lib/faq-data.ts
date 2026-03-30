@@ -89,7 +89,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "How does the refresh engine work?",
         answer:
-          "The refresh pipeline loads tracked skills, decides which are due for a refresh, fetches signals from each skill's source watchlist, synthesizes a revision draft, rewrites the skill body if sources justify it, saves a new version, persists run logs and diffs, and rebuilds the snapshot and search index.",
+          "The refresh pipeline loads tracked skills from Supabase, decides which are due for a refresh based on their automation config (cadence, lastRunAt), fetches signals from each skill's source watchlist, synthesizes a revision draft via the configured AI model, rewrites the skill body if sources justify it, saves a new version, and persists run logs and diffs — all to Supabase.",
       },
       {
         question: "What are sources?",
@@ -125,17 +125,27 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What are automations?",
         answer:
-          "Automations run an agent on a schedule against a selected skill. Each automation stores its prompt, cadence (RRULE schedule), and status. Loop triggers runs at the scheduled time and logs outcomes alongside skill activity.",
+          "Automations run an agent on a schedule against a selected skill. Each skill's automation config — prompt, cadence, and status — is stored directly on the skill in Supabase. Loop's daily cron checks which skills are due, fetches signals from their sources, and runs the agent to draft a revision.",
       },
       {
         question: "How do automation schedules work?",
         answer:
-          "Schedules use RRULE semantics — the same recurrence rule format used by calendar apps. You pick a cadence (daily, weekly, etc.) and Loop converts it to an RRULE. Times follow the server's timezone, so confirm your deployment TZ if something fires at an unexpected hour.",
+          "You pick a cadence (daily, weekly, or manual) when configuring a skill's automation. Loop converts this to an RRULE schedule internally. The monthly calendar on the Automations settings page shows projected run dates. Times follow the server's timezone, so confirm your deployment TZ if something fires at an unexpected hour.",
+      },
+      {
+        question: "Where are automations stored?",
+        answer:
+          "Automations are stored as a JSONB column on the skill in Supabase — not in local files. This means they work identically in local development and on production. The automation config includes enabled state, cadence, status, prompt, and last run timestamp.",
+      },
+      {
+        question: "Can I edit automations from different places?",
+        answer:
+          "Yes. You can edit an automation from the Settings → Automations page, from the calendar day modal, from the skill detail sidebar, and from the activity dashboard. All surfaces open the same edit modal and save to the same Supabase column.",
       },
       {
         question: "Can I pause an automation?",
         answer:
-          "Yes. Paused automations keep their configuration but won't dispatch. Use pause when iterating on prompts or when an external API quota is tight. Deleting an automation is permanent — export or note your prompts before removal.",
+          "Yes. Paused automations keep their configuration but won't dispatch. Use pause when iterating on prompts or when an external API quota is tight. Disabling an automation sets enabled to false — you can re-enable it any time without losing your configuration.",
       },
       {
         question: "Do automations require a paid plan?",
@@ -145,7 +155,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Can I change a skill's body without recreating the automation?",
         answer:
-          "Yes. Each automation binds to one skill. Changing the skill's body or agent prompt affects the next run automatically — no need to recreate the automation unless you want a different skill or schedule entirely.",
+          "Yes. Each automation is part of its skill. Changing the skill's body, sources, or agent prompt affects the next run automatically — no need to recreate the automation unless you want a different schedule entirely.",
       },
     ],
   },
@@ -290,7 +300,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Where is my data stored?",
         answer:
-          "Loop uses Supabase (Postgres) for structured data and Vercel Blob for generated snapshots when configured. Locally, generated files are stored in content/generated/. The app is file-backed by default and Blob-backed when BLOB_READ_WRITE_TOKEN is configured.",
+          "Loop uses Supabase (Postgres) as the single source of truth for all data: skills, automation configs, sources, versions, usage events, and run logs. There are no local filesystem stores in production. Everything is read from and written to Supabase.",
       },
       {
         question: "How is authentication handled?",
@@ -316,12 +326,12 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What tech stack does Loop use?",
         answer:
-          "Loop is built with Next.js 16, React 19, TypeScript, and Tailwind CSS v4. It uses Clerk for authentication, Supabase for persistence, Stripe for billing and payouts, Vercel for hosting (Blob, Sandbox, Analytics, Speed Insights), and the Vercel AI SDK for agent interactions.",
+          "Loop is built with Next.js 16, React 19, TypeScript, and Tailwind CSS v4. It uses Clerk for authentication, Supabase (Postgres) for all persistence, Stripe for billing and payouts, Vercel for hosting (Sandbox, Analytics, Speed Insights), and the Vercel AI SDK for agent interactions.",
       },
       {
         question: "Can I self-host Loop?",
         answer:
-          "Loop is designed for Vercel but runs locally without Vercel services. For a deploy you need to set NEXT_PUBLIC_SITE_URL, CRON_SECRET, optionally BLOB_READ_WRITE_TOKEN for shared persistence, AI provider keys for refresh and agent runs, and Stripe keys if billing is enabled.",
+          "Loop is designed for Vercel but runs locally without Vercel services. For a deploy you need Supabase credentials, Clerk API keys, NEXT_PUBLIC_SITE_URL, CRON_SECRET, AI provider keys for refresh and agent runs, and Stripe keys if billing is enabled.",
       },
       {
         question: "What AI models power the refresh engine?",
@@ -342,6 +352,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
         question: "What is the daily brief?",
         answer:
           "Daily briefs are generated summaries of skill activity and refresh results. They aggregate what changed across your tracked skills and provide a concise digest of recent updates.",
+      },
+      {
+        question: "Are there any local filesystem dependencies?",
+        answer:
+          "No. In production, Loop reads and writes exclusively to Supabase. The only filesystem reads are during local development, where SKILL.md files from the repo and ~/.codex/skills are synced to the database on refresh. Automations, sources, skill content, and all configuration live in Supabase.",
       },
     ],
   },
