@@ -3,12 +3,13 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "next-themes";
 
 import { CommandPalette } from "@/components/command-palette";
 import { NewSkillModal } from "@/components/new-skill-modal";
+import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
 import "@/app/globals.css";
 import { getLoopSnapshot } from "@/lib/refresh";
-import { THEME_SCRIPT } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Loop",
@@ -62,12 +63,18 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body suppressHydrationWarning>
-          <script
-            dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }}
-          />
-          <CommandPalette items={paletteItems} />
-          <NewSkillModal categories={snapshotCategories} />
-          {children}
+          <ThemeProvider
+            attribute="data-theme"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TooltipProvider delayDuration={300}>
+              <CommandPalette items={paletteItems} />
+              <NewSkillModal categories={snapshotCategories} />
+              {children}
+            </TooltipProvider>
+          </ThemeProvider>
           <Analytics />
           <SpeedInsights />
         </body>
