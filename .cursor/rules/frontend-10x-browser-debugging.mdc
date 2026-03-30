@@ -19,3 +19,13 @@ Operational rules:
 - `chrome-devtools-live` requires remote debugging enabled at `chrome://inspect/#remote-debugging` and a user approval prompt.
 - `chrome-devtools-port` assumes Chrome was launched with a remote debug port, for example via `/Users/kevinliu/.codex/bin/open-chrome-debug.sh http://localhost:3000`.
 - Playwright is fallback, not the first move, for manual browser debugging.
+
+Cleanup rules:
+
+MCP processes (chrome-devtools-mcp, playwright-mcp) and Playwright-managed Chrome instances accumulate across sessions and waste memory. When the user asks to clean up, shut down, or wrap up:
+
+- Kill stale MCP processes: `pkill -f "chrome-devtools-mcp"` and `pkill -f "playwright-mcp"`
+- Kill Playwright-managed Chrome: `pkill -f "ms-playwright/mcp-chrome"`
+- Verify nothing remains: `ps aux | grep -iE "chrome-devtools-mcp|playwright-mcp|ms-playwright" | grep -v grep | wc -l`
+- Never kill the user's normal Chrome browser or Cursor processes.
+- Report what was cleaned up and confirm zero remaining.

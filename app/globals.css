@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+/* ================================================================
+   Design tokens — light mode defaults
+   ================================================================ */
+
 @theme {
   --font-sans: "Neue Montreal", "Helvetica Neue", "Avenir Next", Arial, sans-serif;
   --font-serif: "Signifier", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace;
 
   --color-paper: #fafafa;
-  --color-paper-2: #f4f4f5;
+  --color-paper-2: #f3f3f3;
   --color-paper-3: #ffffff;
-  --color-ink: #09090b;
-  --color-ink-soft: #71717a;
-  --color-ink-faint: #a1a1aa;
-  --color-line: #e4e4e7;
-  --color-line-strong: #d4d4d8;
-  --color-accent: #18181b;
-  --color-accent-hover: #27272a;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #636363;
+  --color-ink-faint: #a0a0a0;
+  --color-line: #e2e2e2;
+  --color-line-strong: #d0d0d0;
+  --color-accent: #e8650a;
+  --color-accent-hover: #ff7a1a;
   --color-danger: #b91c1c;
+  --color-glow: #e8650a;
 
   --breakpoint-sm: 640px;
   --breakpoint-md: 720px;
   --breakpoint-lg: 1100px;
 }
+
+/* ================================================================
+   Explicit token overrides — outside @layer so they always win.
+   The inline <script> in layout.tsx sets data-theme before first
+   paint, so one of these two selectors always matches.
+   ================================================================ */
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --color-paper: #fafafa;
+  --color-paper-2: #f3f3f3;
+  --color-paper-3: #ffffff;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #636363;
+  --color-ink-faint: #a0a0a0;
+  --color-line: #e2e2e2;
+  --color-line-strong: #d0d0d0;
+  --color-accent: #e8650a;
+  --color-accent-hover: #ff7a1a;
+  --color-danger: #b91c1c;
+  --color-glow: #e8650a;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-paper: #0a0a0a;
+  --color-paper-2: #141414;
+  --color-paper-3: #1a1a1a;
+  --color-ink: #e8e8e8;
+  --color-ink-soft: #a0a0a0;
+  --color-ink-faint: #525252;
+  --color-line: #232323;
+  --color-line-strong: #303030;
+  --color-accent: #e8650a;
+  --color-accent-hover: #ff7a1a;
+  --color-danger: #ef4444;
+  --color-glow: #e8650a;
+}
+
+/* ================================================================
+   Base resets
+   ================================================================ */
 
 * {
   @apply box-border;
@@ -42,9 +91,55 @@ body {
   @apply m-0 min-h-screen antialiased;
   font-family: var(--font-sans);
   color: var(--color-ink);
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.94), rgba(250, 250, 250, 0.98) 38%, #fafafa 100%);
+  background: var(--color-paper);
   text-rendering: optimizeLegibility;
+  isolation: isolate;
 }
+
+/* Subtle top glow + wash — adapts to theme via custom properties */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232, 101, 10, 0.04), transparent 70%),
+    radial-gradient(circle at top, var(--color-paper-3), var(--color-paper-2) 40%, var(--color-paper) 100%);
+}
+
+html[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232, 101, 10, 0.04), transparent 70%),
+    radial-gradient(circle at top, var(--color-paper-3), var(--color-paper-2) 40%, var(--color-paper) 100%);
+}
+
+html[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232, 101, 10, 0.06), transparent 70%);
+}
+
+/* Noise dither overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+html[data-theme="dark"] body::after {
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+}
+
+/* ================================================================
+   Typography
+   ================================================================ */
 
 h1,
 h2,
@@ -55,8 +150,12 @@ h3 {
 }
 
 ::selection {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(232, 101, 10, 0.16);
   color: var(--color-ink);
+}
+
+html[data-theme="dark"] ::selection {
+  background: rgba(232, 101, 10, 0.28);
 }
 
 a {
@@ -76,7 +175,9 @@ svg {
   @apply block;
 }
 
-/* --- Markdown shell (react-markdown output) --- */
+/* ================================================================
+   Markdown shell (react-markdown output)
+   ================================================================ */
 
 .markdown-shell {
   @apply grid gap-4;
@@ -108,7 +209,7 @@ svg {
 .markdown-shell code {
   @apply rounded-none border px-1.5 py-0.5;
   border-color: var(--color-line);
-  background: #f4f4f5;
+  background: var(--color-paper-2);
   color: var(--color-ink);
   font-family: var(--font-mono);
 }
@@ -127,7 +228,9 @@ svg {
   position: relative;
 }
 
-/* --- Diff lines (dynamic template classes) --- */
+/* ================================================================
+   Diff lines (dynamic template classes)
+   ================================================================ */
 
 .loop-diff-shell {
   @apply grid gap-0 overflow-auto rounded-2xl border p-4;
@@ -153,26 +256,36 @@ svg {
 }
 
 .loop-diff-line--added {
-  background: #ecfdf5;
+  background: rgba(232, 101, 10, 0.06);
+}
+
+html[data-theme="dark"] .loop-diff-line--added {
+  background: rgba(232, 101, 10, 0.1);
 }
 
 .loop-diff-line--removed {
-  background: #fff1f2;
+  background: rgba(10, 10, 10, 0.04);
+}
+
+html[data-theme="dark"] .loop-diff-line--removed {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .loop-diff-line--context {
   background: transparent;
 }
 
-/* --- Skeleton loading --- */
+/* ================================================================
+   Skeleton loading
+   ================================================================ */
 
 .skeleton {
   @apply relative overflow-hidden rounded-2xl;
   background: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0.02) 0%,
-    rgba(0, 0, 0, 0.05) 35%,
-    rgba(0, 0, 0, 0.02) 70%
+    rgba(128, 128, 128, 0.04) 0%,
+    rgba(128, 128, 128, 0.08) 35%,
+    rgba(128, 128, 128, 0.04) 70%
   );
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
@@ -187,11 +300,13 @@ svg {
   min-height: 240px;
 }
 
-/* --- Signal core scene (3D visualization) --- */
+/* ================================================================
+   Signal core scene (3D visualization)
+   ================================================================ */
 
 .signal-scene {
   @apply relative min-h-[520px] overflow-hidden rounded-2xl;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 250, 0.85));
+  background: linear-gradient(180deg, var(--color-paper-3), var(--color-paper));
 }
 
 .signal-scene__canvas,
@@ -252,7 +367,7 @@ svg {
   inset: 0;
   border: 1px solid var(--color-line);
   clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--color-paper-3) 80%, transparent);
 }
 
 .signal-scene__core span:nth-child(1) { transform: translateZ(0); }
@@ -262,7 +377,7 @@ svg {
 .signal-scene__node {
   @apply absolute grid min-w-[148px] gap-1.5 overflow-hidden rounded-2xl border p-4;
   border-color: var(--color-line);
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--color-paper-3) 80%, transparent);
 }
 
 .signal-scene__node strong {
@@ -293,10 +408,12 @@ svg {
   transform: translateY(-50%) translateZ(56px);
 }
 
-/* --- Chat styles --- */
+/* ================================================================
+   Chat styles
+   ================================================================ */
 
 .chat-transcript {
-  @apply grid min-h-[240px] max-h-[360px] gap-3 overflow-auto;
+  @apply grid min-h-[240px] max-h-[420px] gap-3 overflow-auto;
 }
 
 .chat-message {
@@ -315,7 +432,114 @@ svg {
   color: white;
 }
 
-/* --- Keyframes --- */
+/* Markdown inside assistant chat bubbles — compact variant of .markdown-shell */
+.chat-markdown {
+  @apply grid gap-2.5;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3 {
+  @apply mt-3 mb-1 text-sm font-semibold tracking-tight;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+}
+
+.chat-markdown p {
+  @apply m-0;
+  color: var(--color-ink-soft);
+}
+
+.chat-markdown strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.chat-markdown a {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-markdown a:hover {
+  color: var(--color-accent-hover);
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  @apply my-1 ml-4;
+  color: var(--color-ink-soft);
+}
+
+.chat-markdown li {
+  @apply mb-1;
+}
+
+.chat-markdown li::marker {
+  color: var(--color-ink-faint);
+}
+
+.chat-markdown code {
+  @apply rounded-sm border px-1 py-0.5 text-[0.8em];
+  border-color: var(--color-line);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+}
+
+.chat-markdown pre {
+  @apply my-1 overflow-auto rounded-xl p-3;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper-2);
+}
+
+.chat-markdown pre code {
+  @apply border-0 bg-transparent p-0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.chat-markdown blockquote {
+  @apply my-2 border-l-2 pl-3;
+  border-color: var(--color-line-strong);
+  color: var(--color-ink-faint);
+}
+
+.chat-markdown hr {
+  @apply my-3 border-t;
+  border-color: var(--color-line);
+}
+
+.chat-markdown table {
+  @apply my-2 w-full text-left text-sm;
+  border-collapse: collapse;
+}
+
+.chat-markdown th,
+.chat-markdown td {
+  @apply border-b px-2 py-1.5;
+  border-color: var(--color-line);
+}
+
+.chat-markdown th {
+  @apply font-semibold;
+  color: var(--color-ink);
+}
+
+/* ================================================================
+   Keyframes
+   ================================================================ */
 
 @keyframes frontierPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -325,4 +549,72 @@ svg {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ================================================================
+   Dither overlay utility
+   ================================================================ */
+
+.dither-overlay {
+  position: relative;
+  isolation: isolate;
+}
+
+.dither-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+html[data-theme="dark"] .dither-overlay::after {
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+}
+
+.dither-gradient-orange {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(232, 101, 10, 0.08) 0%,
+      rgba(232, 101, 10, 0.02) 40%,
+      transparent 70%
+    );
+}
+
+.dither-gradient-orange::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.32;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* ================================================================
+   Orange glow accent
+   ================================================================ */
+
+.glow-orange {
+  box-shadow:
+    0 0 0 1px rgba(232, 101, 10, 0.06),
+    0 8px 40px -12px rgba(232, 101, 10, 0.12);
+}
+
+.glow-orange-strong {
+  box-shadow:
+    0 0 0 1px rgba(232, 101, 10, 0.1),
+    0 12px 60px -10px rgba(232, 101, 10, 0.2),
+    0 0 80px -20px rgba(232, 101, 10, 0.15);
 }
