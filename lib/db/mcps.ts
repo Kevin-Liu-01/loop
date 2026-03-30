@@ -20,6 +20,7 @@ type McpRow = {
   version_label: string;
   created_at: string;
   updated_at: string;
+  icon_url: string | null;
 };
 
 function rowToMcpDocument(row: McpRow, versions?: ImportedMcpVersion[]): ImportedMcpDocument {
@@ -41,7 +42,8 @@ function rowToMcpDocument(row: McpRow, versions?: ImportedMcpVersion[]): Importe
     updatedAt: row.updated_at,
     version: row.version,
     versionLabel: row.version_label,
-    versions: versions ?? []
+    versions: versions ?? [],
+    iconUrl: row.icon_url ?? undefined
   };
 }
 
@@ -61,7 +63,8 @@ function mcpToRow(mcp: ImportedMcpDocument): Record<string, unknown> {
     tags: mcp.tags,
     raw: mcp.raw,
     version: mcp.version,
-    version_label: mcp.versionLabel
+    version_label: mcp.versionLabel,
+    icon_url: mcp.iconUrl ?? null
   };
 }
 

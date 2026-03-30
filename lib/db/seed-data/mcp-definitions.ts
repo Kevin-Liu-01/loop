@@ -75,6 +75,35 @@ function stdio(
 }
 
 // ---------------------------------------------------------------------------
+// uvx helper — for Python-based MCP servers run via uvx
+// ---------------------------------------------------------------------------
+
+function uvx(
+  name: string,
+  description: string,
+  pkg: string,
+  args: string[],
+  opts: {
+    manifestUrl: string;
+    homepageUrl?: string;
+    envKeys?: string[];
+    tags: string[];
+  }
+): SeedMcp {
+  return {
+    name,
+    description,
+    manifestUrl: opts.manifestUrl,
+    homepageUrl: opts.homepageUrl,
+    transport: "stdio",
+    command: "uvx",
+    args: [`${pkg}@latest`, ...args],
+    envKeys: opts.envKeys ?? [],
+    tags: opts.tags,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // http helper — for remote/hosted MCP servers
 // ---------------------------------------------------------------------------
 
@@ -108,6 +137,17 @@ function http(
 // ===========================================================================
 
 const officialReference: SeedMcp[] = [
+  stdio(
+    "Everything",
+    "Reference and test server demonstrating all MCP features: prompts, resources, tools, sampling, and logging.",
+    "@modelcontextprotocol/server-everything",
+    [],
+    {
+      manifestUrl: "https://www.npmjs.com/package/@modelcontextprotocol/server-everything",
+      homepageUrl: "https://github.com/modelcontextprotocol/servers/tree/main/src/everything",
+      tags: ["official", "reference", "testing", "developer-tools"],
+    }
+  ),
   stdio(
     "Filesystem",
     "Secure file operations with configurable access controls. Read, write, move, search, and get metadata for files and directories.",
@@ -183,6 +223,16 @@ const devPlatforms: SeedMcp[] = [
     }
   ),
   http(
+    "GitLab",
+    "GitLab's official MCP server for project data, issue management, and repository operations via OAuth 2.0.",
+    "https://gitlab.com/-/mcp",
+    {
+      manifestUrl: "https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/",
+      homepageUrl: "https://gitlab.com",
+      tags: ["gitlab", "git", "issues", "developer-tools"],
+    }
+  ),
+  http(
     "Vercel",
     "Manage Vercel projects, deployments, domains, environment variables, and logs. Search documentation and analyze deploy output.",
     "https://mcp.vercel.com/mcp",
@@ -204,6 +254,27 @@ const devPlatforms: SeedMcp[] = [
       tags: ["cloudflare", "workers", "edge", "r2", "kv", "d1", "infra"],
     }
   ),
+  http(
+    "Netlify",
+    "Create, build, deploy, and manage websites with the Netlify web platform. Full project and deploy lifecycle.",
+    "https://mcp.netlify.com/mcp",
+    {
+      manifestUrl: "https://docs.netlify.com/welcome/build-with-ai/netlify-mcp-server/",
+      homepageUrl: "https://netlify.com",
+      tags: ["netlify", "deployment", "hosting", "developer-tools"],
+    }
+  ),
+  stdio(
+    "Heroku",
+    "Interact with the Heroku Platform: manage apps, add-ons, dynos, databases, and more through LLM-driven tools.",
+    "heroku-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/heroku/heroku-mcp-server",
+      homepageUrl: "https://heroku.com",
+      tags: ["heroku", "deployment", "hosting", "developer-tools"],
+    }
+  ),
   stdio(
     "Sentry",
     "Access Sentry issues, errors, projects, and AI-powered Seer analysis. Debug production errors with full context.",
@@ -214,6 +285,29 @@ const devPlatforms: SeedMcp[] = [
       homepageUrl: "https://docs.sentry.io/product/sentry-mcp",
       envKeys: ["SENTRY_AUTH_TOKEN"],
       tags: ["sentry", "error-tracking", "debugging", "observability"],
+    }
+  ),
+  stdio(
+    "CircleCI",
+    "Enable AI agents to fix build failures, inspect pipelines, jobs, and test results from CircleCI.",
+    "circleci-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/CircleCI-Public/mcp-server-circleci",
+      homepageUrl: "https://circleci.com",
+      envKeys: ["CIRCLECI_TOKEN"],
+      tags: ["circleci", "ci-cd", "builds", "developer-tools"],
+    }
+  ),
+  stdio(
+    "Storybook",
+    "Interact with Storybook to automate UI component testing, documentation, and visual regression checks.",
+    "@storybook/addon-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/storybookjs/addon-mcp",
+      homepageUrl: "https://storybook.js.org",
+      tags: ["storybook", "ui", "testing", "components", "developer-tools"],
     }
   ),
 ];
@@ -282,6 +376,132 @@ const databases: SeedMcp[] = [
       tags: ["upstash", "redis", "qstash", "serverless", "cache"],
     }
   ),
+  stdio(
+    "MongoDB",
+    "MongoDB Community Server and Atlas: query collections, manage databases, create indexes, and run aggregation pipelines.",
+    "mongodb-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/mongodb-js/mongodb-mcp-server",
+      homepageUrl: "https://mongodb.com",
+      envKeys: ["MONGODB_CONNECTION_STRING"],
+      tags: ["mongodb", "database", "nosql", "atlas"],
+    }
+  ),
+  stdio(
+    "ClickHouse",
+    "Query your ClickHouse database server. Run analytical queries, inspect schemas, and explore OLAP data.",
+    "@clickhouse/mcp-clickhouse",
+    [],
+    {
+      manifestUrl: "https://github.com/ClickHouse/mcp-clickhouse",
+      homepageUrl: "https://clickhouse.com",
+      envKeys: ["CLICKHOUSE_URL", "CLICKHOUSE_USER", "CLICKHOUSE_PASSWORD"],
+      tags: ["clickhouse", "database", "analytics", "olap"],
+    }
+  ),
+  stdio(
+    "Redis",
+    "The official Redis MCP server for managing and searching data in Redis. Supports key-value ops, search, and JSON.",
+    "@redis/mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/redis/mcp-redis",
+      homepageUrl: "https://redis.io",
+      envKeys: ["REDIS_URL"],
+      tags: ["redis", "database", "cache", "search"],
+    }
+  ),
+  stdio(
+    "Neo4j",
+    "Neo4j graph database server: schema inspection, read/write Cypher queries, and graph-backed memory for agents.",
+    "neo4j-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/neo4j-contrib/mcp-neo4j",
+      homepageUrl: "https://neo4j.com",
+      envKeys: ["NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD"],
+      tags: ["neo4j", "database", "graph", "cypher"],
+    }
+  ),
+  stdio(
+    "Elasticsearch",
+    "Query your data in Elasticsearch: full-text search, aggregations, schema inspection, and index management.",
+    "@elastic/mcp-server-elasticsearch",
+    [],
+    {
+      manifestUrl: "https://github.com/elastic/mcp-server-elasticsearch",
+      homepageUrl: "https://elastic.co/elasticsearch",
+      envKeys: ["ELASTICSEARCH_URL", "ELASTICSEARCH_API_KEY"],
+      tags: ["elasticsearch", "database", "search", "analytics"],
+    }
+  ),
+  stdio(
+    "MariaDB",
+    "Standard SQL operations and advanced vector/embedding-based search for MariaDB databases.",
+    "mariadb-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/mariadb/mcp",
+      homepageUrl: "https://mariadb.com",
+      envKeys: ["MARIADB_CONNECTION_STRING"],
+      tags: ["mariadb", "database", "sql", "vectors"],
+    }
+  ),
+];
+
+// ===========================================================================
+// Vector Databases
+// ===========================================================================
+
+const vectorDbs: SeedMcp[] = [
+  stdio(
+    "Pinecone",
+    "Pinecone vector database: search documentation, manage indexes, upsert and query vectors in your development environment.",
+    "pinecone-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/pinecone-io/pinecone-mcp",
+      homepageUrl: "https://pinecone.io",
+      envKeys: ["PINECONE_API_KEY"],
+      tags: ["pinecone", "database", "vectors", "embeddings", "ai"],
+    }
+  ),
+  stdio(
+    "Qdrant",
+    "Semantic memory layer on top of Qdrant vector search engine. Store, search, and manage vector collections.",
+    "mcp-server-qdrant",
+    [],
+    {
+      manifestUrl: "https://github.com/qdrant/mcp-server-qdrant",
+      homepageUrl: "https://qdrant.tech",
+      envKeys: ["QDRANT_URL", "QDRANT_API_KEY"],
+      tags: ["qdrant", "database", "vectors", "search", "ai"],
+    }
+  ),
+  stdio(
+    "Chroma",
+    "Embeddings, vector search, document storage, and full-text search with the open-source AI application database.",
+    "chroma-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/chroma-core/chroma-mcp",
+      homepageUrl: "https://trychroma.com",
+      tags: ["chroma", "database", "vectors", "embeddings", "ai"],
+    }
+  ),
+  stdio(
+    "Milvus",
+    "Search, query, and interact with data in your Milvus Vector Database. Manage collections and run similarity search.",
+    "mcp-server-milvus",
+    [],
+    {
+      manifestUrl: "https://github.com/zilliztech/mcp-server-milvus",
+      homepageUrl: "https://milvus.io",
+      envKeys: ["MILVUS_ADDRESS"],
+      tags: ["milvus", "database", "vectors", "search", "ai"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -335,6 +555,30 @@ const searchResearch: SeedMcp[] = [
       tags: ["firecrawl", "scraping", "crawling", "extraction", "research"],
     }
   ),
+  stdio(
+    "Perplexity",
+    "Real-time web-wide research using Perplexity's Sonar API. Conversational AI-powered search with citations.",
+    "perplexity-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/ppl-ai/modelcontextprotocol",
+      homepageUrl: "https://perplexity.ai",
+      envKeys: ["PERPLEXITY_API_KEY"],
+      tags: ["perplexity", "search", "research", "ai"],
+    }
+  ),
+  stdio(
+    "Apify",
+    "Use 6,000+ pre-built cloud tools to extract data from websites, e-commerce, social media, search engines, and maps.",
+    "apify-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/apify/apify-mcp-server",
+      homepageUrl: "https://apify.com",
+      envKeys: ["APIFY_TOKEN"],
+      tags: ["apify", "scraping", "extraction", "research", "automation"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -362,6 +606,18 @@ const browserAutomation: SeedMcp[] = [
       manifestUrl: "https://www.npmjs.com/package/@anthropic/mcp-server-puppeteer",
       homepageUrl: "https://github.com/anthropics/mcp-server-puppeteer",
       tags: ["puppeteer", "browser", "automation", "scraping"],
+    }
+  ),
+  stdio(
+    "Browserbase",
+    "Automate browser interactions in the cloud: web navigation, data extraction, form filling, and more.",
+    "@browserbase/mcp-server-browserbase",
+    [],
+    {
+      manifestUrl: "https://github.com/browserbase/mcp-server-browserbase",
+      homepageUrl: "https://browserbase.com",
+      envKeys: ["BROWSERBASE_API_KEY"],
+      tags: ["browserbase", "browser", "automation", "cloud"],
     }
   ),
 ];
@@ -413,6 +669,38 @@ const productivity: SeedMcp[] = [
       tags: ["todoist", "tasks", "productivity", "project-management"],
     }
   ),
+  http(
+    "Atlassian",
+    "Securely interact with Jira work items and Confluence pages, and search across both. Official Atlassian MCP server.",
+    "https://www.atlassian.com/platform/remote-mcp-server",
+    {
+      manifestUrl: "https://www.atlassian.com/platform/remote-mcp-server",
+      homepageUrl: "https://atlassian.com",
+      tags: ["atlassian", "jira", "confluence", "productivity", "project-management"],
+    }
+  ),
+  http(
+    "HubSpot",
+    "Connect, manage, and interact with HubSpot CRM data: contacts, companies, deals, tickets, and marketing assets.",
+    "https://developer.hubspot.com/mcp",
+    {
+      manifestUrl: "https://developer.hubspot.com/mcp",
+      homepageUrl: "https://hubspot.com",
+      tags: ["hubspot", "crm", "marketing", "sales", "productivity"],
+    }
+  ),
+  stdio(
+    "Monday.com",
+    "Interact with Monday.com boards, items, accounts, and work forms. Full project management integration.",
+    "monday-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/mondaycom/mcp",
+      homepageUrl: "https://monday.com",
+      envKeys: ["MONDAY_API_TOKEN"],
+      tags: ["monday", "project-management", "productivity", "boards"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -431,6 +719,16 @@ const payments: SeedMcp[] = [
       tags: ["stripe", "payments", "billing", "subscriptions", "commerce"],
     }
   ),
+  http(
+    "PayPal",
+    "PayPal's official MCP server. Create and manage payments, invoices, subscriptions, and payouts.",
+    "https://mcp.paypal.com",
+    {
+      manifestUrl: "https://mcp.paypal.com",
+      homepageUrl: "https://developer.paypal.com",
+      tags: ["paypal", "payments", "billing", "commerce"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -447,6 +745,18 @@ const design: SeedMcp[] = [
       homepageUrl: "https://figma.com",
       envKeys: ["FIGMA_ACCESS_TOKEN"],
       tags: ["figma", "design", "ui", "prototyping", "design-to-code"],
+    }
+  ),
+  stdio(
+    "Cloudinary",
+    "Media upload, transformation, AI analysis, management, optimization, and delivery. Full asset lifecycle.",
+    "cloudinary-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/cloudinary/mcp-servers",
+      homepageUrl: "https://cloudinary.com",
+      envKeys: ["CLOUDINARY_URL"],
+      tags: ["cloudinary", "media", "images", "video", "design"],
     }
   ),
 ];
@@ -487,6 +797,54 @@ const observability: SeedMcp[] = [
     envKeys: ["GRAFANA_URL", "GRAFANA_API_KEY"],
     tags: ["grafana", "observability", "monitoring", "prometheus", "loki"],
   },
+  stdio(
+    "PagerDuty",
+    "Manage incidents, services, schedules, and escalation policies. Full PagerDuty account integration.",
+    "pagerduty-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/PagerDuty/pagerduty-mcp-server",
+      homepageUrl: "https://pagerduty.com",
+      envKeys: ["PAGERDUTY_API_KEY"],
+      tags: ["pagerduty", "incidents", "on-call", "observability"],
+    }
+  ),
+  stdio(
+    "PostHog",
+    "Interact with PostHog analytics, feature flags, experiments, error tracking, and session replay.",
+    "posthog-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/posthog/mcp",
+      homepageUrl: "https://posthog.com",
+      envKeys: ["POSTHOG_API_KEY"],
+      tags: ["posthog", "analytics", "feature-flags", "observability"],
+    }
+  ),
+  stdio(
+    "Honeycomb",
+    "Query and analyze observability data, alerts, dashboards, and cross-reference production behavior with code.",
+    "honeycomb-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/honeycombio/honeycomb-mcp",
+      homepageUrl: "https://honeycomb.io",
+      envKeys: ["HONEYCOMB_API_KEY"],
+      tags: ["honeycomb", "observability", "tracing", "debugging"],
+    }
+  ),
+  stdio(
+    "Axiom",
+    "Query and analyze Axiom logs, traces, and event data in natural language. Full observability pipeline.",
+    "axiom-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/axiomhq/mcp-server-axiom",
+      homepageUrl: "https://axiom.co",
+      envKeys: ["AXIOM_TOKEN"],
+      tags: ["axiom", "observability", "logs", "traces"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -504,6 +862,28 @@ const aiProviders: SeedMcp[] = [
       homepageUrl: "https://platform.openai.com",
       envKeys: ["OPENAI_API_KEY"],
       tags: ["openai", "ai", "llm", "agents", "completions"],
+    }
+  ),
+  http(
+    "Hugging Face",
+    "Connect to Hugging Face Hub: semantic search for spaces/papers, explore datasets and models, and access compatible tools.",
+    "https://huggingface.co/mcp",
+    {
+      manifestUrl: "https://huggingface.co/settings/mcp",
+      homepageUrl: "https://huggingface.co",
+      tags: ["huggingface", "ai", "models", "datasets", "research"],
+    }
+  ),
+  stdio(
+    "E2B",
+    "Run code in secure cloud sandboxes. Isolated execution environment for AI-generated code with full filesystem access.",
+    "@e2b/mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/e2b-dev/mcp-server",
+      homepageUrl: "https://e2b.dev",
+      envKeys: ["E2B_API_KEY"],
+      tags: ["e2b", "sandbox", "code-execution", "ai", "security"],
     }
   ),
 ];
@@ -543,16 +923,40 @@ const dataAnalytics: SeedMcp[] = [
 // ===========================================================================
 
 const infraCloud: SeedMcp[] = [
-  stdio(
-    "AWS",
-    "Interact with AWS services including S3, Lambda, DynamoDB, EC2, and CloudFormation through natural language.",
-    "aws-mcp-server",
+  uvx(
+    "AWS API",
+    "Official AWS Labs MCP server — interact with AWS services and resources through AWS CLI commands. Covers S3, Lambda, DynamoDB, EC2, CloudFormation, and all other AWS APIs.",
+    "awslabs.aws-api-mcp-server",
     [],
     {
-      manifestUrl: "https://www.npmjs.com/package/aws-mcp-server",
-      homepageUrl: "https://aws.amazon.com",
-      envKeys: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
-      tags: ["aws", "cloud", "s3", "lambda", "infra"],
+      manifestUrl: "https://github.com/awslabs/mcp",
+      homepageUrl: "https://awslabs.github.io/mcp/servers/aws-api-mcp-server",
+      envKeys: ["AWS_REGION", "AWS_PROFILE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+      tags: ["aws", "cloud", "s3", "lambda", "infra", "official"],
+    }
+  ),
+  stdio(
+    "Azure",
+    "Access Azure services: Azure Storage, Cosmos DB, Azure CLI, and more. Official Microsoft Azure MCP server.",
+    "azure-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server",
+      homepageUrl: "https://azure.microsoft.com",
+      envKeys: ["AZURE_SUBSCRIPTION_ID"],
+      tags: ["azure", "cloud", "microsoft", "infra"],
+    }
+  ),
+  stdio(
+    "Google Cloud Run",
+    "Deploy code to Google Cloud Run. Build, configure, and manage Cloud Run services and revisions.",
+    "cloud-run-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/GoogleCloudPlatform/cloud-run-mcp",
+      homepageUrl: "https://cloud.google.com/run",
+      envKeys: ["GOOGLE_CLOUD_PROJECT"],
+      tags: ["gcp", "cloud", "cloud-run", "serverless", "infra"],
     }
   ),
   stdio(
@@ -564,6 +968,18 @@ const infraCloud: SeedMcp[] = [
       manifestUrl: "https://www.npmjs.com/package/terraform-mcp-server",
       homepageUrl: "https://www.terraform.io",
       tags: ["terraform", "iac", "infrastructure", "devops"],
+    }
+  ),
+  stdio(
+    "Pulumi",
+    "Deploy and manage cloud infrastructure using Pulumi. Create, update, and inspect stacks across any cloud.",
+    "pulumi-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/pulumi/mcp-server",
+      homepageUrl: "https://pulumi.com",
+      envKeys: ["PULUMI_ACCESS_TOKEN"],
+      tags: ["pulumi", "iac", "infrastructure", "devops"],
     }
   ),
   stdio(
@@ -589,6 +1005,29 @@ const infraCloud: SeedMcp[] = [
       tags: ["kubernetes", "k8s", "containers", "orchestration", "infra"],
     }
   ),
+  stdio(
+    "Render",
+    "Spin up new services, run queries against databases, and debug with direct access to service metrics and logs.",
+    "render-mcp-server",
+    [],
+    {
+      manifestUrl: "https://render.com/docs/mcp-server",
+      homepageUrl: "https://render.com",
+      envKeys: ["RENDER_API_KEY"],
+      tags: ["render", "deployment", "hosting", "infra"],
+    }
+  ),
+  stdio(
+    "Firebase",
+    "Firebase's experimental MCP server for managing Firebase projects, Firestore, Auth, and Cloud Functions.",
+    "firebase-tools",
+    ["mcp"],
+    {
+      manifestUrl: "https://github.com/firebase/firebase-tools/blob/master/src/mcp",
+      homepageUrl: "https://firebase.google.com",
+      tags: ["firebase", "google", "database", "auth", "infra"],
+    }
+  ),
 ];
 
 // ===========================================================================
@@ -606,6 +1045,53 @@ const security: SeedMcp[] = [
       homepageUrl: "https://snyk.io",
       envKeys: ["SNYK_TOKEN"],
       tags: ["snyk", "security", "vulnerabilities", "dependencies", "sca"],
+    }
+  ),
+  stdio(
+    "Auth0",
+    "Interact with your Auth0 tenant: manage actions, applications, forms, logs, resource servers, and more.",
+    "@auth0/auth0-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/auth0/auth0-mcp-server",
+      homepageUrl: "https://auth0.com",
+      envKeys: ["AUTH0_DOMAIN", "AUTH0_CLIENT_ID", "AUTH0_CLIENT_SECRET"],
+      tags: ["auth0", "auth", "identity", "security"],
+    }
+  ),
+  stdio(
+    "SonarQube",
+    "Integration with SonarQube Server or Cloud for code quality analysis and vulnerability detection.",
+    "sonarqube-mcp-server",
+    [],
+    {
+      manifestUrl: "https://github.com/SonarSource/sonarqube-mcp-server",
+      homepageUrl: "https://sonarsource.com",
+      envKeys: ["SONARQUBE_URL", "SONARQUBE_TOKEN"],
+      tags: ["sonarqube", "security", "code-quality", "static-analysis"],
+    }
+  ),
+  stdio(
+    "Semgrep",
+    "Enable AI agents to secure code with Semgrep. Static analysis for finding bugs, vulnerabilities, and anti-patterns.",
+    "semgrep",
+    ["mcp"],
+    {
+      manifestUrl: "https://github.com/semgrep/semgrep/blob/develop/cli/src/semgrep/mcp/README.md",
+      homepageUrl: "https://semgrep.dev",
+      tags: ["semgrep", "security", "static-analysis", "code-quality"],
+    }
+  ),
+  stdio(
+    "CrowdStrike Falcon",
+    "Intelligent security analysis: detections, incidents, threat intelligence, hosts, vulnerabilities, and identity protection.",
+    "falcon-mcp",
+    [],
+    {
+      manifestUrl: "https://github.com/CrowdStrike/falcon-mcp",
+      homepageUrl: "https://crowdstrike.com",
+      envKeys: ["FALCON_CLIENT_ID", "FALCON_CLIENT_SECRET"],
+      tags: ["crowdstrike", "security", "threat-intelligence", "edr"],
     }
   ),
 ];
@@ -647,6 +1133,7 @@ export const SEED_MCP_DEFINITIONS: SeedMcp[] = [
   ...officialReference,
   ...devPlatforms,
   ...databases,
+  ...vectorDbs,
   ...searchResearch,
   ...browserAutomation,
   ...productivity,
