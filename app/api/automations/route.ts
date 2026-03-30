@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { authErrorResponse, requireActiveSubscription } from "@/lib/auth";
 import { createAutomation, createAutomationInputSchema } from "@/lib/automations";
 import { getSkillRecordBySlug } from "@/lib/content";
-import { refreshLoopSnapshot } from "@/lib/refresh";
+import { getLoopSnapshot, refreshLoopSnapshot } from "@/lib/refresh";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 
 export async function GET() {
@@ -14,14 +14,7 @@ export async function GET() {
       label: "List automations"
     },
     async () => {
-      const snapshot = await refreshLoopSnapshot({
-        writeLocal: true,
-        uploadBlob: false,
-        forceFresh: false,
-        refreshCategorySignals: false,
-        refreshImportedSkills: false,
-        refreshUserSkills: false
-      });
+      const snapshot = await getLoopSnapshot();
 
       return Response.json({
         ok: true,
@@ -49,7 +42,7 @@ export async function POST(request: Request) {
         }
 
         const created = await createAutomation(payload, skill);
-        const snapshot = await refreshLoopSnapshot({
+        await refreshLoopSnapshot({
           writeLocal: true,
           uploadBlob: false,
           forceFresh: true,
@@ -62,11 +55,6 @@ export async function POST(request: Request) {
         revalidatePath("/settings");
         revalidatePath(`/categories/${skill.category}`);
         revalidatePath(`/skills/${skill.slug}`);
-        snapshot.skills.forEach((entry) => {
-          if (entry.slug === skill.slug) {
-            revalidatePath(entry.href);
-          }
-        });
 
         await logUsageEvent({
           kind: "automation_create",

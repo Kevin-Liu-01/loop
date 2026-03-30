@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { cadenceToRRule } from "@/lib/automation-constants";
 import { slugify } from "@/lib/markdown";
 import type { SkillRecord } from "@/lib/types";
 
@@ -27,19 +28,6 @@ function quoteToml(value: string): string {
 
 function renderTomlArray(values: string[]): string {
   return `[${values.map((value) => quoteToml(value)).join(", ")}]`;
-}
-
-function cadenceToRRule(cadence: CreateAutomationInput["cadence"]): string {
-  switch (cadence) {
-    case "hourly-6":
-      return "FREQ=HOURLY;INTERVAL=6";
-    case "daily-9":
-      return "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0";
-    case "weekdays-9":
-      return "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0";
-    case "weekly-mon":
-      return "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0";
-  }
 }
 
 async function pathExists(targetPath: string): Promise<boolean> {
