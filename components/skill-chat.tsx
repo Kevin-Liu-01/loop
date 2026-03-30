@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 
+import { BotIcon, PlusIcon, ResetIcon, SendIcon, StopIcon } from "@/components/frontier-icons";
 import { ChatMessageBubble } from "@/components/chat-message-bubble";
 import { ConversationHistory } from "@/components/conversation-history";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,10 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
     <div className="grid gap-5 rounded-2xl border border-line bg-paper-3/92 p-7">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">In-house copilot</span>
+          <span className="flex items-center gap-1.5 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">
+            <BotIcon className="h-3.5 w-3.5" />
+            In-house copilot
+          </span>
           <h2>Interrogate the desk.</h2>
         </div>
         <div className="flex items-center gap-4">
@@ -160,13 +164,25 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
             type="button"
             variant="ghost"
           >
+            <PlusIcon className="h-3.5 w-3.5" />
             New chat
           </Button>
           <Button onClick={() => setInput(starterPrompt)} type="button" variant="ghost">
+            <ResetIcon className="h-3.5 w-3.5" />
             Reset prompt
           </Button>
           <Button disabled={!enabled || status === "submitted"} type="submit">
-            {status === "submitted" ? "Thinking" : "Ask Loop"}
+            {status === "submitted" ? (
+              <>
+                <StopIcon className="h-3.5 w-3.5" />
+                Thinking
+              </>
+            ) : (
+              <>
+                <SendIcon className="h-3.5 w-3.5" />
+                Ask Loop
+              </>
+            )}
           </Button>
         </div>
       </form>

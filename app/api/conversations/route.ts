@@ -6,7 +6,7 @@ import { withApiUsage } from "@/lib/usage-server";
 
 const upsertSchema = z.object({
   id: z.string().uuid().nullable().optional(),
-  channel: z.enum(["copilot", "agent-studio"]),
+  channel: z.enum(["copilot", "agent-studio", "sandbox"]),
   title: z.string().max(200).default(""),
   messages: z.array(
     z.object({
