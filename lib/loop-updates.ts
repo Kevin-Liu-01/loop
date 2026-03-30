@@ -39,7 +39,7 @@ export function buildLoopUpdateTarget(skill: SkillRecord): LoopUpdateTarget {
       label: source.label,
       url: source.url,
       kind: source.kind,
-      logoUrl: buildSourceLogoUrl(source.url)
+      logoUrl: source.logoUrl || buildSourceLogoUrl(source.url)
     }))
   };
 }
@@ -53,7 +53,7 @@ export function buildLoopUpdateSourceLog(
     label: source.label,
     url: source.url,
     kind: source.kind,
-    logoUrl: buildSourceLogoUrl(source.url),
+    logoUrl: source.logoUrl || buildSourceLogoUrl(source.url),
     status,
     itemCount: 0,
     items: []

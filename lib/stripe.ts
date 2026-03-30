@@ -36,7 +36,7 @@ export function getStripeConfiguration() {
   };
 }
 
-export async function createCheckoutSession(planSlug: string, origin: string): Promise<string> {
+export async function createCheckoutSession(planSlug: string, origin: string, clerkUserId: string): Promise<string> {
   const stripe = getStripeClient();
   const priceId = getPriceId(planSlug);
 
@@ -50,16 +50,18 @@ export async function createCheckoutSession(planSlug: string, origin: string): P
     ],
     allow_promotion_codes: true,
     customer_creation: "always",
-    success_url: `${origin}/admin?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/admin?checkout=canceled`,
+    success_url: `${origin}/settings?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/settings?checkout=canceled`,
     metadata: {
-      product: "skillwire",
-      plan: planSlug
+      product: "loop",
+      plan: planSlug,
+      clerkUserId
     },
     subscription_data: {
       metadata: {
-        product: "skillwire",
-        plan: planSlug
+        product: "loop",
+        plan: planSlug,
+        clerkUserId
       }
     }
   });
@@ -75,7 +77,7 @@ export async function createPortalSession(customerId: string, origin: string): P
   const stripe = getStripeClient();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
-    return_url: `${origin}/admin`
+    return_url: `${origin}/settings`
   });
 
   return session.url;
@@ -160,6 +162,7 @@ export function toSubscriptionRecord(
     return {
       id: subscriptionId,
       customerId,
+      clerkUserId: source.metadata?.clerkUserId ?? undefined,
       customerEmail: source.customer_details?.email ?? undefined,
       planSlug: source.metadata?.plan ?? undefined,
       status: source.payment_status ?? "open",
@@ -177,6 +180,7 @@ export function toSubscriptionRecord(
   return {
     id: source.id,
     customerId,
+    clerkUserId: source.metadata?.clerkUserId ?? undefined,
     planSlug: source.metadata?.plan ?? source.items.data[0]?.price.nickname ?? undefined,
     status: source.status,
     cancelAtPeriodEnd: source.cancel_at_period_end,

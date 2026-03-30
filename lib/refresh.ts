@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -6,14 +5,28 @@ import { generateObject } from "ai";
 import { z } from "zod";
 
 import { getGatewayEditorModel, getGatewayEditorModelId } from "@/lib/agents";
-import { getLocalSnapshotBase, readLocalSnapshotFile, writeLocalSnapshotFile } from "@/lib/content";
-import { buildImportedSkillRecord, listImportedSkills, saveImportedSkills, syncImportedSkill } from "@/lib/imports";
+import {
+  getSkillCatalogue,
+  findSkillFiles,
+  parseSkill,
+  WORKSPACE_ROOT,
+  CODEX_SKILLS_ROOT
+} from "@/lib/content";
+import { seedCategories } from "@/lib/db/categories";
+import { upsertSkillFromFilesystem } from "@/lib/db/skills";
+import { upsertBrief } from "@/lib/db/briefs";
+import {
+  buildImportedSkillRecord,
+  listImportedSkills,
+  saveImportedSkills,
+  syncImportedSkill
+} from "@/lib/imports";
 import { buildLoopUpdateSourceLog, buildLoopUpdateTarget } from "@/lib/loop-updates";
-import { persistSearchIndex } from "@/lib/search";
 import { runSkillEditorAgent } from "@/lib/skill-editor-agent";
 import { fetchSignals } from "@/lib/source-signals";
 import { recordLoopRun, recordRefreshRun } from "@/lib/system-state";
 import { diffMultilineText } from "@/lib/text-diff";
+import { CATEGORY_REGISTRY } from "@/lib/registry";
 import { buildUpdateDigest } from "@/lib/update-digest";
 import {
   buildUserSkillRecord,
@@ -32,7 +45,6 @@ import type {
   LoopUpdateSourceLog,
   LoopUpdateTarget,
   SkillUpdateEntry,
-  SkillwireSnapshot,
   UserSkillDocument
 } from "@/lib/types";
 
@@ -185,7 +197,7 @@ function fallbackSkillUpdate(skill: UserSkillDocument, items: DailySignal[]): Sk
       topItems.length > 0
         ? [
             `Add one new tactic based on ${headline}.`,
-            `Rewrite one stale section with today’s source language.`,
+            `Rewrite one stale section with today's source language.`,
             `Turn the top signal into a reusable agent prompt.`
           ]
         : [
@@ -524,19 +536,12 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
 
   const nextSkills = await Promise.all(
     importedSkills.map(async (skill) => {
-      if (!skill.syncEnabled) {
-        return skill;
-      }
-
-      if (focusSet && !focusSet.has(skill.slug)) {
-        return skill;
-      }
+      if (!skill.syncEnabled) return skill;
+      if (focusSet && !focusSet.has(skill.slug)) return skill;
 
       if (!focusSet && skill.lastSyncedAt) {
         const elapsedMs = Date.now() - new Date(skill.lastSyncedAt).valueOf();
-        if (elapsedMs < 24 * 60 * 60 * 1000) {
-          return skill;
-        }
+        if (elapsedMs < 24 * 60 * 60 * 1000) return skill;
       }
 
       const startedAt = new Date().toISOString();
@@ -655,30 +660,49 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
   }
 }
 
-async function uploadSnapshot(snapshot: SkillwireSnapshot): Promise<string | undefined> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return undefined;
-  }
+async function syncFilesystemSkillsToDb(): Promise<void> {
+  const repoSkillFiles = await findSkillFiles(WORKSPACE_ROOT);
+  const codexSkillFiles = await findSkillFiles(CODEX_SKILLS_ROOT);
+  const allSkillFiles = [...repoSkillFiles, ...codexSkillFiles];
 
-  const { put } = await import("@vercel/blob");
-  const blob = await put("skillwire/latest.json", JSON.stringify(snapshot, null, 2), {
-    access: "public",
-    addRandomSuffix: false,
-    contentType: "application/json"
-  });
-
-  return blob.url;
+  await Promise.all(
+    allSkillFiles.map(async (skillFile) => {
+      const parsed = await parseSkill(skillFile);
+      await upsertSkillFromFilesystem({
+        slug: parsed.slug,
+        title: parsed.title,
+        description: parsed.description,
+        category: parsed.category,
+        body: parsed.body,
+        accent: parsed.accent,
+        featured: parsed.featured,
+        visibility: parsed.visibility,
+        origin: parsed.origin as "repo" | "codex",
+        path: parsed.path,
+        relativeDir: parsed.relativeDir,
+        tags: parsed.tags,
+        headings: parsed.headings,
+        references: parsed.references,
+        agents: parsed.agents,
+        agentDocs: parsed.agentDocs,
+        version: 1
+      });
+    })
+  );
 }
 
-export async function refreshSkillwireSnapshot(
+export async function refreshLoopSnapshot(
   options: RefreshOptions = {}
-): Promise<SkillwireSnapshot> {
+): Promise<void> {
   const startedAt = new Date().toISOString();
   const refreshUserSkills = options.refreshUserSkills ?? true;
   const shouldRefreshImportedSkills = options.refreshImportedSkills ?? true;
   const refreshCategorySignals = options.refreshCategorySignals ?? true;
 
   try {
+    await seedCategories(CATEGORY_REGISTRY);
+    await syncFilesystemSkillsToDb();
+
     if (refreshUserSkills) {
       await refreshTrackedUserSkills(options);
     }
@@ -687,79 +711,49 @@ export async function refreshSkillwireSnapshot(
       await refreshTrackedImportedSkills(options);
     }
 
-    const base = await getLocalSnapshotBase();
-    const cachedSnapshot = options.forceFresh ? null : await readLocalSnapshotFile();
+    if (refreshCategorySignals) {
+      const categories = CATEGORY_REGISTRY;
+      await Promise.all(
+        categories.map(async (category) => {
+          const signalBuckets = await Promise.all(category.sources.map(fetchSignals));
+          const flattened = signalBuckets
+            .flat()
+            .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
 
-    const dailyBriefs = refreshCategorySignals
-      ? await Promise.all(
-          base.categories.map(async (category) => {
-            const signalBuckets = await Promise.all(category.sources.map(fetchSignals));
-            const flattened = signalBuckets
-              .flat()
-              .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
-
-            return synthesizeBrief(category.slug, category.title, flattened);
-          })
-        )
-      : cachedSnapshot?.dailyBriefs ??
-        base.categories.map((category) => fallbackBrief(category.slug, category.title, []));
-
-    const snapshot: SkillwireSnapshot = {
-      ...base,
-      dailyBriefs,
-      generatedAt: new Date().toISOString(),
-      generatedFrom: refreshCategorySignals ? "remote-refresh" : "local-scan",
-      remoteSnapshotUrl: cachedSnapshot?.remoteSnapshotUrl
-    };
-
-    if (options.writeLocal !== false) {
-      await writeLocalSnapshotFile(snapshot);
+          const brief = await synthesizeBrief(category.slug, category.title, flattened);
+          await upsertBrief(brief);
+        })
+      );
     }
 
-    try {
-      await persistSearchIndex(snapshot);
-    } catch {
-      // Search can rebuild on demand; snapshot generation should still succeed.
-    }
-
-    if (options.uploadBlob) {
-      const remoteSnapshotUrl = await uploadSnapshot(snapshot);
-      if (remoteSnapshotUrl) {
-        snapshot.remoteSnapshotUrl = remoteSnapshotUrl;
-        if (options.writeLocal !== false) {
-          await writeLocalSnapshotFile(snapshot);
-        }
-      }
-    }
+    const catalogue = await getSkillCatalogue();
 
     await recordRefreshRun({
       id: randomUUID(),
       status: "success",
       startedAt,
       finishedAt: new Date().toISOString(),
-      generatedAt: snapshot.generatedAt,
-      generatedFrom: snapshot.generatedFrom,
-      writeLocal: options.writeLocal !== false,
-      uploadBlob: Boolean(options.uploadBlob),
+      generatedAt: new Date().toISOString(),
+      generatedFrom: refreshCategorySignals ? "remote-refresh" : "local-scan",
+      writeLocal: false,
+      uploadBlob: false,
       refreshCategorySignals,
       refreshUserSkills,
       refreshImportedSkills: shouldRefreshImportedSkills,
       focusSkillSlugs: options.focusSkillSlugs ?? [],
       focusImportedSkillSlugs: options.focusImportedSkillSlugs ?? [],
-      skillCount: snapshot.skills.length,
-      categoryCount: snapshot.categories.length,
-      dailyBriefCount: snapshot.dailyBriefs.length
+      skillCount: catalogue.skills.length,
+      categoryCount: catalogue.categories.length,
+      dailyBriefCount: 0
     });
-
-    return snapshot;
   } catch (error) {
     await recordRefreshRun({
       id: randomUUID(),
       status: "error",
       startedAt,
       finishedAt: new Date().toISOString(),
-      writeLocal: options.writeLocal !== false,
-      uploadBlob: Boolean(options.uploadBlob),
+      writeLocal: false,
+      uploadBlob: false,
       refreshCategorySignals,
       refreshUserSkills,
       refreshImportedSkills: shouldRefreshImportedSkills,
@@ -771,37 +765,7 @@ export async function refreshSkillwireSnapshot(
   }
 }
 
-export async function getSkillwireSnapshot(): Promise<SkillwireSnapshot> {
-  const base = await getLocalSnapshotBase();
-  const cached = await readLocalSnapshotFile();
-  if (cached && cached.dailyBriefs.length > 0 && cached.categories.length > 0) {
-    return {
-      ...cached,
-      ...base,
-      dailyBriefs: cached.dailyBriefs,
-      generatedAt: cached.generatedAt,
-      generatedFrom: cached.generatedFrom,
-      remoteSnapshotUrl: cached.remoteSnapshotUrl
-    };
-  }
-
-  return refreshSkillwireSnapshot({ writeLocal: true, uploadBlob: false });
-}
-
-async function runCli(): Promise<void> {
-  const args = new Set(process.argv.slice(2));
-  const writeLocal = args.has("--write-local");
-  const uploadBlob = args.has("--upload-blob");
-  const snapshot = await refreshSkillwireSnapshot({ writeLocal, uploadBlob, forceFresh: true });
-
-  const outputPath = path.join(process.cwd(), "content/generated/skillwire-snapshot.stdout.json");
-  await fs.writeFile(outputPath, JSON.stringify(snapshot, null, 2));
-  console.log(`Skillwire snapshot written to ${outputPath}`);
-}
-
-if (process.argv[1] && process.argv[1].endsWith("refresh.ts")) {
-  runCli().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+export async function getLoopSnapshot() {
+  const { getLoopSnapshot: getSnapshot } = await import("@/lib/content");
+  return getSnapshot();
 }

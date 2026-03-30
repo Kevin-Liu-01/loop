@@ -1,9 +1,15 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import YAML from "yaml";
-import { z } from "zod";
 
+import {
+  createSkill as dbCreateSkill,
+  getSkillBySlug as dbGetSkillBySlug,
+  listSkills as dbListSkills,
+  updateSkill as dbUpdateSkill
+} from "@/lib/db/skills";
+import {
+  listMcps as dbListMcps,
+  upsertMcp as dbUpsertMcp
+} from "@/lib/db/mcps";
 import { buildVersionLabel, buildSkillVersionHref } from "@/lib/format";
 import { createExcerpt, slugify, stableHash } from "@/lib/markdown";
 import { CATEGORY_REGISTRY } from "@/lib/registry";
@@ -13,7 +19,6 @@ import type {
   ImportedMcpDocument,
   ImportedMcpTransport,
   ImportedMcpVersion,
-  ImportedResourceStore,
   ImportedSkillDocument,
   ImportedSkillVersion,
   ReferenceDoc,
@@ -22,138 +27,9 @@ import type {
   VersionReference
 } from "@/lib/types";
 
-const IMPORT_STORE_VERSION = 2;
-const IMPORT_STORE_FILE = path.join(process.cwd(), "content/generated/skillwire-imports.local.json");
-const IMPORT_STORE_BLOB_PATH = "skillwire/imports.json";
-
-const CATEGORY_SLUGS = CATEGORY_REGISTRY.map((category) => category.slug) as [
-  CategorySlug,
-  ...CategorySlug[]
-];
-
-const importedSkillVersionSchema = z.object({
-  version: z.number().int().min(1),
-  updatedAt: z.string().datetime(),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.enum(CATEGORY_SLUGS),
-  body: z.string().min(1),
-  sourceUrl: z.string().url(),
-  canonicalUrl: z.string().url(),
-  ownerName: z.string().min(1).optional(),
-  tags: z.array(z.string()),
-  visibility: z.enum(["public", "member"]),
-  syncEnabled: z.boolean(),
-  lastSyncedAt: z.string().datetime().optional()
-});
-
-const importedSkillSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.enum(CATEGORY_SLUGS),
-  body: z.string().min(1),
-  sourceUrl: z.string().url(),
-  canonicalUrl: z.string().url(),
-  ownerName: z.string().min(1).optional(),
-  tags: z.array(z.string()),
-  visibility: z.enum(["public", "member"]),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  syncEnabled: z.boolean(),
-  lastSyncedAt: z.string().datetime().optional(),
-  version: z.number().int().min(1),
-  versions: z.array(importedSkillVersionSchema).min(1)
-});
-
-const importedMcpVersionSchema = z.object({
-  version: z.number().int().min(1),
-  updatedAt: z.string().datetime(),
-  description: z.string(),
-  manifestUrl: z.string().url(),
-  homepageUrl: z.string().url().optional(),
-  transport: z.enum(["stdio", "http", "sse", "ws", "unknown"]),
-  url: z.string().url().optional(),
-  command: z.string().optional(),
-  args: z.array(z.string()),
-  envKeys: z.array(z.string()),
-  headers: z.record(z.string(), z.string()).optional(),
-  tags: z.array(z.string()),
-  raw: z.string()
-});
-
-const importedMcpSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string(),
-  manifestUrl: z.string().url(),
-  homepageUrl: z.string().url().optional(),
-  transport: z.enum(["stdio", "http", "sse", "ws", "unknown"]),
-  url: z.string().url().optional(),
-  command: z.string().optional(),
-  args: z.array(z.string()),
-  envKeys: z.array(z.string()),
-  headers: z.record(z.string(), z.string()).optional(),
-  tags: z.array(z.string()),
-  raw: z.string(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  version: z.number().int().min(1),
-  versionLabel: z.string().min(2),
-  versions: z.array(importedMcpVersionSchema).min(1)
-});
-
-const legacyImportedSkillSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.enum(CATEGORY_SLUGS),
-  body: z.string().min(1),
-  sourceUrl: z.string().url(),
-  canonicalUrl: z.string().url(),
-  ownerName: z.string().min(1).optional(),
-  tags: z.array(z.string()),
-  visibility: z.enum(["public", "member"]),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  syncEnabled: z.boolean(),
-  lastSyncedAt: z.string().datetime().optional()
-});
-
-const legacyImportedMcpSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string(),
-  manifestUrl: z.string().url(),
-  homepageUrl: z.string().url().optional(),
-  transport: z.enum(["stdio", "http", "sse", "ws", "unknown"]),
-  url: z.string().url().optional(),
-  command: z.string().optional(),
-  args: z.array(z.string()),
-  envKeys: z.array(z.string()),
-  headers: z.record(z.string(), z.string()).optional(),
-  tags: z.array(z.string()),
-  raw: z.string(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
-});
-
-async function pathExists(targetPath: string): Promise<boolean> {
-  try {
-    await fs.access(targetPath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function emptyStore(): ImportedResourceStore {
-  return {
-    version: IMPORT_STORE_VERSION,
-    skills: [],
-    mcps: []
-  };
-}
+// ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
 
 function normalizeTags(input: string[]): string[] {
   return Array.from(
@@ -228,9 +104,7 @@ function inferCategory(title: string, content: string, url: string): CategorySlu
 function inferOwnerName(url: string): string | undefined {
   const hostname = new URL(url).hostname.replace(/^www\./, "");
   const root = hostname.split(".").slice(0, -1).join(" ");
-  if (!root) {
-    return undefined;
-  }
+  if (!root) return undefined;
 
   return root
     .split(/[-_]/g)
@@ -240,24 +114,17 @@ function inferOwnerName(url: string): string | undefined {
 
 function inferTitle(raw: string, fallbackUrl: string): string {
   const markdownTitle = /^#\s+(.+)$/m.exec(raw)?.[1]?.trim();
-  if (markdownTitle) {
-    return markdownTitle;
-  }
+  if (markdownTitle) return markdownTitle;
 
   const htmlTitle = /<title>([^<]+)<\/title>/i.exec(raw)?.[1]?.trim();
-  if (htmlTitle) {
-    return decodeHtml(htmlTitle);
-  }
+  if (htmlTitle) return decodeHtml(htmlTitle);
 
   const pathname = new URL(fallbackUrl).pathname.split("/").filter(Boolean).pop();
   return pathname?.replace(/\.(md|markdown|txt|html)$/i, "").replace(/[-_]/g, " ") || "Imported skill";
 }
 
 function toMarkdownBody(raw: string, title: string, sourceUrl: string): string {
-  if (!looksLikeHtml(raw, sourceUrl)) {
-    return raw.trim();
-  }
-
+  if (!looksLikeHtml(raw, sourceUrl)) return raw.trim();
   const plain = stripHtml(raw);
   return [`# ${title}`, "", plain].join("\n");
 }
@@ -265,9 +132,7 @@ function toMarkdownBody(raw: string, title: string, sourceUrl: string): string {
 export async function fetchRemoteText(inputUrl: string): Promise<{ raw: string; normalizedUrl: string }> {
   const normalizedUrl = normalizeImportUrl(inputUrl);
   const response = await fetch(normalizedUrl, {
-    headers: {
-      "user-agent": "SkillwireImporter/0.1 (+https://skillwire.local)"
-    },
+    headers: { "user-agent": "LoopImporter/0.1 (+https://loop.local)" },
     signal: AbortSignal.timeout(10000),
     cache: "no-store"
   });
@@ -276,10 +141,7 @@ export async function fetchRemoteText(inputUrl: string): Promise<{ raw: string; 
     throw new Error(`Import failed with ${response.status}.`);
   }
 
-  return {
-    raw: await response.text(),
-    normalizedUrl
-  };
+  return { raw: await response.text(), normalizedUrl };
 }
 
 function buildImportedSource(skill: ImportedSkillDocument | ImportedSkillVersion): SourceDefinition {
@@ -294,11 +156,11 @@ function buildImportedSource(skill: ImportedSkillDocument | ImportedSkillVersion
 
 function buildImportedAgent(skill: ImportedSkillDocument | ImportedSkillVersion, slug: string): AgentPrompt {
   return {
-    provider: "skillwire-import",
+    provider: "loop-import",
     displayName: "Imported skill prompt",
     shortDescription: "Context synthesized from a remote skill import.",
     defaultPrompt: `Use $${slug}. Prefer the imported source at ${skill.canonicalUrl}.`,
-    path: `skillwire://imports/skills/${slug}`
+    path: `loop://imports/skills/${slug}`
   };
 }
 
@@ -307,11 +169,7 @@ function buildImportedSkillVersion(
   version: number,
   updatedAt: string
 ): ImportedSkillVersion {
-  return {
-    version,
-    updatedAt,
-    ...fields
-  };
+  return { version, updatedAt, ...fields };
 }
 
 function materializeImportedSkillVersion(
@@ -328,95 +186,25 @@ function materializeImportedSkillVersion(
   );
 }
 
-export function buildImportedSkillRecord(
-  skill: ImportedSkillDocument,
-  requestedVersion?: number
-): SkillRecord {
-  const version = materializeImportedSkillVersion(skill, requestedVersion);
-  const source = buildImportedSource(version);
-  const category = CATEGORY_REGISTRY.find((entry) => entry.slug === version.category);
-  const body = [
-    version.body.trim(),
-    "",
-    "## Import metadata",
-    `- Source: [${version.canonicalUrl}](${version.canonicalUrl})`,
-    `- Sync: ${version.syncEnabled ? "enabled" : "manual"}`,
-    `- Last sync: ${version.lastSyncedAt ?? "not yet"}`
-  ].join("\n");
-
-  const references: ReferenceDoc[] = [
-    {
-      slug: source.id,
-      title: "Canonical source",
-      path: source.url,
-      excerpt: version.description
-    }
-  ];
-
-  return {
-    slug: skill.slug,
-    title: version.title,
-    description: version.description,
-    category: version.category,
-    accent: category?.accent ?? "signal-red",
-    featured: false,
-    visibility: version.visibility,
-    origin: "remote",
-    href: buildSkillVersionHref(skill.slug, version.version),
-    path: version.canonicalUrl,
-    relativeDir: `imports/${skill.slug}`,
-    updatedAt: version.updatedAt,
-    tags: normalizeTags(version.tags),
-    headings: [],
-    body,
-    excerpt: createExcerpt(body),
-    references,
-    agents: [buildImportedAgent(version, skill.slug)],
-    automations: [],
-    version: version.version,
-    versionLabel: buildVersionLabel(version.version),
-    availableVersions: skill.versions
-      .slice()
-      .sort((left, right) => right.version - left.version)
-      .map(toVersionReference),
-    ownerName: version.ownerName,
-    sources: [source]
-  };
+function buildImportedMcpVersion(
+  fields: Omit<ImportedMcpVersion, "version" | "updatedAt">,
+  version: number,
+  updatedAt: string
+): ImportedMcpVersion {
+  return { version, updatedAt, ...fields };
 }
 
 function guessTransport(config: Record<string, unknown>): ImportedMcpTransport {
   const transport = typeof config.transport === "string" ? config.transport.toLowerCase() : "";
   const endpoint = typeof config.url === "string" ? config.url.toLowerCase() : "";
 
-  if (transport === "stdio") {
-    return "stdio";
-  }
-  if (transport === "sse" || endpoint.includes("/sse")) {
-    return "sse";
-  }
-  if (transport === "http" || endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-    return "http";
-  }
-  if (transport === "ws" || endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) {
-    return "ws";
-  }
-  if (config.command) {
-    return "stdio";
-  }
+  if (transport === "stdio") return "stdio";
+  if (transport === "sse" || endpoint.includes("/sse")) return "sse";
+  if (transport === "http" || endpoint.startsWith("http://") || endpoint.startsWith("https://")) return "http";
+  if (transport === "ws" || endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) return "ws";
+  if (config.command) return "stdio";
 
   return "unknown";
-}
-
-function buildImportedMcpVersion(
-  fields: Omit<ImportedMcpVersion, "version" | "updatedAt">,
-  version: number,
-  updatedAt: string
-): ImportedMcpVersion {
-  return {
-    version,
-    updatedAt,
-    ...fields
-  };
 }
 
 function normalizeMcpRecord(
@@ -469,10 +257,7 @@ function normalizeMcpRecord(
       headers:
         config.headers && typeof config.headers === "object" && !Array.isArray(config.headers)
           ? Object.fromEntries(
-              Object.entries(config.headers as Record<string, unknown>).map(([key, value]) => [
-                key,
-                String(value)
-              ])
+              Object.entries(config.headers as Record<string, unknown>).map(([key, value]) => [key, String(value)])
             )
           : undefined,
       tags: normalizeTags([name, transport, new URL(manifestUrl).hostname]),
@@ -508,13 +293,11 @@ function extractManifestCandidate(raw: string): string {
   const fencedBlocks = Array.from(raw.matchAll(/```(?:json|yaml|yml)?\n([\s\S]*?)```/g)).map(
     (match) => match[1]
   );
-
   return fencedBlocks[0] ?? raw;
 }
 
 function parseManifestObject(raw: string): unknown {
   const candidate = extractManifestCandidate(raw);
-
   try {
     return JSON.parse(candidate);
   } catch {
@@ -525,6 +308,10 @@ function parseManifestObject(raw: string): unknown {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Public pure builders
+// ---------------------------------------------------------------------------
 
 export function extractMcpDocuments(raw: string, manifestUrl: string): ImportedMcpDocument[] {
   const now = new Date().toISOString();
@@ -606,246 +393,60 @@ export function buildImportedSkillDraft(
   };
 }
 
-function normalizeImportedSkillDocument(value: unknown): ImportedSkillDocument | null {
-  const current = importedSkillSchema.safeParse(value);
-  if (current.success) {
-    const versions = current.data.versions.slice().sort((left, right) => right.version - left.version);
-    const latest = versions[0];
+export function buildImportedSkillRecord(
+  skill: ImportedSkillDocument,
+  requestedVersion?: number
+): SkillRecord {
+  const version = materializeImportedSkillVersion(skill, requestedVersion);
+  const source = buildImportedSource(version);
+  const category = CATEGORY_REGISTRY.find((entry) => entry.slug === version.category);
+  const body = [
+    version.body.trim(),
+    "",
+    "## Import metadata",
+    `- Source: [${version.canonicalUrl}](${version.canonicalUrl})`,
+    `- Sync: ${version.syncEnabled ? "enabled" : "manual"}`,
+    `- Last sync: ${version.lastSyncedAt ?? "not yet"}`
+  ].join("\n");
 
-    return {
-      ...current.data,
-      title: latest.title,
-      description: latest.description,
-      category: latest.category,
-      body: latest.body,
-      sourceUrl: latest.sourceUrl,
-      canonicalUrl: latest.canonicalUrl,
-      ownerName: latest.ownerName,
-      tags: latest.tags,
-      visibility: latest.visibility,
-      updatedAt: latest.updatedAt,
-      syncEnabled: latest.syncEnabled,
-      lastSyncedAt: latest.lastSyncedAt,
-      version: latest.version,
-      versions
-    };
-  }
-
-  const legacy = legacyImportedSkillSchema.safeParse(value);
-  if (!legacy.success) {
-    return null;
-  }
-
-  const version = buildImportedSkillVersion(
+  const references: ReferenceDoc[] = [
     {
-      title: legacy.data.title,
-      description: legacy.data.description,
-      category: legacy.data.category,
-      body: legacy.data.body,
-      sourceUrl: legacy.data.sourceUrl,
-      canonicalUrl: legacy.data.canonicalUrl,
-      ownerName: legacy.data.ownerName,
-      tags: legacy.data.tags,
-      visibility: legacy.data.visibility,
-      syncEnabled: legacy.data.syncEnabled,
-      lastSyncedAt: legacy.data.lastSyncedAt
-    },
-    1,
-    legacy.data.updatedAt
-  );
-
-  return {
-    ...legacy.data,
-    version: 1,
-    versions: [version]
-  };
-}
-
-function normalizeImportedMcpDocument(value: unknown): ImportedMcpDocument | null {
-  const current = importedMcpSchema.safeParse(value);
-  if (current.success) {
-    const versions = current.data.versions.slice().sort((left, right) => right.version - left.version);
-    const latest = versions[0];
-
-    return {
-      ...current.data,
-      description: latest.description,
-      manifestUrl: latest.manifestUrl,
-      homepageUrl: latest.homepageUrl,
-      transport: latest.transport,
-      url: latest.url,
-      command: latest.command,
-      args: latest.args,
-      envKeys: latest.envKeys,
-      headers: latest.headers,
-      tags: latest.tags,
-      raw: latest.raw,
-      updatedAt: latest.updatedAt,
-      version: latest.version,
-      versionLabel: buildVersionLabel(latest.version),
-      versions
-    };
-  }
-
-  const legacy = legacyImportedMcpSchema.safeParse(value);
-  if (!legacy.success) {
-    return null;
-  }
-
-  const version = buildImportedMcpVersion(
-    {
-      description: legacy.data.description,
-      manifestUrl: legacy.data.manifestUrl,
-      homepageUrl: legacy.data.homepageUrl,
-      transport: legacy.data.transport,
-      url: legacy.data.url,
-      command: legacy.data.command,
-      args: legacy.data.args,
-      envKeys: legacy.data.envKeys,
-      headers: legacy.data.headers,
-      tags: legacy.data.tags,
-      raw: legacy.data.raw
-    },
-    1,
-    legacy.data.updatedAt
-  );
-
-  return {
-    ...legacy.data,
-    version: 1,
-    versionLabel: buildVersionLabel(1),
-    versions: [version]
-  };
-}
-
-function normalizeStore(value: unknown): ImportedResourceStore {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return emptyStore();
-  }
-
-  return {
-    version: IMPORT_STORE_VERSION,
-    skills: Array.isArray((value as { skills?: unknown[] }).skills)
-      ? (value as { skills: unknown[] }).skills
-          .map(normalizeImportedSkillDocument)
-          .filter((skill): skill is ImportedSkillDocument => skill !== null)
-      : [],
-    mcps: Array.isArray((value as { mcps?: unknown[] }).mcps)
-      ? (value as { mcps: unknown[] }).mcps
-          .map(normalizeImportedMcpDocument)
-          .filter((mcp): mcp is ImportedMcpDocument => mcp !== null)
-      : []
-  };
-}
-
-async function readStoreFromBlob(): Promise<ImportedResourceStore | null> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return null;
-  }
-
-  try {
-    const { list } = await import("@vercel/blob");
-    const result = await list({
-      limit: 10,
-      prefix: IMPORT_STORE_BLOB_PATH
-    });
-    const blob = result.blobs.find((entry) => entry.pathname === IMPORT_STORE_BLOB_PATH);
-    if (!blob) {
-      return null;
+      slug: source.id,
+      title: "Canonical source",
+      path: source.url,
+      excerpt: version.description
     }
-
-    const response = await fetch(blob.url, { cache: "no-store" });
-    if (!response.ok) {
-      return null;
-    }
-
-    return normalizeStore(await response.json());
-  } catch {
-    return null;
-  }
-}
-
-async function readStoreFromFile(): Promise<ImportedResourceStore | null> {
-  if (!(await pathExists(IMPORT_STORE_FILE))) {
-    return null;
-  }
-
-  try {
-    return normalizeStore(JSON.parse(await fs.readFile(IMPORT_STORE_FILE, "utf8")));
-  } catch {
-    return null;
-  }
-}
-
-export async function readImportStore(): Promise<ImportedResourceStore> {
-  const remote = await readStoreFromBlob();
-  if (remote) {
-    return remote;
-  }
-
-  return (await readStoreFromFile()) ?? emptyStore();
-}
-
-export async function writeImportStore(store: ImportedResourceStore): Promise<void> {
-  const normalized = normalizeStore(store);
-  const payload = JSON.stringify(normalized, null, 2);
-
-  await fs.mkdir(path.dirname(IMPORT_STORE_FILE), { recursive: true });
-  await fs.writeFile(IMPORT_STORE_FILE, payload);
-
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const { put } = await import("@vercel/blob");
-    await put(IMPORT_STORE_BLOB_PATH, payload, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json"
-    });
-  }
-}
-
-export async function listImportedSkills(): Promise<ImportedSkillDocument[]> {
-  return [...(await readImportStore()).skills].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-}
-
-export async function listImportedMcps(): Promise<ImportedMcpDocument[]> {
-  return [...(await readImportStore()).mcps].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-}
-
-export async function saveImportedSkills(skills: ImportedSkillDocument[]): Promise<void> {
-  const store = await readImportStore();
-  await writeImportStore({
-    ...store,
-    skills
-  });
-}
-
-export async function saveImportedMcps(mcps: ImportedMcpDocument[]): Promise<void> {
-  const store = await readImportStore();
-  await writeImportStore({
-    ...store,
-    mcps
-  });
-}
-
-export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkillDocument> {
-  const { raw, normalizedUrl } = await fetchRemoteText(inputUrl);
-  const draft = buildImportedSkillDraft(raw, normalizedUrl);
-  const store = await readImportStore();
-
-  const nextSkills = [
-    draft,
-    ...store.skills.filter(
-      (skill) => skill.slug !== draft.slug && skill.canonicalUrl !== draft.canonicalUrl && skill.sourceUrl !== inputUrl
-    )
   ];
 
-  await writeImportStore({
-    ...store,
-    skills: nextSkills
-  });
-
-  return draft;
+  return {
+    slug: skill.slug,
+    title: version.title,
+    description: version.description,
+    category: version.category,
+    accent: category?.accent ?? "signal-red",
+    featured: false,
+    visibility: version.visibility,
+    origin: "remote",
+    href: buildSkillVersionHref(skill.slug, version.version),
+    path: version.canonicalUrl,
+    relativeDir: `imports/${skill.slug}`,
+    updatedAt: version.updatedAt,
+    tags: normalizeTags(version.tags),
+    headings: [],
+    body,
+    excerpt: createExcerpt(body),
+    references,
+    agents: [buildImportedAgent(version, skill.slug)],
+    automations: [],
+    version: version.version,
+    versionLabel: buildVersionLabel(version.version),
+    availableVersions: skill.versions
+      .slice()
+      .sort((left, right) => right.version - left.version)
+      .map(toVersionReference),
+    ownerName: version.ownerName,
+    sources: [source]
+  };
 }
 
 export function createNextImportedSkillVersion(
@@ -873,47 +474,6 @@ export function createNextImportedSkillVersion(
     version: versionNumber,
     versions: [snapshot, ...skill.versions].sort((left, right) => right.version - left.version)
   };
-}
-
-export async function syncImportedSkill(skill: ImportedSkillDocument): Promise<ImportedSkillDocument> {
-  const { raw, normalizedUrl } = await fetchRemoteText(skill.canonicalUrl);
-  const refreshed = buildImportedSkillDraft(raw, normalizedUrl, new Date());
-  const latest = materializeImportedSkillVersion(skill);
-
-  const changed =
-    latest.title !== refreshed.title ||
-    latest.description !== refreshed.description ||
-    latest.category !== refreshed.category ||
-    latest.body !== refreshed.body ||
-    latest.canonicalUrl !== refreshed.canonicalUrl ||
-    latest.ownerName !== refreshed.ownerName ||
-    JSON.stringify(latest.tags) !== JSON.stringify(refreshed.tags);
-
-  if (!changed) {
-    return {
-      ...skill,
-      lastSyncedAt: refreshed.lastSyncedAt,
-      updatedAt: skill.updatedAt
-    };
-  }
-
-  return createNextImportedSkillVersion(
-    skill,
-    {
-      title: refreshed.title,
-      description: refreshed.description,
-      category: refreshed.category,
-      body: refreshed.body,
-      sourceUrl: refreshed.sourceUrl,
-      canonicalUrl: refreshed.canonicalUrl,
-      ownerName: refreshed.ownerName,
-      tags: refreshed.tags,
-      visibility: refreshed.visibility,
-      syncEnabled: refreshed.syncEnabled,
-      lastSyncedAt: refreshed.lastSyncedAt
-    },
-    refreshed.updatedAt
-  );
 }
 
 export function createNextImportedMcpVersion(
@@ -958,19 +518,180 @@ export function getImportedMcpVersion(
   );
 }
 
+export async function syncImportedSkill(skill: ImportedSkillDocument): Promise<ImportedSkillDocument> {
+  const { raw, normalizedUrl } = await fetchRemoteText(skill.canonicalUrl);
+  const refreshed = buildImportedSkillDraft(raw, normalizedUrl, new Date());
+  const latest = materializeImportedSkillVersion(skill);
+
+  const changed =
+    latest.title !== refreshed.title ||
+    latest.description !== refreshed.description ||
+    latest.category !== refreshed.category ||
+    latest.body !== refreshed.body ||
+    latest.canonicalUrl !== refreshed.canonicalUrl ||
+    latest.ownerName !== refreshed.ownerName ||
+    JSON.stringify(latest.tags) !== JSON.stringify(refreshed.tags);
+
+  if (!changed) {
+    return {
+      ...skill,
+      lastSyncedAt: refreshed.lastSyncedAt,
+      updatedAt: skill.updatedAt
+    };
+  }
+
+  return createNextImportedSkillVersion(
+    skill,
+    {
+      title: refreshed.title,
+      description: refreshed.description,
+      category: refreshed.category,
+      body: refreshed.body,
+      sourceUrl: refreshed.sourceUrl,
+      canonicalUrl: refreshed.canonicalUrl,
+      ownerName: refreshed.ownerName,
+      tags: refreshed.tags,
+      visibility: refreshed.visibility,
+      syncEnabled: refreshed.syncEnabled,
+      lastSyncedAt: refreshed.lastSyncedAt
+    },
+    refreshed.updatedAt
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DB-backed storage operations
+// ---------------------------------------------------------------------------
+
+function skillRecordToImportedDoc(record: SkillRecord): ImportedSkillDocument {
+  const versions: ImportedSkillVersion[] = record.availableVersions.map((vRef) => ({
+    version: vRef.version,
+    updatedAt: vRef.updatedAt,
+    title: record.title,
+    description: record.description,
+    category: record.category,
+    body: record.body,
+    sourceUrl: record.path,
+    canonicalUrl: record.path,
+    ownerName: record.ownerName,
+    tags: record.tags,
+    visibility: record.visibility,
+    syncEnabled: true,
+    lastSyncedAt: vRef.updatedAt
+  }));
+
+  return {
+    slug: record.slug,
+    title: record.title,
+    description: record.description,
+    category: record.category,
+    body: record.body,
+    sourceUrl: record.path,
+    canonicalUrl: record.path,
+    ownerName: record.ownerName,
+    tags: record.tags,
+    visibility: record.visibility,
+    createdAt: record.updatedAt,
+    updatedAt: record.updatedAt,
+    syncEnabled: true,
+    lastSyncedAt: record.updatedAt,
+    version: record.version,
+    versions
+  };
+}
+
+export async function listImportedSkills(): Promise<ImportedSkillDocument[]> {
+  const records = await dbListSkills({ origin: "remote" });
+  return records.map(skillRecordToImportedDoc);
+}
+
+export async function listImportedMcps(): Promise<ImportedMcpDocument[]> {
+  return dbListMcps();
+}
+
+export async function saveImportedSkills(skills: ImportedSkillDocument[]): Promise<void> {
+  await Promise.all(
+    skills.map(async (skill) => {
+      await dbUpdateSkill(skill.slug, {
+        title: skill.title,
+        description: skill.description,
+        category: skill.category,
+        body: skill.body,
+        visibility: skill.visibility,
+        tags: skill.tags,
+        ownerName: skill.ownerName,
+        sourceUrl: skill.sourceUrl,
+        canonicalUrl: skill.canonicalUrl,
+        syncEnabled: skill.syncEnabled,
+        version: skill.version
+      }).catch(() => {
+        // Skill may not exist yet; create it
+        return dbCreateSkill({
+          slug: skill.slug,
+          title: skill.title,
+          description: skill.description,
+          category: skill.category,
+          body: skill.body,
+          visibility: skill.visibility,
+          origin: "remote",
+          tags: skill.tags,
+          ownerName: skill.ownerName,
+          sourceUrl: skill.sourceUrl,
+          canonicalUrl: skill.canonicalUrl,
+          syncEnabled: skill.syncEnabled,
+          version: skill.version
+        });
+      });
+    })
+  );
+}
+
+export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkillDocument> {
+  const { raw, normalizedUrl } = await fetchRemoteText(inputUrl);
+  const draft = buildImportedSkillDraft(raw, normalizedUrl);
+
+  await dbCreateSkill({
+    slug: draft.slug,
+    title: draft.title,
+    description: draft.description,
+    category: draft.category,
+    body: draft.body,
+    visibility: draft.visibility,
+    origin: "remote",
+    tags: draft.tags,
+    ownerName: draft.ownerName,
+    sourceUrl: draft.sourceUrl,
+    canonicalUrl: draft.canonicalUrl,
+    syncEnabled: draft.syncEnabled,
+    version: 1
+  }).catch(async () => {
+    await dbUpdateSkill(draft.slug, {
+      title: draft.title,
+      description: draft.description,
+      category: draft.category,
+      body: draft.body,
+      tags: draft.tags,
+      ownerName: draft.ownerName,
+      sourceUrl: draft.sourceUrl,
+      canonicalUrl: draft.canonicalUrl,
+      syncEnabled: draft.syncEnabled
+    });
+  });
+
+  return draft;
+}
+
 export async function importRemoteMcps(inputUrl: string): Promise<ImportedMcpDocument[]> {
   const { raw, normalizedUrl } = await fetchRemoteText(inputUrl);
   const documents = extractMcpDocuments(raw, normalizedUrl);
-  const store = await readImportStore();
+  const existingMcps = await dbListMcps();
 
   const mergedDocuments = documents.map((incoming) => {
-    const existing = store.mcps.find(
+    const existing = existingMcps.find(
       (entry) => entry.id === incoming.id || (entry.manifestUrl === incoming.manifestUrl && entry.name === incoming.name)
     );
 
-    if (!existing) {
-      return incoming;
-    }
+    if (!existing) return incoming;
 
     const latest = getImportedMcpVersion(existing);
     const changed =
@@ -986,9 +707,7 @@ export async function importRemoteMcps(inputUrl: string): Promise<ImportedMcpDoc
       JSON.stringify(latest.tags) !== JSON.stringify(incoming.tags) ||
       latest.raw !== incoming.raw;
 
-    if (!changed) {
-      return existing;
-    }
+    if (!changed) return existing;
 
     return createNextImportedMcpVersion(
       existing,
@@ -1009,17 +728,6 @@ export async function importRemoteMcps(inputUrl: string): Promise<ImportedMcpDoc
     );
   });
 
-  const dedupedExisting = store.mcps.filter(
-    (existing) =>
-      !mergedDocuments.some(
-        (incoming) => incoming.id === existing.id || (incoming.manifestUrl === existing.manifestUrl && incoming.name === existing.name)
-      )
-  );
-
-  await writeImportStore({
-    ...store,
-    mcps: [...mergedDocuments, ...dedupedExisting]
-  });
-
+  await Promise.all(mergedDocuments.map(dbUpsertMcp));
   return mergedDocuments;
 }

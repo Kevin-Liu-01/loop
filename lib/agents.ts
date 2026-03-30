@@ -6,7 +6,7 @@ import type {
   AgentProviderPreset,
   ImportedMcpDocument,
   SkillRecord,
-  SkillwireSnapshot
+  LoopSnapshot
 } from "@/lib/types";
 
 export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
@@ -152,7 +152,7 @@ function serializeMcp(mcp: ImportedMcpDocument): string {
     .join("\n");
 }
 
-export function buildAgentContext(snapshot: SkillwireSnapshot, input: AgentRunInput): string {
+export function buildAgentContext(snapshot: LoopSnapshot, input: AgentRunInput): string {
   const selectedSkills =
     input.selectedSkillSlugs && input.selectedSkillSlugs.length > 0
       ? snapshot.skills.filter((skill) => input.selectedSkillSlugs?.includes(skill.slug))
@@ -163,7 +163,7 @@ export function buildAgentContext(snapshot: SkillwireSnapshot, input: AgentRunIn
       : [];
 
   return [
-    input.systemPrompt?.trim() || "You are Skillwire's configurable agent runner. Use attached skills and MCP definitions precisely.",
+    input.systemPrompt?.trim() || "You are Loop's configurable agent runner. Use attached skills and MCP definitions precisely.",
     "",
     `Agent name: ${input.agentName?.trim() || "Untitled agent"}`,
     `Model: ${input.model}`,
@@ -182,7 +182,7 @@ export function buildAgentContext(snapshot: SkillwireSnapshot, input: AgentRunIn
   ].join("\n\n");
 }
 
-const GATEWAY_EDITOR_MODEL = process.env.SKILLWIRE_MODEL ?? "openai/gpt-5-mini";
+const GATEWAY_EDITOR_MODEL = process.env.LOOP_MODEL ?? "openai/gpt-5-mini";
 
 export function getGatewayEditorModel(): LanguageModel | null {
   const apiKey = process.env.AI_GATEWAY_API_KEY;

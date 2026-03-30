@@ -1,4 +1,9 @@
 import type { CategoryDefinition, CategorySlug, MembershipPlan } from "@/lib/types";
+import { computeSourceLogoUrl } from "@/lib/skill-icons";
+
+function s(id: string, label: string, url: string, kind: "rss" | "atom" | "docs", tags: string[]) {
+  return { id, label, url, kind, tags, logoUrl: computeSourceLogoUrl(url) } as const;
+}
 
 export const CATEGORY_REGISTRY: CategoryDefinition[] = [
   {
@@ -9,37 +14,14 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Editorial UI craft, motion systems, design-engineering references, and production-ready frontend skills.",
     hero: "Daily frontend radar with local skills, source pulls, and reusable agent prompts.",
     accent: "signal-red",
+    icon: "palette",
     status: "live",
     keywords: ["frontend", "motion", "design", "react", "next.js", "ui", "animation"],
     sources: [
-      {
-        id: "vercel-blog",
-        label: "Vercel Blog",
-        url: "https://vercel.com/atom",
-        kind: "atom",
-        tags: ["vercel", "next.js", "ai", "frontend"]
-      },
-      {
-        id: "react-blog",
-        label: "React",
-        url: "https://react.dev/rss.xml",
-        kind: "rss",
-        tags: ["react", "frontend"]
-      },
-      {
-        id: "nextjs-releases",
-        label: "Next.js Releases",
-        url: "https://github.com/vercel/next.js/releases.atom",
-        kind: "atom",
-        tags: ["next.js", "releases"]
-      },
-      {
-        id: "hn-show",
-        label: "Hacker News Show",
-        url: "https://hnrss.org/show",
-        kind: "rss",
-        tags: ["hn", "show-hn"]
-      }
+      s("vercel-blog", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "next.js", "ai", "frontend"]),
+      s("react-blog", "React", "https://react.dev/rss.xml", "rss", ["react", "frontend"]),
+      s("nextjs-releases", "Next.js Releases", "https://github.com/vercel/next.js/releases.atom", "atom", ["next.js", "releases"]),
+      s("hn-show", "Hacker News Show", "https://hnrss.org/show", "rss", ["hn", "show-hn"])
     ]
   },
   {
@@ -50,30 +32,13 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Living operational guidance for search, generative-engine optimization, structured data, and source quality.",
     hero: "Track crawler, citation, and entity-surface shifts without drowning in acronym soup.",
     accent: "signal-blue",
+    icon: "search",
     status: "live",
     keywords: ["seo", "geo", "aeo", "search", "schema", "crawler", "citability"],
     sources: [
-      {
-        id: "google-search-central",
-        label: "Google Search Central",
-        url: "https://developers.google.com/search/blog",
-        kind: "docs",
-        tags: ["google", "search"]
-      },
-      {
-        id: "moz-blog",
-        label: "Moz Blog",
-        url: "https://moz.com/blog/feed",
-        kind: "rss",
-        tags: ["seo", "industry"]
-      },
-      {
-        id: "search-engine-land",
-        label: "Search Engine Land",
-        url: "https://searchengineland.com/feed",
-        kind: "rss",
-        tags: ["seo", "industry"]
-      }
+      s("google-search-central", "Google Search Central", "https://developers.google.com/search/blog", "docs", ["google", "search"]),
+      s("moz-blog", "Moz Blog", "https://moz.com/blog/feed", "rss", ["seo", "industry"]),
+      s("search-engine-land", "Search Engine Land", "https://searchengineland.com/feed", "rss", ["seo", "industry"])
     ]
   },
   {
@@ -84,23 +49,12 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Turn signals into ranked content backlogs, sharper drafts, and repeatable publishing systems.",
     hero: "The content side of the machine: what to say, how to say it, and why anyone should care.",
     accent: "signal-gold",
+    icon: "megaphone",
     status: "live",
     keywords: ["social", "content", "linkedin", "x", "post", "distribution"],
     sources: [
-      {
-        id: "signal-radar",
-        label: "Signal Radar",
-        url: "https://hnrss.org/frontpage",
-        kind: "rss",
-        tags: ["hn", "social-angle"]
-      },
-      {
-        id: "product-hunt",
-        label: "Product Hunt",
-        url: "https://www.producthunt.com/feed",
-        kind: "rss",
-        tags: ["launches", "products"]
-      }
+      s("signal-radar", "Signal Radar", "https://hnrss.org/frontpage", "rss", ["hn", "social-angle"]),
+      s("product-hunt", "Product Hunt", "https://www.producthunt.com/feed", "rss", ["launches", "products"])
     ]
   },
   {
@@ -111,30 +65,13 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Infra signals focused on deploy surfaces, storage, performance, and platform capability shifts.",
     hero: "For the infrastructure layer you do care about, even when you claim you do not.",
     accent: "signal-blue",
+    icon: "server",
     status: "seeded",
     keywords: ["infra", "hosting", "edge", "observability", "serverless", "platform"],
     sources: [
-      {
-        id: "cloudflare-blog",
-        label: "Cloudflare Blog",
-        url: "https://blog.cloudflare.com/rss/",
-        kind: "rss",
-        tags: ["cloudflare", "edge"]
-      },
-      {
-        id: "vercel-blog-infra",
-        label: "Vercel Blog",
-        url: "https://vercel.com/atom",
-        kind: "atom",
-        tags: ["vercel", "infra"]
-      },
-      {
-        id: "kubernetes-blog",
-        label: "Kubernetes",
-        url: "https://kubernetes.io/feed.xml",
-        kind: "rss",
-        tags: ["kubernetes", "infra"]
-      }
+      s("cloudflare-blog", "Cloudflare Blog", "https://blog.cloudflare.com/rss/", "rss", ["cloudflare", "edge"]),
+      s("vercel-blog-infra", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "infra"]),
+      s("kubernetes-blog", "Kubernetes", "https://kubernetes.io/feed.xml", "rss", ["kubernetes", "infra"])
     ]
   },
   {
@@ -145,23 +82,12 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "A dedicated lane for container signals so infra notes stop getting buried in generic ops noise.",
     hero: "Container changes worth caring about, minus the usual YAML-induced Stockholm syndrome.",
     accent: "signal-red",
+    icon: "box",
     status: "seeded",
     keywords: ["container", "docker", "oci", "kubernetes", "podman"],
     sources: [
-      {
-        id: "docker-blog",
-        label: "Docker",
-        url: "https://www.docker.com/blog/feed/",
-        kind: "rss",
-        tags: ["docker", "containers"]
-      },
-      {
-        id: "containerd-releases",
-        label: "containerd Releases",
-        url: "https://github.com/containerd/containerd/releases.atom",
-        kind: "atom",
-        tags: ["containerd", "releases"]
-      }
+      s("docker-blog", "Docker", "https://www.docker.com/blog/feed/", "rss", ["docker", "containers"]),
+      s("containerd-releases", "containerd Releases", "https://github.com/containerd/containerd/releases.atom", "atom", ["containerd", "releases"])
     ]
   },
   {
@@ -172,30 +98,13 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "A daily desk for agent systems, orchestration patterns, provider changes, and protocol-level moves.",
     hero: "Where agent infrastructure, orchestration, and protocol work gets distilled into something usable.",
     accent: "signal-gold",
+    icon: "brain",
     status: "seeded",
     keywords: ["agent", "a2a", "orchestration", "tools", "mcp", "sdk"],
     sources: [
-      {
-        id: "openai-news",
-        label: "OpenAI News",
-        url: "https://openai.com/news/rss.xml",
-        kind: "rss",
-        tags: ["agents", "llms"]
-      },
-      {
-        id: "anthropic-news",
-        label: "Anthropic News",
-        url: "https://www.anthropic.com/news",
-        kind: "docs",
-        tags: ["agents", "llms"]
-      },
-      {
-        id: "vercel-ai",
-        label: "Vercel AI",
-        url: "https://vercel.com/atom",
-        kind: "atom",
-        tags: ["ai-sdk", "agents"]
-      }
+      s("openai-news", "OpenAI News", "https://openai.com/news/rss.xml", "rss", ["agents", "llms"]),
+      s("anthropic-news", "Anthropic News", "https://www.anthropic.com/news", "docs", ["agents", "llms"]),
+      s("vercel-ai", "Vercel AI", "https://vercel.com/atom", "atom", ["ai-sdk", "agents"])
     ]
   },
   {
@@ -206,30 +115,13 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Security review and threat-model skills surfaced alongside the same daily signal machinery.",
     hero: "Because the security pass should not be the scene where everyone suddenly remembers consequences exist.",
     accent: "signal-blue",
+    icon: "shield",
     status: "live",
     keywords: ["security", "threat", "auth", "abuse", "hardening"],
     sources: [
-      {
-        id: "github-advisory",
-        label: "GitHub Security Advisories",
-        url: "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm",
-        kind: "docs",
-        tags: ["security", "npm", "advisories"]
-      },
-      {
-        id: "portswigger-research",
-        label: "PortSwigger Research",
-        url: "https://portswigger.net/research/rss",
-        kind: "rss",
-        tags: ["security", "research", "web"]
-      },
-      {
-        id: "krebs-security",
-        label: "Krebs on Security",
-        url: "https://krebsonsecurity.com/feed/",
-        kind: "rss",
-        tags: ["security", "industry"]
-      }
+      s("github-advisory", "GitHub Security Advisories", "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm", "docs", ["security", "npm", "advisories"]),
+      s("portswigger-research", "PortSwigger Research", "https://portswigger.net/research/rss", "rss", ["security", "research", "web"]),
+      s("krebs-security", "Krebs on Security", "https://krebsonsecurity.com/feed/", "rss", ["security", "industry"])
     ]
   },
   {
@@ -240,30 +132,13 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
       "Operational skills for CI, issue triage, release hygiene, and the less glamorous parts of shipping.",
     hero: "The glue code and operational muscle memory that keeps the rest of the machine from face-planting.",
     accent: "signal-gold",
+    icon: "settings",
     status: "live",
     keywords: ["ops", "github", "linear", "automation", "maintenance", "workflow"],
     sources: [
-      {
-        id: "github-blog",
-        label: "GitHub Blog",
-        url: "https://github.blog/feed/",
-        kind: "rss",
-        tags: ["github", "ops", "releases"]
-      },
-      {
-        id: "github-changelog",
-        label: "GitHub Changelog",
-        url: "https://github.blog/changelog/feed/",
-        kind: "rss",
-        tags: ["github", "changelog"]
-      },
-      {
-        id: "linear-changelog",
-        label: "Linear Changelog",
-        url: "https://linear.app/changelog",
-        kind: "docs",
-        tags: ["linear", "ops"]
-      }
+      s("github-blog", "GitHub Blog", "https://github.blog/feed/", "rss", ["github", "ops", "releases"]),
+      s("github-changelog", "GitHub Changelog", "https://github.blog/changelog/feed/", "rss", ["github", "changelog"]),
+      s("linear-changelog", "Linear Changelog", "https://linear.app/changelog", "docs", ["linear", "ops"])
     ]
   }
 ];

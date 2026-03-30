@@ -6,6 +6,15 @@ import matter from "gray-matter";
 import { parse as parseToml } from "smol-toml";
 import YAML from "yaml";
 
+import { parseAgentDocs } from "@/lib/agent-docs";
+import {
+  listSkills as dbListSkills,
+  getSkillBySlug as dbGetSkillBySlug,
+  getSkillAtVersion as dbGetSkillAtVersion
+} from "@/lib/db/skills";
+import { listCategories as dbListCategories } from "@/lib/db/categories";
+import { listMcps as dbListMcps } from "@/lib/db/mcps";
+import { listBriefs as dbListBriefs } from "@/lib/db/briefs";
 import { buildSkillVersionHref, buildVersionLabel } from "@/lib/format";
 import { createExcerpt, extractHeadings, slugify } from "@/lib/markdown";
 import {
@@ -14,12 +23,6 @@ import {
   MEMBERSHIP_PLANS,
   SKILL_OVERRIDES
 } from "@/lib/registry";
-import { buildImportedSkillRecord, listImportedMcps, listImportedSkills } from "@/lib/imports";
-import {
-  buildUserSkillAutomation,
-  buildUserSkillRecord,
-  listUserSkillDocuments
-} from "@/lib/user-skills";
 import type {
   AgentPrompt,
   AutomationSummary,
@@ -27,14 +30,13 @@ import type {
   CategorySlug,
   ReferenceDoc,
   SkillRecord,
-  SkillwireSnapshot
+  LoopSnapshot
 } from "@/lib/types";
 
 const WORKSPACE_ROOT = process.cwd();
 const CODEX_ROOT = path.join(os.homedir(), ".codex");
 const CODEX_SKILLS_ROOT = path.join(CODEX_ROOT, "skills");
 const AUTOMATIONS_ROOT = path.join(CODEX_ROOT, "automations");
-const SNAPSHOT_FILE = path.join(WORKSPACE_ROOT, "content/generated/skillwire-snapshot.local.json");
 
 const IGNORE_DIRS = new Set([
   ".git",
@@ -57,7 +59,7 @@ async function pathExists(targetPath: string): Promise<boolean> {
   }
 }
 
-async function findSkillFiles(rootDir: string): Promise<string[]> {
+export async function findSkillFiles(rootDir: string): Promise<string[]> {
   if (!(await pathExists(rootDir))) {
     return [];
   }
@@ -189,7 +191,7 @@ async function parseReferences(skillDir: string): Promise<ReferenceDoc[]> {
   );
 }
 
-async function parseSkill(skillFile: string): Promise<SkillRecord> {
+export async function parseSkill(skillFile: string): Promise<SkillRecord> {
   const raw = await fs.readFile(skillFile, "utf8");
   const stats = await fs.stat(skillFile);
   const skillDir = path.dirname(skillFile);
@@ -206,6 +208,12 @@ async function parseSkill(skillFile: string): Promise<SkillRecord> {
   const category = inferCategory(slug, `${description}\n${content}`, skillFile);
   const override = SKILL_OVERRIDES[slug];
   const origin = skillFile.startsWith(CODEX_ROOT) ? "codex" : "repo";
+
+  const [references, agents, agentDocs] = await Promise.all([
+    parseReferences(skillDir),
+    parseAgentPrompts(skillDir),
+    parseAgentDocs(skillDir)
+  ]);
 
   return {
     slug,
@@ -232,8 +240,9 @@ async function parseSkill(skillFile: string): Promise<SkillRecord> {
     headings: extractHeadings(content),
     body: content.trim(),
     excerpt: createExcerpt(content),
-    references: await parseReferences(skillDir),
-    agents: await parseAgentPrompts(skillDir),
+    references,
+    agents,
+    agentDocs,
     automations: [],
     version: 1,
     versionLabel: buildVersionLabel(1),
@@ -286,40 +295,6 @@ async function parseAutomations(): Promise<AutomationSummary[]> {
   );
 
   return items.filter((item): item is AutomationSummary => item !== null);
-}
-
-function getSkillOriginPriority(skill: SkillRecord): number {
-  switch (skill.origin) {
-    case "user":
-      return 4;
-    case "remote":
-      return 3;
-    case "repo":
-      return 2;
-    case "codex":
-      return 1;
-    default:
-      return 0;
-  }
-}
-
-function shouldReplaceSkillRecord(existing: SkillRecord | undefined, incoming: SkillRecord): boolean {
-  if (!existing) {
-    return true;
-  }
-
-  const existingPriority = getSkillOriginPriority(existing);
-  const incomingPriority = getSkillOriginPriority(incoming);
-
-  if (incomingPriority !== existingPriority) {
-    return incomingPriority > existingPriority;
-  }
-
-  if (incoming.version !== existing.version) {
-    return incoming.version > existing.version;
-  }
-
-  return +new Date(incoming.updatedAt) >= +new Date(existing.updatedAt);
 }
 
 function attachAutomations(
@@ -375,128 +350,64 @@ function attachAutomations(
   };
 }
 
-export async function getLocalSnapshotBase(): Promise<
-  Omit<SkillwireSnapshot, "dailyBriefs" | "generatedAt" | "generatedFrom">
-> {
-  const repoSkillFiles = await findSkillFiles(WORKSPACE_ROOT);
-  const codexSkillFiles = await findSkillFiles(CODEX_SKILLS_ROOT);
-  const parsedSkills = await Promise.all([...repoSkillFiles, ...codexSkillFiles].map(parseSkill));
-  const userSkillDocuments = await listUserSkillDocuments();
-  const importedSkills = await listImportedSkills();
-  const importedMcps = await listImportedMcps();
-  const userSkillRecords = userSkillDocuments.map(buildUserSkillRecord);
-  const importedSkillRecords = importedSkills.map(buildImportedSkillRecord);
-  const dedupedSkills = Array.from(
-    [...parsedSkills, ...userSkillRecords, ...importedSkillRecords].reduce((map, skill) => {
-      const existing = map.get(skill.slug);
-      if (shouldReplaceSkillRecord(existing, skill)) {
-        map.set(skill.slug, skill);
-      }
+// ---------------------------------------------------------------------------
+// Primary DB-backed queries (replaces snapshot assembly)
+// ---------------------------------------------------------------------------
 
-      return map;
-    }, new Map<string, SkillRecord>()).values()
-  );
-  const categories = CATEGORY_REGISTRY;
-  const automations = [
-    ...(await parseAutomations()),
-    ...userSkillDocuments.map(buildUserSkillAutomation).filter((item): item is AutomationSummary => item !== null)
-  ];
-  const attached = attachAutomations(dedupedSkills, automations, categories);
+export async function getSkillCatalogue(): Promise<
+  Omit<LoopSnapshot, "dailyBriefs" | "generatedAt" | "generatedFrom">
+> {
+  const [skills, categories, mcps] = await Promise.all([
+    dbListSkills(),
+    dbListCategories(),
+    dbListMcps()
+  ]);
+
+  const automations = await parseAutomations();
+  const attached = attachAutomations(skills, automations, categories.length > 0 ? categories : CATEGORY_REGISTRY);
 
   return {
-    categories,
+    categories: categories.length > 0 ? categories : CATEGORY_REGISTRY,
     skills: attached.skills,
-    mcps: importedMcps,
+    mcps,
     automations: attached.automations,
     plans: MEMBERSHIP_PLANS
   };
 }
 
+/** @deprecated Use getSkillCatalogue() instead */
+export const getLocalSnapshotBase = getSkillCatalogue;
+
 export async function getSkillRecordBySlug(
   slug: string,
   requestedVersion?: number
 ): Promise<SkillRecord | null> {
-  const base = await getLocalSnapshotBase();
-  const skill = base.skills.find((entry) => entry.slug === slug);
-
-  if (!skill) {
-    return null;
+  if (requestedVersion) {
+    return dbGetSkillAtVersion(slug, requestedVersion);
   }
-
-  if (skill.origin === "user") {
-    const documents = await listUserSkillDocuments();
-    const document = documents.find((entry) => entry.slug === slug);
-    if (!document) {
-      return null;
-    }
-
-    const record = buildUserSkillRecord(document, requestedVersion);
-    return requestedVersion && !record.availableVersions.some((version) => version.version === requestedVersion)
-      ? null
-      : {
-          ...record,
-          automations: skill.automations
-        };
-  }
-
-  if (skill.origin === "remote") {
-    const documents = await listImportedSkills();
-    const document = documents.find((entry) => entry.slug === slug);
-    if (!document) {
-      return null;
-    }
-
-    const record = buildImportedSkillRecord(document, requestedVersion);
-    return requestedVersion && !record.availableVersions.some((version) => version.version === requestedVersion)
-      ? null
-      : {
-          ...record,
-          automations: skill.automations
-        };
-  }
-
-  if (requestedVersion && requestedVersion !== 1) {
-    return null;
-  }
-
-  return skill;
+  return dbGetSkillBySlug(slug);
 }
 
-export async function readLocalSnapshotFile(): Promise<SkillwireSnapshot | null> {
-  if (!(await pathExists(SNAPSHOT_FILE))) {
-    return null;
-  }
-
-  const raw = await fs.readFile(SNAPSHOT_FILE, "utf8");
-  const parsed = JSON.parse(raw) as Partial<SkillwireSnapshot>;
-  if (!parsed.skills || !parsed.categories || !parsed.automations || !parsed.dailyBriefs || !parsed.plans) {
-    return null;
-  }
-
-  const hasVersionedSkills = parsed.skills.every(
-    (skill) =>
-      typeof skill?.version === "number" &&
-      typeof skill?.versionLabel === "string" &&
-      typeof skill?.href === "string" &&
-      Array.isArray(skill?.availableVersions)
-  );
-  const hasVersionedMcps = (parsed.mcps ?? []).every(
-    (mcp) =>
-      typeof mcp?.version === "number" &&
-      typeof mcp?.versionLabel === "string" &&
-      Array.isArray(mcp?.versions)
-  );
-  if (!hasVersionedSkills || !hasVersionedMcps) {
-    return null;
-  }
+export async function getLoopSnapshot(): Promise<LoopSnapshot> {
+  const [catalogue, briefs] = await Promise.all([
+    getSkillCatalogue(),
+    dbListBriefs()
+  ]);
 
   return {
-    ...parsed,
-    mcps: parsed.mcps ?? []
-  } as SkillwireSnapshot;
+    ...catalogue,
+    dailyBriefs: briefs,
+    generatedAt: new Date().toISOString(),
+    generatedFrom: "remote-refresh"
+  };
 }
 
-export async function writeLocalSnapshotFile(snapshot: SkillwireSnapshot): Promise<void> {
-  await fs.mkdir(path.dirname(SNAPSHOT_FILE), { recursive: true });
-  await fs.writeFile(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2));
-}
+// ---------------------------------------------------------------------------
+// Filesystem helpers (kept for sync/migration)
+// ---------------------------------------------------------------------------
+
+export {
+  WORKSPACE_ROOT,
+  CODEX_SKILLS_ROOT,
+  CODEX_ROOT
+};

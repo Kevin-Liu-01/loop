@@ -82,7 +82,7 @@ function buildInitializeParams() {
     protocolVersion: MCP_PROTOCOL_VERSION,
     capabilities: {},
     clientInfo: {
-      name: "skillwire",
+      name: "loop",
       version: "0.1.0"
     }
   };
