@@ -125,6 +125,7 @@ export type SkillRecord = {
   agentDocs?: AgentDocs;
   price?: SkillPrice | null;
   creatorClerkUserId?: string;
+  iconUrl?: string;
 };
 
 export type DailySignal = {
@@ -142,6 +143,7 @@ export type SkillAutomationState = {
   status: UserSkillAutomationStatus;
   prompt: string;
   lastRunAt?: string;
+  consecutiveFailures?: number;
 };
 
 export type SkillUpdateEntry = {
@@ -365,6 +367,7 @@ export type ImportedMcpDocument = {
   version: number;
   versionLabel: string;
   versions: ImportedMcpVersion[];
+  iconUrl?: string;
 };
 
 export type ImportedResourceStore = {

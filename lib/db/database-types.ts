@@ -112,6 +112,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           search_vector: unknown;
+          icon_url: string | null;
         };
         Insert: {
           id?: string;
@@ -142,6 +143,7 @@ export type Database = {
           version?: number;
           created_at?: string;
           updated_at?: string;
+          icon_url?: string | null;
         };
         Update: {
           id?: string;
@@ -172,6 +174,7 @@ export type Database = {
           version?: number;
           created_at?: string;
           updated_at?: string;
+          icon_url?: string | null;
         };
         Relationships: [];
       };
@@ -248,6 +251,7 @@ export type Database = {
           version_label: string;
           created_at: string;
           updated_at: string;
+          icon_url: string | null;
         };
         Insert: {
           id?: string;
@@ -267,6 +271,7 @@ export type Database = {
           version_label?: string;
           created_at?: string;
           updated_at?: string;
+          icon_url?: string | null;
         };
         Update: {
           id?: string;
@@ -286,6 +291,7 @@ export type Database = {
           version_label?: string;
           created_at?: string;
           updated_at?: string;
+          icon_url?: string | null;
         };
         Relationships: [];
       };
