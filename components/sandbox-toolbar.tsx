@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 import {
   ChevronDownIcon,
   ChevronUpIcon,
   PanelLeftIcon,
   PanelRightIcon,
+  SparkIcon,
 } from "@/components/frontier-icons";
 import { SkillIcon, McpIcon } from "@/components/ui/skill-icon";
 import { Separator } from "@/components/ui/shadcn/separator";
@@ -65,8 +66,8 @@ function PanelToggle({
   return (
     <button
       className={cn(
-        "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-transparent text-ink-soft transition-colors hover:border-line/80 hover:bg-paper-3 hover:text-ink",
-        active && "border-line/60 bg-paper-3/60 text-ink",
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
+        active && "bg-paper-3/60 text-ink shadow-sm ring-1 ring-line/40",
       )}
       onClick={onClick}
       type="button"
@@ -87,15 +88,15 @@ function ContextSectionHeader({
   total: number;
 }) {
   return (
-    <div className="flex items-baseline gap-2.5 pb-3">
-      <h3 className="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-ink-soft">
+    <div className="flex items-baseline gap-2 pb-2">
+      <h3 className="m-0 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-ink-faint">
         {label}
       </h3>
-      <span className="font-mono text-[0.6rem] tabular-nums text-ink-faint">
+      <span className="font-mono text-[0.5rem] tabular-nums text-ink-faint/60">
         {count > 0 ? (
           <>
-            <span className="text-accent">{count}</span>
-            <span className="mx-0.5">/</span>
+            <span className="font-semibold text-accent">{count}</span>
+            <span className="mx-0.5 opacity-50">/</span>
             {total}
           </>
         ) : (
@@ -124,26 +125,57 @@ export function SandboxToolbar({
     (m) => m.transport === "stdio" || m.transport === "http",
   );
 
-  const [contextExpanded, setContextExpanded] = useState(true);
+  const [contextOpen, setContextOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const selectedSkillCount = config.selectedSkillSlugs.length;
   const selectedMcpCount = config.selectedMcpIds.length;
   const totalSelected = selectedSkillCount + selectedMcpCount;
 
+  const closeDropdown = useCallback(() => setContextOpen(false), []);
+
+  useEffect(() => {
+    if (!contextOpen) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(target)
+      ) {
+        closeDropdown();
+      }
+    }
+
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") closeDropdown();
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [contextOpen, closeDropdown]);
+
   return (
-    <div className="shrink-0 border-b border-line/80 bg-linear-to-b from-paper-2/55 to-transparent dark:from-paper-2/30">
-      {/* Row 1: panel toggles + runtime/provider/model */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 sm:px-6">
+    <div className="relative shrink-0 border-b border-line/60 bg-paper-2/30 backdrop-blur-sm dark:bg-paper-2/15">
+      {/* Row: panel toggles + runtime/provider/model */}
+      <div className="flex flex-wrap text-xs items-center gap-x-3 gap-y-1.5 px-3 py-2 sm:px-4">
         <PanelToggle
           active={sidebarOpen}
           onClick={onToggleSidebar}
           label="Toggle sidebar"
         >
-          <PanelLeftIcon className="h-4 w-4" />
+          <PanelLeftIcon className="h-3.5 w-3.5" />
         </PanelToggle>
 
-        <Separator orientation="vertical" className="hidden h-5 sm:block" />
+        <Separator orientation="vertical" className="hidden h-3.5 opacity-30 sm:block" />
 
-        <label className="flex items-center gap-2.5">
+        <label className="flex items-center gap-1.5">
           <span className={sandboxToolbarLabel}>Runtime</span>
           <select
             className={sandboxToolbarControl}
@@ -157,7 +189,7 @@ export function SandboxToolbar({
           </select>
         </label>
 
-        <label className="flex items-center gap-2.5">
+        <label className="flex items-center gap-1.5">
           <span className={sandboxToolbarLabel}>Provider</span>
           <select
             className={cn(sandboxToolbarControl, "min-w-[7.5rem]")}
@@ -179,12 +211,12 @@ export function SandboxToolbar({
           </select>
         </label>
 
-        <label className="flex min-w-0 flex-1 items-center gap-2.5 sm:max-w-[min(100%,18rem)] sm:flex-initial">
+        <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:max-w-[min(100%,16rem)] sm:flex-initial">
           <span className={sandboxToolbarLabel}>Model</span>
           <input
             className={cn(
               sandboxToolbarControl,
-              "min-w-0 flex-1 font-mono sm:w-56",
+              "min-w-0 flex-1 font-mono sm:w-48",
             )}
             onChange={(e) => onUpdateConfig("model", e.target.value)}
             placeholder={selectedPreset?.defaultModel}
@@ -194,111 +226,134 @@ export function SandboxToolbar({
 
         <div className="ml-auto flex items-center gap-2">
           <button
+            ref={triggerRef}
             className={cn(
-              "flex h-8 items-center gap-2 rounded-md border border-transparent px-2.5 text-xs font-medium text-ink-faint transition-colors hover:border-line/60 hover:bg-paper-3 hover:text-ink",
-              contextExpanded && "border-line/40 bg-paper-3/40 text-ink-soft",
+              "flex h-6 items-center gap-1.5 rounded-lg px-2 text-[0.6rem] font-medium text-ink-faint transition-all duration-200",
+              "border border-transparent hover:border-line/60 hover:bg-paper-3/60 hover:text-ink",
+              contextOpen && "border-accent/30 bg-accent/[0.06] text-accent shadow-sm",
             )}
-            onClick={() => setContextExpanded((p) => !p)}
+            onClick={() => setContextOpen((p) => !p)}
             type="button"
+            aria-expanded={contextOpen}
           >
             {totalSelected > 0 && (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent/15 px-1.5 font-mono text-[0.6rem] tabular-nums text-accent">
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/12 px-1 font-mono text-[0.5rem] font-semibold tabular-nums text-accent">
                 {totalSelected}
               </span>
             )}
+            <SparkIcon className="h-3 w-3" />
             Context
-            {contextExpanded ? (
-              <ChevronUpIcon className="h-3 w-3" />
+            {contextOpen ? (
+              <ChevronUpIcon className="h-3 w-3 opacity-50" />
             ) : (
-              <ChevronDownIcon className="h-3 w-3" />
+              <ChevronDownIcon className="h-3 w-3 opacity-50" />
             )}
           </button>
 
-          <Separator orientation="vertical" className="hidden h-5 sm:block" />
+          <Separator orientation="vertical" className="hidden h-3.5 opacity-30 sm:block" />
 
           <PanelToggle
             active={inspectorOpen}
             onClick={onToggleInspector}
             label="Toggle VM inspector"
           >
-            <PanelRightIcon className="h-4 w-4" />
+            <PanelRightIcon className="h-3.5 w-3.5" />
           </PanelToggle>
         </div>
       </div>
 
-      {/* Collapsible context: skills + MCPs in scrollable grid */}
-      {contextExpanded && (
-        <div className="max-h-[min(45vh,420px)] overflow-y-auto overscroll-contain border-t border-line/50 px-5 py-4 sm:px-6">
-          {/* Skills */}
-          <ContextSectionHeader
-            label="Skills"
-            count={selectedSkillCount}
-            total={skills.length}
+      {/* Floating context dropdown */}
+      {contextOpen && (
+        <>
+          {/* Scrim */}
+          <div
+            className="fixed inset-0 z-40"
+            aria-hidden
+            onClick={closeDropdown}
           />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {skills.slice(0, 24).map((skill) => {
-              const active = config.selectedSkillSlugs.includes(skill.slug);
-              return (
-                <button
-                  className={cn(
-                    sandboxContextCard,
-                    active && sandboxContextCardActive,
-                  )}
-                  key={skill.slug}
-                  onClick={() => onToggleSkill(skill.slug)}
-                  type="button"
-                >
-                  <SkillIcon
-                    slug={skill.slug}
-                    iconUrl={skill.iconUrl}
-                    size={18}
-                    className="shrink-0"
-                  />
-                  <span className="min-w-0 truncate">{skill.title}</span>
-                </button>
-              );
-            })}
-          </div>
 
-          {/* MCPs */}
-          {executableMcps.length > 0 && (
-            <div className="mt-5 border-t border-line/30 pt-5">
+          <div
+            ref={dropdownRef}
+            className={cn(
+              "absolute right-3 top-full z-50 mt-1.5 w-[min(560px,calc(100vw-2rem))]",
+              "origin-top-right animate-in fade-in slide-in-from-top-1 duration-150",
+              "overflow-hidden rounded-xl border border-line/60 bg-paper-3/95 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12),0_2px_8px_-2px_rgba(0,0,0,0.06)] backdrop-blur-xl",
+              "dark:border-line/40 dark:bg-paper-3/90 dark:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.4)]",
+            )}
+          >
+            <div className="max-h-[min(50vh,420px)] overflow-y-auto overscroll-contain px-4 py-3.5">
+              {/* Skills */}
               <ContextSectionHeader
-                label="MCPs"
-                count={selectedMcpCount}
-                total={executableMcps.length}
+                label="Skills"
+                count={selectedSkillCount}
+                total={skills.length}
               />
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                {executableMcps.slice(0, 24).map((mcp) => {
-                  const active = config.selectedMcpIds.includes(mcp.id);
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {skills.slice(0, 24).map((skill) => {
+                  const active = config.selectedSkillSlugs.includes(skill.slug);
                   return (
                     <button
                       className={cn(
                         sandboxContextCard,
                         active && sandboxContextCardActive,
                       )}
-                      key={mcp.id}
-                      onClick={() => onToggleMcp(mcp.id)}
+                      key={skill.slug}
+                      onClick={() => onToggleSkill(skill.slug)}
                       type="button"
                     >
-                      <McpIcon
-                        name={mcp.name}
-                        iconUrl={mcp.iconUrl}
-                        homepageUrl={mcp.homepageUrl}
-                        size={18}
+                      <SkillIcon
+                        slug={skill.slug}
+                        iconUrl={skill.iconUrl}
+                        size={15}
                         className="shrink-0"
                       />
-                      <span className="min-w-0 truncate">{mcp.name}</span>
-                      <span className="ml-auto shrink-0 text-[0.6rem] text-ink-faint">
-                        {mcp.transport}
-                      </span>
+                      <span className="min-w-0 text-xs truncate">{skill.title}</span>
                     </button>
                   );
                 })}
               </div>
+
+              {/* MCPs */}
+              {executableMcps.length > 0 && (
+                <div className="mt-3 border-t border-line/25 pt-3">
+                  <ContextSectionHeader
+                    label="MCPs"
+                    count={selectedMcpCount}
+                    total={executableMcps.length}
+                  />
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                    {executableMcps.slice(0, 24).map((mcp) => {
+                      const active = config.selectedMcpIds.includes(mcp.id);
+                      return (
+                        <button
+                          className={cn(
+                            sandboxContextCard,
+                            active && sandboxContextCardActive,
+                          )}
+                          key={mcp.id}
+                          onClick={() => onToggleMcp(mcp.id)}
+                          type="button"
+                        >
+                          <McpIcon
+                            name={mcp.name}
+                            iconUrl={mcp.iconUrl}
+                            homepageUrl={mcp.homepageUrl}
+                            size={15}
+                            className="shrink-0"
+                          />
+                          <span className="min-w-0 text-xs truncate">{mcp.name}</span>
+                          <span className="ml-auto shrink-0 rounded-md bg-paper-2/80 px-1.5 py-0.5 text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-2">
+                            {mcp.transport}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -69,7 +69,7 @@ function formatSummary(
   if (toolName === "executeCode") {
     const code = typeof input.code === "string" ? input.code : "";
     const line = code.split("\n")[0] ?? "";
-    return line.length > 50 ? line.slice(0, 50) + "..." : line;
+    return line.length > 50 ? line.slice(0, 50) + "…" : line;
   }
   if (toolName === "runCommand") {
     const cmd = input.command ?? "";
@@ -106,7 +106,7 @@ function formatInput(
   return JSON.stringify(input, null, 2);
 }
 
-function StatusDot({
+function StatusIndicator({
   state,
   exitCode,
 }: {
@@ -116,13 +116,17 @@ function StatusDot({
   if (state === "result") {
     const ok = exitCode === undefined || exitCode === 0;
     return ok ? (
-      <CheckIcon className="h-3 w-3 text-success" />
+      <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success/15">
+        <CheckIcon className="h-3 w-3 text-success" />
+      </span>
     ) : (
-      <span className="inline-block h-3 w-3 rounded-full bg-red-400" />
+      <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-danger/15">
+        <span className="h-2 w-2 rounded-full bg-danger" />
+      </span>
     );
   }
   return (
-    <span className="inline-block h-3 w-3 animate-spin rounded-full border-[1.5px] border-accent/30 border-t-accent" />
+    <span className="inline-block h-4 w-4 animate-spin rounded-full border-[1.5px] border-accent/20 border-t-accent" />
   );
 }
 
@@ -141,7 +145,7 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <button
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ink-faint opacity-0 transition-[opacity,color] group-hover/block:opacity-100 hover:text-ink"
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint/50 opacity-0 transition-all group-hover/block:opacity-100 hover:bg-paper-3/60 hover:text-ink-soft"
       onClick={handleCopy}
       type="button"
       aria-label="Copy output"
@@ -185,69 +189,78 @@ export function SandboxToolBlock({
   return (
     <div
       className={cn(
-        "group/block my-2 overflow-hidden rounded-lg border transition-colors duration-200",
+        "group/block my-2.5 overflow-hidden rounded-xl border transition-all duration-200",
         isRunning
-          ? "border-accent/30 bg-accent/3"
+          ? "border-accent/20 shadow-[0_0_0_1px_rgba(232,101,10,0.04)]"
           : hasError
-            ? "border-red-400/30 bg-red-400/3"
-            : "border-line bg-paper-2/40",
+            ? "border-danger/20 shadow-[0_0_0_1px_rgba(185,28,28,0.04)]"
+            : "border-line/50 shadow-[0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.1)]",
       )}
     >
+      {/* Header bar */}
       <button
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-paper-3/40"
+        className={cn(
+          "flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs transition-colors",
+          "bg-paper-2/50 hover:bg-paper-2/80 dark:bg-paper-2/60 dark:hover:bg-paper-2/80",
+        )}
         onClick={() => setOpen((p) => !p)}
         type="button"
       >
-        <StatusDot state={state} exitCode={exitCode} />
+        <StatusIndicator state={state} exitCode={exitCode} />
         <Icon className="h-3.5 w-3.5 shrink-0 text-ink-faint" />
-        <span className="font-medium text-ink-soft">
+        <span className="font-medium text-ink">
           {isRunning ? meta.verb : meta.label}
         </span>
         {lang && (
-          <span className="rounded bg-paper-3/80 px-1.5 py-0.5 font-mono text-[0.55rem] text-ink-faint ring-1 ring-line/40">
+          <span className="rounded-md bg-paper-3/80 px-1.5 py-0.5 font-mono text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-3/40">
             {lang}
           </span>
         )}
         {summary && (
-          <span className="min-w-0 flex-1 truncate font-mono text-[0.65rem] text-ink-faint">
+          <span className="min-w-0 flex-1 truncate font-mono text-[0.65rem] text-ink-faint/70">
             {summary}
           </span>
         )}
         {exitCode !== undefined && (
           <span
             className={cn(
-              "ml-auto shrink-0 font-mono text-[0.6rem] tabular-nums",
-              exitCode === 0 ? "text-success" : "text-danger",
+              "ml-auto shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[0.55rem] font-semibold tabular-nums",
+              exitCode === 0
+                ? "bg-success/10 text-success"
+                : "bg-danger/10 text-danger",
             )}
           >
             exit {exitCode}
           </span>
         )}
         {open ? (
-          <ChevronDownIcon className="h-3 w-3 shrink-0 text-ink-faint" />
+          <ChevronDownIcon className="h-3 w-3 shrink-0 text-ink-faint/50" />
         ) : (
-          <ChevronRightIcon className="h-3 w-3 shrink-0 text-ink-faint" />
+          <ChevronRightIcon className="h-3 w-3 shrink-0 text-ink-faint/50" />
         )}
       </button>
 
       {open && (
-        <div className="grid gap-0 border-t border-line/40">
+        <div className="grid gap-0 border-t border-line/30">
+          {/* Input */}
           <div className="relative">
-            <pre className="max-h-52 overflow-auto px-3 py-2 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+            <pre className="max-h-52 overflow-auto px-3.5 py-2.5 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
               {formatInput(toolName, input)}
             </pre>
           </div>
+
+          {/* Output */}
           {output && (
-            <div className="relative border-t border-line/40">
+            <div className="relative border-t border-line/30 bg-paper-2/30 dark:bg-paper-2/20">
               <pre
                 className={cn(
-                  "max-h-52 overflow-auto px-3 py-2 pr-10 font-mono text-[0.7rem] leading-relaxed",
-                  hasError ? "text-red-400" : "text-ink",
+                  "max-h-52 overflow-auto px-3.5 py-2.5 pr-10 font-mono text-[0.7rem] leading-relaxed",
+                  hasError ? "text-danger" : "text-ink",
                 )}
               >
                 {outputText}
               </pre>
-              <div className="absolute right-1.5 top-1.5">
+              <div className="absolute right-2 top-2">
                 <CopyButton text={outputText} />
               </div>
             </div>

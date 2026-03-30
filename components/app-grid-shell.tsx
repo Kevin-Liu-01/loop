@@ -18,7 +18,12 @@ type AppGridShellProps = {
  */
 export function AppGridShell({ header, children, fillViewport, bodyClassName }: AppGridShellProps) {
   return (
-    <div className="flex min-h-dvh w-full max-w-full flex-col border border-line bg-paper/90 backdrop-blur-xl dark:bg-paper/82">
+    <div
+      className={cn(
+        "flex w-full max-w-full flex-col border border-line bg-paper/90 backdrop-blur-xl dark:bg-paper/82",
+        fillViewport ? "h-dvh max-h-dvh overflow-hidden" : "min-h-dvh",
+      )}
+    >
       <header
         className="sticky top-0 z-60 w-full shrink-0 border-b border-line bg-paper/95 backdrop-blur-xl dark:bg-paper/88"
         role="banner"
@@ -36,7 +41,7 @@ export function AppGridShell({ header, children, fillViewport, bodyClassName }: 
         >
           {children}
         </div>
-        <SiteFooter />
+        {!fillViewport && <SiteFooter />}
       </div>
     </div>
   );

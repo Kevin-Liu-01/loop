@@ -73,14 +73,17 @@ export function SandboxInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-line/60 px-4 py-3">
+      <div className="shrink-0 border-b border-line/40 px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-ink-soft">
-            VM Inspector
-          </span>
+          <div className="flex items-center gap-2">
+            <CpuIcon className="h-3.5 w-3.5 text-accent/50" />
+            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-ink-soft">
+              VM Inspector
+            </span>
+          </div>
           <button
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition-colors hover:bg-paper-3 hover:text-ink",
+              "flex h-7 w-7 items-center justify-center rounded-lg text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
             )}
             onClick={onRefresh}
             type="button"
@@ -94,7 +97,7 @@ export function SandboxInspector({
       </div>
 
       {/* Tab bar */}
-      <div className="flex shrink-0 items-center border-b border-line/40 bg-paper-2/20">
+      <div className="flex shrink-0 items-center border-b border-line/30 px-1">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -102,15 +105,15 @@ export function SandboxInspector({
             <button
               key={tab.id}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 border-b-2 py-3 text-[0.65rem] font-medium transition-colors",
+                "flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-[0.6rem] font-medium transition-all duration-150",
                 active
                   ? "border-accent text-accent"
-                  : "border-transparent text-ink-faint hover:text-ink-soft",
+                  : "border-transparent text-ink-faint/70 hover:text-ink-soft",
               )}
               onClick={() => setActiveTab(tab.id)}
               type="button"
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-3 w-3" />
               <span>{tab.label}</span>
             </button>
           );
@@ -120,7 +123,7 @@ export function SandboxInspector({
       {/* Tab content */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {error && (
-          <div className="border-b border-danger/20 bg-danger/5 px-4 py-2.5 text-xs text-danger">
+          <div className="border-b border-danger/15 bg-danger/[0.04] px-4 py-2.5 text-xs font-medium text-danger">
             {error}
           </div>
         )}

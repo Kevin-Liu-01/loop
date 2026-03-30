@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer } from "react";
 
-import { ClockIcon, TerminalIcon, TimerIcon } from "@/components/frontier-icons";
+import { TerminalIcon, TimerIcon } from "@/components/frontier-icons";
 import { cn } from "@/lib/cn";
 
 type StatusTabProps = {
@@ -31,8 +31,8 @@ function StatusRow({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5">
-      <span className="text-[0.65rem] font-medium uppercase tracking-[0.06em] text-ink-faint">
+    <div className="flex items-center justify-between gap-3 py-2">
+      <span className="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-ink-faint/70">
         {label}
       </span>
       <span
@@ -48,11 +48,11 @@ function StatusRow({
 }
 
 const stateColors: Record<string, string> = {
-  idle: "bg-ink-faint",
+  idle: "bg-ink-faint/40",
   creating: "animate-pulse bg-warning",
-  running: "bg-success",
-  stopped: "bg-ink-faint",
-  error: "bg-danger",
+  running: "bg-success shadow-[0_0_6px_rgba(22,163,74,0.4)]",
+  stopped: "bg-ink-faint/40",
+  error: "bg-danger shadow-[0_0_6px_rgba(185,28,28,0.3)]",
 };
 
 export function StatusTab({
@@ -78,11 +78,11 @@ export function StatusTab({
   return (
     <div className="grid gap-5 p-4">
       {/* State badge */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <span
           className={cn(
             "inline-block h-2.5 w-2.5 rounded-full",
-            stateColors[sandboxState] ?? "bg-ink-faint",
+            stateColors[sandboxState] ?? "bg-ink-faint/40",
           )}
         />
         <span className="text-sm font-medium capitalize text-ink">
@@ -92,11 +92,11 @@ export function StatusTab({
 
       {/* Timeout remaining bar */}
       {sandboxState === "running" && (
-        <div className="grid gap-1.5">
+        <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <TimerIcon className="h-3 w-3 text-ink-faint" />
-              <span className="text-[0.65rem] font-medium uppercase tracking-[0.06em] text-ink-faint">
+              <TimerIcon className="h-3 w-3 text-ink-faint/60" />
+              <span className="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-ink-faint/70">
                 Time remaining
               </span>
             </div>
@@ -104,7 +104,7 @@ export function StatusTab({
               {formatDuration(remaining)}
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper-2">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-line/30 dark:bg-line/20">
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-1000",
@@ -117,13 +117,13 @@ export function StatusTab({
       )}
 
       {/* Detail rows */}
-      <div className="grid divide-y divide-line/40">
+      <div className="grid divide-y divide-line/25">
         <StatusRow label="Runtime" value={runtime} />
         {runtimeVersion && (
           <StatusRow label="Version" value={runtimeVersion} mono />
         )}
         {sandboxId && (
-          <StatusRow label="Sandbox ID" value={sandboxId.slice(0, 16) + "..."} mono />
+          <StatusRow label="Sandbox ID" value={sandboxId.slice(0, 16) + "…"} mono />
         )}
         {uptimeSeconds > 0 && (
           <StatusRow label="Uptime" value={formatDuration(uptimeSeconds)} mono />
@@ -133,12 +133,17 @@ export function StatusTab({
       {/* Empty state */}
       {sandboxState === "idle" && (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <TerminalIcon className="h-7 w-7 text-ink-faint/40" />
-          <p className="text-sm leading-relaxed text-ink-faint">
-            No active sandbox.
-            <br />
-            Send a message to spin one up.
-          </p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-line/30 bg-paper-3/60 shadow-sm dark:bg-paper-2/40">
+            <TerminalIcon className="h-6 w-6 text-ink-faint/30" />
+          </div>
+          <div className="grid gap-1">
+            <p className="text-sm font-medium text-ink-faint">
+              No active sandbox
+            </p>
+            <p className="text-xs text-ink-faint/60">
+              Send a message to spin one up.
+            </p>
+          </div>
         </div>
       )}
     </div>

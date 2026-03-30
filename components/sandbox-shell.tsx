@@ -16,6 +16,9 @@ import {
   SparkIcon,
   ClockIcon,
   PanelRightIcon,
+  CodeIcon,
+  PlayIcon,
+  GlobeIcon,
 } from "@/components/frontier-icons";
 import { SandboxStatusBar } from "@/components/ui/sandbox-status-bar";
 import { SandboxMessage, SavedMessage } from "@/components/sandbox-message";
@@ -26,7 +29,6 @@ import { SandboxInspector } from "@/components/sandbox-inspector";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useSandboxInspector } from "@/hooks/use-sandbox-inspector";
-import { pageHeaderSub } from "@/lib/ui-layout";
 import type {
   AgentProviderPreset,
   ConversationMessage,
@@ -124,10 +126,13 @@ type MessagePart = {
   [key: string]: unknown;
 };
 
-const SUGGESTIONS = [
-  "Fetch the top HN story and analyze it",
-  "Create a simple HTTP server and test it",
-  "Use attached MCP tools to query my data",
+const SUGGESTIONS: Array<{
+  text: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { text: "Fetch the top HN story and analyze it", icon: GlobeIcon },
+  { text: "Create a simple HTTP server and test it", icon: CodeIcon },
+  { text: "Run a benchmark script and chart results", icon: PlayIcon },
 ];
 
 export function SandboxShell({
@@ -475,8 +480,8 @@ export function SandboxShell({
       {sidebarOpen && (
         <aside
           className={cn(
-            "flex h-full min-h-0 w-[260px] shrink-0 flex-col overflow-hidden border-r border-line/60 bg-paper-2/30 backdrop-blur-sm dark:bg-paper-2/20",
-            "max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:z-30 max-sm:w-[min(280px,92vw)] max-sm:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.2)]",
+            "flex h-full min-h-0 w-[260px] shrink-0 flex-col overflow-hidden border-r border-line/50 bg-paper-2/40 backdrop-blur-md dark:bg-paper-2/20",
+            "max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:z-30 max-sm:w-[min(280px,92vw)] max-sm:shadow-[4px_0_24px_-4px_rgba(0,0,0,0.12)]",
           )}
         >
           <SandboxSidebar
@@ -489,7 +494,7 @@ export function SandboxShell({
       )}
 
       {/* ── Center: toolbar + chat + composer ── */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper/40 dark:bg-paper/25">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Toolbar */}
         <SandboxToolbar
           config={config}
@@ -509,54 +514,65 @@ export function SandboxShell({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
             {showEmptyHero ? (
-              <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-10 px-6 py-20 text-center sm:py-28">
-                <div className="grid max-w-lg gap-8">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-line/80 bg-paper-3/90 shadow-[0_1px_0_rgba(0,0,0,0.04),0_16px_40px_-12px_rgba(0,0,0,0.06)] ring-1 ring-ink/[0.03] dark:ring-white/[0.06]">
-                    <TerminalIcon className="h-7 w-7 text-ink-faint" />
+              <div className="flex h-full flex-col items-center justify-center px-6 py-8 text-center sm:py-12">
+                {/* Glow backdrop */}
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="absolute left-1/2 top-1/3 h-[480px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/[0.03] blur-[100px]" />
+                </div>
+
+                <div className="relative grid max-w-lg gap-6">
+                  {/* Icon */}
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-line/60 bg-paper-3 shadow-[0_0_0_1px_rgba(0,0,0,0.02),0_8px_40px_-8px_rgba(232,101,10,0.08),0_24px_80px_-16px_rgba(0,0,0,0.04)] ring-1 ring-ink/[0.02] dark:border-line/40 dark:bg-paper-3/80 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_8px_40px_-8px_rgba(232,101,10,0.12)] dark:ring-white/[0.04]">
+                    <TerminalIcon className="h-7 w-7 text-accent/70" />
                   </div>
-                  <div className="grid gap-3">
-                    <h2 className="m-0 font-serif text-2xl font-medium tracking-[-0.03em] text-balance text-ink">
+
+                  {/* Title + description */}
+                  <div className="grid gap-2.5">
+                    <h2 className="m-0 font-serif text-2xl font-medium tracking-[-0.04em] text-balance text-ink sm:text-3xl">
                       Sandbox
                     </h2>
-                    <p
-                      className={cn(
-                        pageHeaderSub,
-                        "mx-auto max-w-[min(100%,46ch)]",
-                      )}
-                    >
+                    <p className="m-0 mx-auto max-w-[42ch] text-pretty text-sm leading-relaxed text-ink-soft">
                       Run code, tools, and MCP servers in an isolated VM.
-                      Attach skills and MCPs from the toolbar — a session
-                      spins up when you send your first message.
+                      A session spins up when you send your first message.
                     </p>
                   </div>
-                  <div className="flex flex-wrap justify-center gap-2.5 pt-1">
-                    {SUGGESTIONS.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        className="rounded-full border border-line/50 bg-paper-3/70 px-4 py-2.5 text-left text-[0.8rem] leading-snug text-ink-soft shadow-sm transition-[border-color,background-color,color] duration-150 hover:border-accent/30 hover:bg-paper-2 hover:text-ink"
-                        onClick={() => setInput(suggestion)}
-                        type="button"
-                      >
-                        <SparkIcon className="mr-2 inline-block h-3.5 w-3.5 align-[-2px] text-accent/60" />
-                        {suggestion}
-                      </button>
-                    ))}
+
+                  {/* Suggestions */}
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {SUGGESTIONS.map((suggestion) => {
+                      const Icon = suggestion.icon;
+                      return (
+                        <button
+                          key={suggestion.text}
+                          className="group grid gap-2 rounded-xl border border-line/50 bg-paper-3/60 p-3 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-accent/25 hover:bg-paper-3 hover:shadow-[0_4px_16px_-4px_rgba(232,101,10,0.08)] dark:bg-paper-2/40 dark:hover:bg-paper-3/30"
+                          onClick={() => setInput(suggestion.text)}
+                          type="button"
+                        >
+                          <div className="flex h-7 w-7 items-center justify-center rounded-md border border-line/40 bg-paper-2/60 transition-colors group-hover:border-accent/20 group-hover:bg-accent/[0.06] dark:bg-paper-2/80">
+                            <Icon className="h-3.5 w-3.5 text-ink-faint transition-colors group-hover:text-accent/70" />
+                          </div>
+                          <span className="text-[0.75rem] leading-snug text-ink-soft transition-colors group-hover:text-ink">
+                            {suggestion.text}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="mx-auto grid w-full max-w-3xl gap-6 px-4 py-8 sm:px-6">
+              <div className="mx-auto grid w-full max-w-3xl gap-5 px-4 py-8 sm:px-6">
 
                 {viewConvo && (
                   <>
-                    <div className="flex items-center gap-3 border border-line/70 bg-paper-3/90 px-4 py-3 shadow-sm ring-1 ring-ink/[0.03] dark:bg-paper-3/70">
+                    <div className="flex items-center gap-3 rounded-xl border border-line/60 bg-paper-3/80 px-4 py-3 shadow-sm dark:bg-paper-3/50">
                       <ClockIcon className="h-4 w-4 shrink-0 text-ink-faint" />
                       <div className="min-w-0 flex-1">
                         <span className="text-sm font-medium text-ink">
                           {viewConvo.title || "Untitled session"}
                         </span>
-                        <span className="ml-2 text-xs text-ink-faint">
-                          (read-only)
+                        <span className="ml-2 text-[0.65rem] font-medium uppercase tracking-wider text-ink-faint">
+                          Read-only
                         </span>
                       </div>
                       <Button
@@ -591,12 +607,16 @@ export function SandboxShell({
                   ))}
 
                 {isBusy && isActive && (
-                  <div className="flex items-center gap-3 pl-10">
-                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" />
-                    <span className="text-xs text-ink-soft">
+                  <div className="flex items-center gap-3 py-2 pl-11">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent [animation-delay:150ms]" />
+                      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent [animation-delay:300ms]" />
+                    </div>
+                    <span className="text-xs font-medium text-ink-faint">
                       {sandboxState === "creating"
-                        ? "Starting sandbox..."
-                        : "Agent is thinking..."}
+                        ? "Starting sandbox…"
+                        : "Agent is thinking…"}
                     </span>
                   </div>
                 )}
@@ -610,12 +630,13 @@ export function SandboxShell({
         {/* Composer + status */}
         <div
           className={cn(
-            "shrink-0 border-t border-line/80 bg-paper-3/85 backdrop-blur-md dark:bg-paper-2/40",
+            "shrink-0 border-t border-line/60",
+            "bg-paper-3/70 backdrop-blur-xl dark:bg-paper-2/50",
             "px-4 sm:px-6",
-            "pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4",
+            "pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5",
           )}
         >
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3.5">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2.5">
             {isActive && (
               <SandboxStatusBar
                 onStop={stopSandbox}
@@ -628,38 +649,57 @@ export function SandboxShell({
               />
             )}
 
-            <div className="flex items-end gap-2">
-              <div className="relative min-w-0 flex-1">
+            <div className="relative">
+              <div
+                className={cn(
+                  "overflow-hidden rounded-2xl border border-line/80 bg-paper-3 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-shadow duration-200",
+                  "has-[:focus]:border-accent/30 has-[:focus]:shadow-[0_0_0_3px_rgba(232,101,10,0.06),0_4px_20px_-4px_rgba(0,0,0,0.08)]",
+                  "dark:border-line/60 dark:bg-paper-3/80 dark:shadow-[0_2px_12px_-2px_rgba(0,0,0,0.2)]",
+                  "dark:has-[:focus]:border-accent/25 dark:has-[:focus]:shadow-[0_0_0_3px_rgba(232,101,10,0.08),0_4px_20px_-4px_rgba(0,0,0,0.3)]",
+                )}
+              >
                 <textarea
                   ref={textareaRef}
                   className={cn(
-                    "w-full resize-none border border-line/90 bg-paper-2/90 px-4 py-3 pr-12 text-sm leading-relaxed text-ink outline-none transition-[border-color,box-shadow,background-color]",
-                    "placeholder:text-ink-faint focus:border-accent/35 focus:bg-paper-3 focus:shadow-[0_0_0_4px_rgba(232,101,10,0.08)] dark:bg-paper-2/80",
+                    "w-full resize-none bg-transparent px-3.5 py-2.5 pr-12 text-sm leading-relaxed text-ink outline-none",
+                    "placeholder:text-ink-faint/70",
                   )}
                   disabled={isBusy}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={
                     viewConvo
-                      ? "Start a new session to send messages..."
-                      : "Ask the agent to do something..."
+                      ? "Start a new session to send messages…"
+                      : "Ask the agent to do something…"
                   }
-                  rows={2}
+                  rows={1}
                   value={input}
                 />
-                <Button
-                  className="absolute bottom-2.5 right-2.5"
-                  disabled={!input.trim() || isBusy}
-                  onClick={handleSend}
-                  size="icon-sm"
-                >
-                  <SendIcon className="h-3.5 w-3.5" />
-                </Button>
+                <div className="absolute bottom-2 right-2.5">
+                  <button
+                    className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-200",
+                      input.trim() && !isBusy
+                        ? "bg-accent text-white shadow-[0_2px_8px_-2px_rgba(232,101,10,0.3)] hover:bg-accent-hover hover:shadow-[0_4px_12px_-2px_rgba(232,101,10,0.4)]"
+                        : "bg-paper-2/80 text-ink-faint dark:bg-paper-2",
+                    )}
+                    disabled={!input.trim() || isBusy}
+                    onClick={handleSend}
+                    type="button"
+                    aria-label="Send message"
+                  >
+                    <SendIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
+            </div>
 
-              {/* Mobile inspector toggle */}
+            {/* Mobile inspector toggle */}
+            <div className="flex items-center justify-between sm:hidden">
+              <span className="text-[0.6rem] font-medium uppercase tracking-wider text-ink-faint">
+                VM Inspector
+              </span>
               <Button
-                className="sm:hidden"
                 onClick={() => setInspectorOpen((p) => !p)}
                 size="icon-sm"
                 variant={inspectorOpen ? "primary" : "ghost"}
@@ -670,7 +710,7 @@ export function SandboxShell({
             </div>
 
             {authError && (
-              <div className="rounded-lg border border-danger/30 bg-danger/5 p-4">
+              <div className="rounded-xl border border-danger/20 bg-danger/[0.04] p-4 dark:bg-danger/[0.06]">
                 <p className="m-0 mb-3 text-sm font-medium text-danger">
                   {authError.message}
                 </p>
@@ -682,7 +722,7 @@ export function SandboxShell({
               </div>
             )}
             {!authError && (error || sandboxError) && (
-              <p className="m-0 text-xs text-danger">
+              <p className="m-0 text-xs font-medium text-danger">
                 {error?.message ?? sandboxError}
               </p>
             )}
@@ -694,8 +734,8 @@ export function SandboxShell({
       {inspectorOpen && (
         <aside
           className={cn(
-            "flex h-full min-h-0 w-[320px] shrink-0 flex-col overflow-hidden border-l border-line/60 bg-paper-2/30 backdrop-blur-sm dark:bg-paper-2/20",
-            "max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:z-30 max-sm:w-[min(340px,92vw)] max-sm:shadow-[-24px_0_48px_-12px_rgba(0,0,0,0.2)]",
+            "flex h-full min-h-0 w-[320px] shrink-0 flex-col overflow-hidden border-l border-line/50 bg-paper-2/40 backdrop-blur-md dark:bg-paper-2/20",
+            "max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:z-30 max-sm:w-[min(340px,92vw)] max-sm:shadow-[-4px_0_24px_-4px_rgba(0,0,0,0.12)]",
           )}
         >
           <SandboxInspector

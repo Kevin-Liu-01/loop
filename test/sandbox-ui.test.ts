@@ -11,7 +11,7 @@ import {
 
 describe("sandbox-ui tokens", () => {
   it("exports toolbar class strings", () => {
-    assert.ok(sandboxToolbarControl.includes("rounded-xl"));
+    assert.ok(sandboxToolbarControl.includes("rounded-lg"));
     assert.ok(sandboxToolbarLabel.includes("uppercase"));
   });
 

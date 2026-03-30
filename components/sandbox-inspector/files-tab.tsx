@@ -40,9 +40,9 @@ function FileRow({
   return (
     <button
       className={cn(
-        "flex w-full items-center gap-2 px-3 py-1.5 text-left text-[0.7rem] transition-colors",
+        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[0.7rem] transition-all duration-150",
         entry.isDir
-          ? "hover:bg-accent/5 cursor-pointer"
+          ? "cursor-pointer hover:bg-accent/[0.04]"
           : "cursor-default",
       )}
       onClick={() => entry.isDir && onBrowse(entry.path)}
@@ -52,7 +52,7 @@ function FileRow({
       <Icon
         className={cn(
           "h-3.5 w-3.5 shrink-0",
-          entry.isDir ? "text-accent/70" : "text-ink-faint",
+          entry.isDir ? "text-accent/60" : "text-ink-faint/50",
         )}
       />
       <span
@@ -64,7 +64,7 @@ function FileRow({
         {entry.name}
       </span>
       {!entry.isDir && (
-        <span className="shrink-0 font-mono text-[0.55rem] tabular-nums text-ink-faint">
+        <span className="shrink-0 font-mono text-[0.55rem] tabular-nums text-ink-faint/50">
           {formatSize(entry.size)}
         </span>
       )}
@@ -77,9 +77,9 @@ export function FilesTab({ files, currentPath, isLoading, onBrowse }: FilesTabPr
 
   if (isLoading && files.length === 0) {
     return (
-      <div className="grid gap-1 p-3">
+      <div className="grid gap-1.5 p-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-5 animate-pulse rounded bg-paper-2/60" />
+          <div key={i} className="h-5 animate-pulse rounded-lg bg-paper-2/40" />
         ))}
       </div>
     );
@@ -93,10 +93,10 @@ export function FilesTab({ files, currentPath, isLoading, onBrowse }: FilesTabPr
   return (
     <div className="grid gap-0">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 border-b border-line/40 px-3 py-2">
+      <div className="flex items-center gap-1.5 border-b border-line/25 px-3 py-2.5">
         {showBack && (
           <button
-            className="flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-paper-3"
+            className="flex h-5 w-5 items-center justify-center rounded-md transition-colors hover:bg-paper-3/60"
             onClick={() => onBrowse(parentPath(currentPath))}
             type="button"
             aria-label="Go up"
@@ -104,20 +104,20 @@ export function FilesTab({ files, currentPath, isLoading, onBrowse }: FilesTabPr
             <ChevronLeftIcon className="h-3 w-3 text-ink-faint" />
           </button>
         )}
-        <FolderOpenIcon className="h-3 w-3 shrink-0 text-accent/60" />
-        <span className="min-w-0 truncate font-mono text-[0.65rem] text-ink-soft">
+        <FolderOpenIcon className="h-3 w-3 shrink-0 text-accent/50" />
+        <span className="min-w-0 truncate font-mono text-[0.65rem] text-ink-faint">
           {currentPath}
         </span>
       </div>
 
       {/* File list */}
       {sortedFiles.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
-          <FolderOpenIcon className="h-5 w-5 text-ink-faint/50" />
-          <p className="text-xs text-ink-faint">Empty directory</p>
+        <div className="flex flex-col items-center gap-2.5 px-3 py-8 text-center">
+          <FolderOpenIcon className="h-5 w-5 text-ink-faint/30" />
+          <p className="text-xs font-medium text-ink-faint/60">Empty directory</p>
         </div>
       ) : (
-        <div className="max-h-[300px] overflow-y-auto overscroll-contain">
+        <div className="max-h-[300px] overflow-y-auto overscroll-contain p-1">
           {sortedFiles.map((entry) => (
             <FileRow key={entry.path} entry={entry} onBrowse={onBrowse} />
           ))}
