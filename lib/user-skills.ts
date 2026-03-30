@@ -290,12 +290,25 @@ function cloneVersion(version: UserSkillVersion): UserSkillVersion {
 // Public pure logic
 // ---------------------------------------------------------------------------
 
+/** UTC day index for weekly cadence runs (Monday = 1). */
+const WEEKLY_RUN_DAY_UTC = 1;
+
 export function isUserSkillAutomationDue(skill: UserSkillDocument, now = new Date()): boolean {
   if (!skill.automation.enabled || skill.automation.status !== "active" || skill.sources.length === 0) {
     return false;
   }
 
   if (skill.automation.cadence === "manual") return false;
+
+  const failures = skill.automation.consecutiveFailures ?? 0;
+  if (failures >= 3) {
+    console.warn(`[automation] Skipping ${skill.slug}: ${failures} consecutive failures`);
+    return false;
+  }
+
+  if (skill.automation.cadence === "weekly" && now.getUTCDay() !== WEEKLY_RUN_DAY_UTC) {
+    return false;
+  }
 
   const lastRunAt = skill.automation.lastRunAt ? new Date(skill.automation.lastRunAt) : null;
   if (!lastRunAt || Number.isNaN(lastRunAt.valueOf())) return true;

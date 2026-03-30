@@ -62,6 +62,74 @@ test("manual or paused user skills are never due for automation", () => {
   );
 });
 
+test("weekly cadence only fires on Monday UTC", () => {
+  const skill = createUserSkillDocument({
+    title: "Weekly Digest",
+    description: "A weekly skill that should only fire on Mondays.",
+    category: "infra",
+    body: "## Purpose\n\nTrack weekly shifts.\n\n## Workflow\n\n1. Scan sources.\n2. Update notes.\n",
+    tags: [],
+    sourceUrls: ["https://vercel.com/blog/rss.xml"],
+    autoUpdate: true,
+    automationCadence: "weekly",
+    automationPrompt: "Weekly refresh."
+  });
+
+  const monday = new Date("2026-03-30T12:00:00.000Z");
+  const tuesday = new Date("2026-03-31T12:00:00.000Z");
+  const sunday = new Date("2026-03-29T12:00:00.000Z");
+
+  assert.equal(monday.getUTCDay(), 1, "sanity: 2026-03-30 is Monday");
+  assert.equal(tuesday.getUTCDay(), 2, "sanity: 2026-03-31 is Tuesday");
+  assert.equal(sunday.getUTCDay(), 0, "sanity: 2026-03-29 is Sunday");
+
+  assert.equal(isUserSkillAutomationDue(skill, monday), true, "should fire on Monday");
+  assert.equal(isUserSkillAutomationDue(skill, tuesday), false, "should not fire on Tuesday");
+  assert.equal(isUserSkillAutomationDue(skill, sunday), false, "should not fire on Sunday");
+});
+
+test("skills with 3+ consecutive failures are skipped", () => {
+  const skill = createUserSkillDocument({
+    title: "Broken Skill",
+    description: "A skill that keeps failing.",
+    category: "infra",
+    body: "## Purpose\n\nFail.\n\n## Workflow\n\n1. Fail.\n",
+    tags: [],
+    sourceUrls: ["https://example.com/feed.xml"],
+    autoUpdate: true,
+    automationCadence: "daily",
+    automationPrompt: "Refresh."
+  });
+
+  const withFailures = {
+    ...skill,
+    automation: {
+      ...skill.automation,
+      consecutiveFailures: 3
+    }
+  };
+
+  assert.equal(
+    isUserSkillAutomationDue(withFailures, new Date("2026-03-30T12:00:00.000Z")),
+    false,
+    "should skip after 3 failures"
+  );
+
+  const with2Failures = {
+    ...skill,
+    automation: {
+      ...skill.automation,
+      consecutiveFailures: 2
+    }
+  };
+
+  assert.equal(
+    isUserSkillAutomationDue(with2Failures, new Date("2026-03-30T12:00:00.000Z")),
+    true,
+    "should still run with 2 failures"
+  );
+});
+
 test("buildUserSkillRecord appends automation context into the rendered skill body", () => {
   const skill = createUserSkillDocument({
     title: "A2A Radar",

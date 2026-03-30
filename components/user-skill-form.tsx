@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ImageIcon } from "lucide-react";
+
 import {
   ClockIcon,
   GlobeIcon,
@@ -72,6 +74,8 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
   const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<FormState>(() => createInitialState(categories));
   const [error, setError] = useState<string | null>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -116,9 +120,25 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
     }));
   }
 
+  function handleIconSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const ALLOWED = new Set(["image/png", "image/svg+xml", "image/webp", "image/jpeg"]);
+    if (!ALLOWED.has(file.type) || file.size > 1_048_576) {
+      setError("Icon must be PNG, SVG, WebP, or JPEG under 1 MB.");
+      return;
+    }
+
+    setIconFile(file);
+    setIconPreview(URL.createObjectURL(file));
+  }
+
   function resetDraft() {
     const nextState = createInitialState(categories);
     setState(nextState);
+    setIconFile(null);
+    setIconPreview(null);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
   }
 
@@ -149,10 +169,19 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
         })
       });
 
-      const payload = (await response.json().catch(() => ({}))) as { error?: string; href?: string };
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; href?: string; slug?: string };
       if (!response.ok || !payload.href) {
         setError(payload.error ?? "Unable to create the skill.");
         return;
+      }
+
+      if (iconFile && payload.slug) {
+        const formData = new FormData();
+        formData.append("icon", iconFile);
+        await fetch(`/api/skills/${encodeURIComponent(payload.slug)}/icon`, {
+          method: "POST",
+          body: formData,
+        });
       }
 
       window.localStorage.removeItem(STORAGE_KEY);
@@ -205,6 +234,24 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             </strong>
           </div>
         </div>
+
+        <FieldGroup>
+          <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Skill icon</span>
+          <label className="flex cursor-pointer items-center gap-4 rounded-[14px] border border-dashed border-line bg-paper-3 p-4 transition-colors hover:border-ink-faint">
+            {iconPreview ? (
+              <img alt="Icon preview" className="h-12 w-12 shrink-0 rounded-lg object-cover" src={iconPreview} />
+            ) : (
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-paper-2">
+                <ImageIcon className="h-5 w-5 text-ink-faint" />
+              </span>
+            )}
+            <span className="grid gap-0.5">
+              <span className="text-sm font-medium text-ink">{iconPreview ? "Change icon" : "Upload icon"}</span>
+              <span className="text-xs text-ink-faint">Square PNG, SVG, WebP, or JPEG — max 1 MB</span>
+            </span>
+            <input accept="image/png,image/svg+xml,image/webp,image/jpeg" className="sr-only" onChange={handleIconSelect} type="file" />
+          </label>
+        </FieldGroup>
 
         <FieldGroup>
           <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Title</span>
