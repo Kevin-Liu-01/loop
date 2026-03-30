@@ -30,6 +30,7 @@ export type SourceDefinition = {
   url: string;
   kind: SourceKind;
   tags: string[];
+  logoUrl?: string;
 };
 
 export type CategoryDefinition = {
@@ -39,9 +40,21 @@ export type CategoryDefinition = {
   description: string;
   hero: string;
   accent: string;
+  icon?: string;
   status: CategoryStatus;
   keywords: string[];
   sources: SourceDefinition[];
+};
+
+export type AgentDocKey = "codex" | "cursor" | "claude" | "agents";
+
+export type AgentDocs = Partial<Record<AgentDocKey, string>> & Record<string, string | undefined>;
+
+export const AGENT_DOC_FILENAMES: Record<AgentDocKey, string> = {
+  codex: "codex.md",
+  cursor: "cursor.md",
+  claude: "claude.md",
+  agents: "AGENTS.md"
 };
 
 export type SkillHeading = {
@@ -77,6 +90,11 @@ export type AutomationSummary = {
   matchedCategorySlugs: CategorySlug[];
 };
 
+export type SkillPrice = {
+  amount: number;
+  currency: string;
+};
+
 export type SkillRecord = {
   slug: string;
   title: string;
@@ -104,6 +122,9 @@ export type SkillRecord = {
   sources?: SourceDefinition[];
   automation?: SkillAutomationState;
   updates?: SkillUpdateEntry[];
+  agentDocs?: AgentDocs;
+  price?: SkillPrice | null;
+  creatorClerkUserId?: string;
 };
 
 export type DailySignal = {
@@ -278,6 +299,9 @@ export type UserSkillDocument = {
   updates: SkillUpdateEntry[];
   version: number;
   versions: UserSkillVersion[];
+  agentDocs?: AgentDocs;
+  price?: SkillPrice | null;
+  creatorClerkUserId?: string;
 };
 
 export type UserSkillStore = {
@@ -298,6 +322,8 @@ export type UserSkillVersion = {
   sources: SourceDefinition[];
   automation: SkillAutomationState;
   updates: SkillUpdateEntry[];
+  agentDocs?: AgentDocs;
+  price?: SkillPrice | null;
 };
 
 export type ImportedSkillDocument = {
@@ -317,6 +343,7 @@ export type ImportedSkillDocument = {
   lastSyncedAt?: string;
   version: number;
   versions: ImportedSkillVersion[];
+  agentDocs?: AgentDocs;
 };
 
 export type ImportedMcpDocument = {
@@ -360,6 +387,7 @@ export type ImportedSkillVersion = {
   visibility: SkillVisibility;
   syncEnabled: boolean;
   lastSyncedAt?: string;
+  agentDocs?: AgentDocs;
 };
 
 export type ImportedMcpVersion = {
@@ -472,6 +500,7 @@ export type BillingEventRecord = {
 export type StripeSubscriptionRecord = {
   id: string;
   customerId: string;
+  clerkUserId?: string;
   customerEmail?: string;
   planSlug?: string;
   status: string;
@@ -524,7 +553,7 @@ export type SystemStateStore = {
   usageEvents: UsageEventRecord[];
 };
 
-export type SkillwireSnapshot = {
+export type LoopSnapshot = {
   generatedAt: string;
   generatedFrom: "local-scan" | "remote-refresh";
   categories: CategoryDefinition[];
@@ -534,4 +563,35 @@ export type SkillwireSnapshot = {
   dailyBriefs: CategoryBrief[];
   plans: MembershipPlan[];
   remoteSnapshotUrl?: string;
+};
+
+export type SkillPurchaseRecord = {
+  id: string;
+  clerkUserId: string;
+  skillSlug: string;
+  stripePaymentIntentId: string;
+  amount: number;
+  currency: string;
+  purchasedAt: string;
+};
+
+export type ConversationChannel = "copilot" | "agent-studio";
+
+export type ConversationMessage = {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  createdAt: string;
+};
+
+export type ConversationRecord = {
+  id: string;
+  clerkUserId: string;
+  channel: ConversationChannel;
+  title: string;
+  messages: ConversationMessage[];
+  model?: string;
+  providerId?: string;
+  createdAt: string;
+  updatedAt: string;
 };
