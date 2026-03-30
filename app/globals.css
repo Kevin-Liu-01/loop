@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 /* ================================================================
    Design tokens — light mode defaults
@@ -28,6 +29,35 @@
 }
 
 /* ================================================================
+   shadcn token bridge — maps our design tokens to shadcn variable
+   names so Radix-based components inherit the existing palette.
+   Skip --color-accent to avoid colliding with our brand orange.
+   ================================================================ */
+
+@theme inline {
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-paper-3);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-paper-3);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: #fff;
+  --color-secondary: var(--color-paper-2);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-paper-2);
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-destructive: var(--color-danger);
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-accent);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ================================================================
    Explicit token overrides — outside @layer so they always win.
    The inline <script> in layout.tsx sets data-theme before first
    paint, so one of these two selectors always matches.
@@ -48,6 +78,8 @@ html[data-theme="light"] {
   --color-accent-hover: #ff7a1a;
   --color-danger: #b91c1c;
   --color-glow: #e8650a;
+
+  --radius: 0.75rem;
 }
 
 html[data-theme="dark"] {
@@ -65,6 +97,8 @@ html[data-theme="dark"] {
   --color-accent-hover: #ff7a1a;
   --color-danger: #ef4444;
   --color-glow: #e8650a;
+
+  --radius: 0.75rem;
 }
 
 /* ================================================================
@@ -85,6 +119,7 @@ html {
   background: var(--color-paper);
   color: var(--color-ink);
   scroll-behavior: smooth;
+  overscroll-behavior: none;
 }
 
 body {
@@ -229,50 +264,187 @@ svg {
 }
 
 /* ================================================================
-   Diff lines (dynamic template classes)
+   Diff viewer
    ================================================================ */
 
-.loop-diff-shell {
-  @apply grid gap-0 overflow-auto rounded-2xl border p-4;
-  max-height: 360px;
+.diff-viewer {
+  @apply grid gap-0 overflow-hidden rounded-xl border;
   border-color: var(--color-line);
   background: var(--color-paper-3);
 }
 
-.loop-diff-line {
-  @apply grid items-start gap-3 px-3 py-1.5;
-  grid-template-columns: 42px 42px 18px minmax(0, 1fr);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  line-height: 1.6;
+.diff-viewer__header {
+  @apply flex items-center justify-between gap-3 border-b px-3.5 py-2;
+  border-color: var(--color-line);
+  background: var(--color-paper-2);
 }
 
-.loop-diff-line span {
+.diff-viewer__stat {
+  @apply inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[0.65rem] font-bold leading-none;
+}
+
+.diff-viewer__stat--added {
+  background: oklch(0.87 0.12 145 / 0.18);
+  color: oklch(0.42 0.14 145);
+}
+
+html[data-theme="dark"] .diff-viewer__stat--added {
+  background: oklch(0.42 0.12 145 / 0.25);
+  color: oklch(0.78 0.14 145);
+}
+
+.diff-viewer__stat--removed {
+  background: oklch(0.87 0.10 25 / 0.18);
+  color: oklch(0.48 0.16 25);
+}
+
+html[data-theme="dark"] .diff-viewer__stat--removed {
+  background: oklch(0.42 0.10 25 / 0.25);
+  color: oklch(0.78 0.12 25);
+}
+
+.diff-viewer__body {
+  @apply overflow-auto;
+}
+
+.diff-viewer__footer {
+  @apply border-t px-3.5 py-2 text-center text-[0.65rem] text-ink-faint;
+  border-color: var(--color-line);
+}
+
+.diff-viewer__hunk {
+  @apply grid gap-0;
+}
+
+.diff-viewer__hunk-sep {
+  @apply flex items-center gap-3 px-3 py-1.5;
+  background: var(--color-paper-2);
+}
+
+.diff-viewer__hunk-sep-line {
+  @apply block h-px flex-1;
+  background: var(--color-line);
+}
+
+.diff-viewer__hunk-sep-label {
+  @apply shrink-0 font-mono text-[0.65rem] text-ink-faint;
+}
+
+/* --- Lines --- */
+
+.diff-viewer__line {
+  @apply grid items-baseline;
+  grid-template-columns: 42px 42px 20px minmax(0, 1fr);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.diff-viewer--compact .diff-viewer__line {
+  grid-template-columns: 20px minmax(0, 1fr);
+}
+
+/* --- Gutter (line numbers) --- */
+
+.diff-viewer__gutter {
+  @apply select-none text-right;
+  padding: 1px 8px 1px 6px;
+  color: var(--color-ink-faint);
+  opacity: 0.65;
+}
+
+.diff-viewer__gutter--left {
+  border-right: 1px solid var(--color-line);
+}
+
+.diff-viewer__gutter--right {
+  border-right: 1px solid var(--color-line);
+}
+
+/* --- Marker (+/-/space) --- */
+
+.diff-viewer__marker {
+  @apply select-none text-center font-bold;
+  padding: 1px 0;
   color: var(--color-ink-faint);
 }
 
-.loop-diff-line code {
+.diff-viewer__marker--added {
+  color: oklch(0.50 0.14 145);
+}
+
+html[data-theme="dark"] .diff-viewer__marker--added {
+  color: oklch(0.72 0.16 145);
+}
+
+.diff-viewer__marker--removed {
+  color: oklch(0.52 0.16 25);
+}
+
+html[data-theme="dark"] .diff-viewer__marker--removed {
+  color: oklch(0.72 0.14 25);
+}
+
+/* --- Line content --- */
+
+.diff-viewer__content {
   @apply whitespace-pre-wrap break-words;
+  padding: 1px 10px 1px 4px;
+  color: var(--color-ink);
 }
 
-.loop-diff-line--added {
-  background: rgba(232, 101, 10, 0.06);
+/* --- Row backgrounds --- */
+
+.diff-viewer__line--added {
+  background: oklch(0.96 0.04 145 / 0.55);
 }
 
-html[data-theme="dark"] .loop-diff-line--added {
-  background: rgba(232, 101, 10, 0.1);
+html[data-theme="dark"] .diff-viewer__line--added {
+  background: oklch(0.26 0.06 145 / 0.35);
 }
 
-.loop-diff-line--removed {
-  background: rgba(10, 10, 10, 0.04);
+.diff-viewer__line--added .diff-viewer__content {
+  color: oklch(0.25 0.06 145);
 }
 
-html[data-theme="dark"] .loop-diff-line--removed {
-  background: rgba(255, 255, 255, 0.04);
+html[data-theme="dark"] .diff-viewer__line--added .diff-viewer__content {
+  color: oklch(0.88 0.06 145);
 }
 
-.loop-diff-line--context {
-  background: transparent;
+.diff-viewer__line--removed {
+  background: oklch(0.96 0.04 25 / 0.5);
+}
+
+html[data-theme="dark"] .diff-viewer__line--removed {
+  background: oklch(0.26 0.06 25 / 0.3);
+}
+
+.diff-viewer__line--removed .diff-viewer__content {
+  color: oklch(0.32 0.06 25);
+}
+
+html[data-theme="dark"] .diff-viewer__line--removed .diff-viewer__content {
+  color: oklch(0.88 0.06 25);
+}
+
+/* --- Word-level highlights --- */
+
+.diff-viewer__word--added {
+  @apply rounded-sm;
+  background: oklch(0.82 0.10 145 / 0.45);
+}
+
+html[data-theme="dark"] .diff-viewer__word--added {
+  background: oklch(0.42 0.12 145 / 0.55);
+}
+
+.diff-viewer__word--removed {
+  @apply rounded-sm;
+  background: oklch(0.82 0.10 25 / 0.4);
+}
+
+html[data-theme="dark"] .diff-viewer__word--removed {
+  background: oklch(0.42 0.12 25 / 0.5);
 }
 
 /* ================================================================
