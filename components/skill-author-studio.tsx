@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 
 import { ImageIcon } from "lucide-react";
 
+import { AgentDocsEditor } from "@/components/agent-docs-editor";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
+import { SkillVisibilityToggle } from "@/components/skill-visibility-toggle";
 import { RefreshIcon } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
@@ -13,7 +15,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/shadcn/tabs";
 import { cn } from "@/lib/cn";
 import { CATEGORY_REGISTRY } from "@/lib/registry";
-import type { LoopUpdateStreamEvent, SkillRecord } from "@/lib/types";
+import type { AgentDocs, LoopUpdateStreamEvent, SkillRecord } from "@/lib/types";
 
 type SkillAuthorStudioProps = {
   skill: SkillRecord;
@@ -29,6 +31,7 @@ type AuthorStudioState = {
   automationPrompt: string;
   body: string;
   ownerName: string;
+  agentDocs: AgentDocs;
 };
 
 function buildInitialState(skill: SkillRecord): AuthorStudioState {
@@ -43,7 +46,8 @@ function buildInitialState(skill: SkillRecord): AuthorStudioState {
     cadence: skill.automation?.enabled ? skill.automation.cadence : "manual",
     automationPrompt: skill.automation?.prompt ?? "",
     body: skill.body,
-    ownerName: skill.ownerName ?? ""
+    ownerName: skill.ownerName ?? "",
+    agentDocs: skill.agentDocs ?? {}
   };
 }
 
@@ -170,7 +174,8 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
           .filter(Boolean),
         autoUpdate: state.cadence !== "manual",
         automationCadence: state.cadence,
-        automationPrompt: state.automationPrompt
+        automationPrompt: state.automationPrompt,
+        agentDocs: Object.keys(state.agentDocs).length > 0 ? state.agentDocs : undefined
       })
     });
 
@@ -295,7 +300,7 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
         </div>
       </PanelHead>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
         <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
           <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">version</small>
           <strong className="text-sm font-semibold text-ink">{skill.versionLabel}</strong>
@@ -314,6 +319,14 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
             {state.cadence === "manual" ? "manual" : state.cadence}
           </strong>
         </div>
+        <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+          <small className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">visibility</small>
+          <SkillVisibilityToggle
+            canEdit
+            currentVisibility={skill.visibility}
+            slug={skill.slug}
+          />
+        </div>
       </div>
 
       <div className="rounded-none border border-line bg-paper-3/80 p-4 text-sm leading-relaxed text-ink-soft dark:bg-paper-2/35">
@@ -327,6 +340,7 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="automation">Automation</TabsTrigger>
+            <TabsTrigger value="agent-docs">Agent docs</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
           </TabsList>
 
@@ -448,6 +462,23 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
                   skill stable until you explicitly run the updater.
                 </p>
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent className="mt-0" value="agent-docs">
+            <div className="grid gap-4 rounded-none border border-line bg-paper-3/70 p-4 dark:bg-paper-2/30">
+              <div className="grid gap-1">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+                  Agent config files
+                </span>
+                <p className="m-0 text-sm text-ink-faint">
+                  Attach platform-specific agent configuration. These are bundled with the skill when used in each agent environment.
+                </p>
+              </div>
+              <AgentDocsEditor
+                onChange={(docs) => setState((current) => ({ ...current, agentDocs: docs }))}
+                value={state.agentDocs}
+              />
             </div>
           </TabsContent>
 

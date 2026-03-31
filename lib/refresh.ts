@@ -795,7 +795,7 @@ export async function refreshLoopSnapshot(
   }
 }
 
-export async function getLoopSnapshot() {
+export async function getLoopSnapshot(options?: { includePrivate?: boolean }) {
   const { getLoopSnapshot: getSnapshot } = await import("@/lib/content");
-  return getSnapshot();
+  return getSnapshot(options);
 }

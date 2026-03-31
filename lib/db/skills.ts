@@ -15,7 +15,7 @@ import type {
   SkillUpdateEntry,
   SkillVisibility,
   SourceDefinition,
-  VersionReference
+  VersionReference,
 } from "@/lib/types";
 
 type SkillRow = {
@@ -54,6 +54,7 @@ type SkillRow = {
   featured_rank?: number;
   quality_score?: number;
   research_profile?: unknown;
+  forked_from_slug?: string | null;
 };
 
 async function attachAuthors(rows: SkillRow[]): Promise<Map<string, SkillRecord["author"]>> {
@@ -110,7 +111,8 @@ export function rowToSkillRecord(
     iconUrl: row.icon_url ?? undefined,
     featuredRank: row.featured_rank ?? 0,
     qualityScore: row.quality_score ?? 0,
-    researchProfile: row.research_profile as SkillResearchProfile | undefined
+    researchProfile: row.research_profile as SkillResearchProfile | undefined,
+    forkedFromSlug: row.forked_from_slug ?? undefined
   };
 }
 
@@ -146,6 +148,7 @@ export type CreateSkillInput = {
   featuredRank?: number;
   qualityScore?: number;
   researchProfile?: SkillResearchProfile;
+  forkedFromSlug?: string;
 };
 
 function inputToRow(input: CreateSkillInput): Record<string, unknown> {
@@ -183,6 +186,7 @@ function inputToRow(input: CreateSkillInput): Record<string, unknown> {
   if (input.featuredRank !== undefined) row.featured_rank = input.featuredRank;
   if (input.qualityScore !== undefined) row.quality_score = input.qualityScore;
   if (input.researchProfile !== undefined) row.research_profile = input.researchProfile;
+  if (input.forkedFromSlug !== undefined) row.forked_from_slug = input.forkedFromSlug;
 
   return row;
 }
@@ -190,6 +194,7 @@ function inputToRow(input: CreateSkillInput): Record<string, unknown> {
 export async function listSkills(filter?: {
   origin?: SkillOrigin;
   category?: string;
+  visibility?: SkillVisibility;
 }): Promise<SkillRecord[]> {
   const db = getServerSupabase();
   let query = db.from("skills").select("*");
@@ -199,6 +204,9 @@ export async function listSkills(filter?: {
   }
   if (filter?.category) {
     query = query.eq("category", filter.category);
+  }
+  if (filter?.visibility) {
+    query = query.eq("visibility", filter.visibility);
   }
 
   const { data, error } = await query.order("title");
@@ -370,6 +378,7 @@ export async function updateSkill(
   if (updates.featuredRank !== undefined) mapped.featured_rank = updates.featuredRank;
   if (updates.qualityScore !== undefined) mapped.quality_score = updates.qualityScore;
   if (updates.researchProfile !== undefined) mapped.research_profile = updates.researchProfile;
+  if (updates.forkedFromSlug !== undefined) mapped.forked_from_slug = updates.forkedFromSlug;
 
   const { data, error } = await db
     .from("skills")

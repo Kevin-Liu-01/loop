@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  AutomationIcon,
   CreditCardIcon,
-  FlowIcon,
   LinkIcon,
   PulseIcon,
   RefreshIcon,
@@ -27,7 +27,7 @@ function NavIcon({ id, active }: { id: SettingsNavId; active: boolean }) {
     case "refresh":
       return <RefreshIcon className={cls} aria-hidden />;
     case "automations":
-      return <FlowIcon className={cls} aria-hidden />;
+      return <AutomationIcon className={cls} aria-hidden />;
     case "health":
       return <PulseIcon className={cls} aria-hidden />;
     default:

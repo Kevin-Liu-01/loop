@@ -31,7 +31,7 @@ export type SourceParser =
   | "docs-index"
   | "manifest"
   | "manual";
-export type SkillVisibility = "public" | "member";
+export type SkillVisibility = "public" | "member" | "private";
 export type CategoryStatus = "live" | "seeded";
 export type SkillOrigin = "repo" | "codex" | "user" | "remote";
 export type UserSkillCadence = "daily" | "weekly" | "manual";
@@ -214,6 +214,7 @@ export type SkillRecord = {
   qualityScore?: number;
   researchProfile?: SkillResearchProfile;
   upstreams?: SkillUpstreamRecord[];
+  forkedFromSlug?: string;
 };
 
 export type DailySignal = {

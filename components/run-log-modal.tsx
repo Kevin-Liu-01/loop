@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { DiffViewer } from "@/components/diff-viewer";
-import { FlowIcon } from "@/components/frontier-icons";
+import { AutomationIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -163,7 +163,7 @@ function StepDetail({ step }: { step: AgentReasoningStep }) {
     <div className="grid gap-4">
       <div className="flex items-center gap-2">
         <span className="flex h-7 w-7 items-center justify-center border border-line bg-paper-3 text-ink-soft [&>svg]:h-3.5 [&>svg]:w-3.5">
-          <FlowIcon />
+          <AutomationIcon />
         </span>
         <span className="text-sm font-semibold text-ink">
           Step {step.index + 1}

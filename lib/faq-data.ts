@@ -27,7 +27,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Who is Loop for?",
         answer:
-          "Anyone who operates AI agents and wants their skill playbooks to stay accurate over time — prompt engineers, AI-ops teams, developer-tool authors, and agent builders who publish reusable skills.",
+          "Anyone who operates AI agents and wants their skill playbooks to stay accurate over time — prompt engineers, AI-ops teams, developer-tool authors, and agent builders who publish reusable skills. Loop also automatically imports high-signal skills weekly from trusted sources so your catalog stays current.",
       },
       {
         question: "What problem does Loop solve?",
@@ -78,7 +78,22 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is the skill catalog?",
         answer:
-          "The catalog is the home view of Loop — a browsable, searchable collection of all available skills. You can filter by category, search by name or tag, open skill detail pages, and track skills into your editable set from here.",
+          "The catalog is the home view of Loop — a browsable, searchable collection of all public skills. You can filter by category, search by name or tag, open skill detail pages, and track or copy skills into your editable set from here.",
+      },
+      {
+        question: "Can I copy a catalog skill to make it my own?",
+        answer:
+          "Yes. Any signed-in user can copy (fork) a public skill. The copy starts as private and is owned by you — you can add automations, edit the body, attach agent docs, and later make it public. The original skill is unaffected. Copied skills track their lineage via a 'forked from' badge.",
+      },
+      {
+        question: "What are public and private skills?",
+        answer:
+          "Every skill has a visibility setting. Public skills appear in the catalog for everyone. Private skills are only visible to their owner. You can change a skill's visibility at any time from the detail page or the author studio. All Loop-published skills are public by default.",
+      },
+      {
+        question: "What are agent docs?",
+        answer:
+          "Agent docs are platform-specific configuration files attached to a skill — AGENTS.md, cursor.md, claude.md, and codex.md. Each file contains instructions tailored to a specific agent platform. You can add or edit them when creating a skill or from the Author Studio's 'Agent docs' tab.",
       },
     ],
   },
@@ -187,6 +202,42 @@ export const FAQ_SECTIONS: FaqSection[] = [
         question: "Can I attach MCP servers to agent runs?",
         answer:
           "Yes. When starting an agent run, you select which MCP servers to attach. Loop's runtime initializes each server, discovers its tools, and injects them into the model's tool catalog. The agent can then call tools across multiple servers in a single conversation.",
+      },
+    ],
+  },
+  {
+    id: "weekly-imports",
+    title: "Weekly imports & email digest",
+    items: [
+      {
+        question: "What are weekly imports?",
+        answer:
+          "Every Sunday at 10:00 UTC, Loop's import cron scans trusted skill sources — official repos from Anthropic, OpenAI, and community-curated lists — discovers new skills, and imports them into the catalog with proper attribution, icons, and agent docs. This keeps the catalog growing with high-signal skills without manual effort.",
+      },
+      {
+        question: "Which sources does Loop import from?",
+        answer:
+          "Loop imports from three source tiers: official repos (Anthropic Skills, OpenAI Skills), community-curated lists (Awesome Agent Skills), and any additional sources defined in the external skill sources registry. Each source has a trust tier — official or community — which is tagged on imported skills.",
+      },
+      {
+        question: "What happens when a new skill is imported?",
+        answer:
+          "Imported skills are created as public skills with a 'remote' origin and weekly automation cadence. They include the skill body, description, category, tags, and any agent docs found in the source repo (AGENTS.md, cursor.md, claude.md, codex.md). The source author is attributed via the owner name field.",
+      },
+      {
+        question: "Do I get notified about new imports?",
+        answer:
+          "Yes. After each weekly import, Loop sends a digest email to admin accounts via Resend. The email lists all newly imported skills with links, descriptions, and source attribution. You can also see new imports in the Activity sidebar on the catalog page by switching to the 'New imports' tab.",
+      },
+      {
+        question: "Can I see import activity in the catalog?",
+        answer:
+          "Yes. The Activity sidebar on the home page has two views: 'Automations' shows the automation calendar and schedule, and 'New imports' shows the most recently imported skills and MCPs sorted by import date.",
+      },
+      {
+        question: "How do I configure email preferences?",
+        answer:
+          "Email preferences are managed per account. By default, admin accounts receive the weekly digest. You can manage email settings from Settings. The RESEND_API_KEY environment variable must be configured for emails to send.",
       },
     ],
   },
@@ -352,6 +403,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
         question: "What is the daily brief?",
         answer:
           "Daily briefs are generated summaries of skill activity and refresh results. They aggregate what changed across your tracked skills and provide a concise digest of recent updates.",
+      },
+      {
+        question: "How does Loop send emails?",
+        answer:
+          "Loop uses the Resend API for transactional email. Set the RESEND_API_KEY and optionally RESEND_FROM_EMAIL environment variables. Currently, Loop sends a weekly digest email after the import cron runs, summarizing newly imported skills and any import errors.",
       },
       {
         question: "Are there any local filesystem dependencies?",

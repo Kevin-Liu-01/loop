@@ -301,11 +301,15 @@ function deriveAutomationsFromSkills(
 // Primary DB-backed queries (replaces snapshot assembly)
 // ---------------------------------------------------------------------------
 
-export async function getSkillCatalogue(): Promise<
+export async function getSkillCatalogue(options?: {
+  includePrivate?: boolean;
+}): Promise<
   Omit<LoopSnapshot, "dailyBriefs" | "generatedAt" | "generatedFrom">
 > {
   const [skills, categories, mcps] = await Promise.all([
-    dbListSkills(),
+    options?.includePrivate
+      ? dbListSkills()
+      : dbListSkills({ visibility: "public" }),
     dbListCategories(),
     dbListMcps()
   ]);
@@ -334,9 +338,11 @@ export async function getSkillRecordBySlug(
   return dbGetSkillBySlug(slug);
 }
 
-export async function getLoopSnapshot(): Promise<LoopSnapshot> {
+export async function getLoopSnapshot(options?: {
+  includePrivate?: boolean;
+}): Promise<LoopSnapshot> {
   const [catalogue, briefs] = await Promise.all([
-    getSkillCatalogue(),
+    getSkillCatalogue({ includePrivate: options?.includePrivate }),
     dbListBriefs()
   ]);
 

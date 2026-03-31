@@ -4,7 +4,7 @@ import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { DiffViewer } from "@/components/diff-viewer";
-import { FlowIcon, RefreshIcon } from "@/components/frontier-icons";
+import { AutomationIcon, RefreshIcon } from "@/components/frontier-icons";
 import { RunLogModal } from "@/components/run-log-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -207,7 +207,7 @@ function StepLog({ messages, isLive }: { messages: string[]; isLive: boolean }) 
               isLive && index === messages.length - 1 && "animate-pulse"
             )}
           >
-            <FlowIcon />
+            <AutomationIcon />
           </div>
           <div className="grid gap-0.5 pt-1">
             <span className="text-xs font-medium text-ink-faint">Step {index + 1}</span>

@@ -12,7 +12,7 @@ export default async function SettingsAutomationsPage() {
   const timeZone = await getUsageTimeZoneFromCookie();
   const [session, { snapshot }] = await Promise.all([
     getSessionUser(),
-    getSystemSnapshot({ timeZone })
+    getSystemSnapshot({ timeZone, includePrivate: true })
   ]);
   const sessionAuthor = session ? await findSkillAuthorForSession(session) : null;
   const manageableSkillSlugs = snapshot.skills

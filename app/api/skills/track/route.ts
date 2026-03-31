@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 
 import { z } from "zod";
 
+import { authErrorResponse, requireAuth } from "@/lib/auth";
 import { getSkillCatalogue } from "@/lib/content";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 import { addTrackedSkillFromRecord, buildUserSkillRecord } from "@/lib/user-skills";
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     },
     async () => {
       try {
+        await requireAuth();
         const payload = bodySchema.parse(await request.json());
         const base = await getSkillCatalogue();
         const skill = base.skills.find((entry) => entry.slug === payload.slug);
@@ -64,6 +66,9 @@ export async function POST(request: Request) {
           created: true
         });
       } catch (error) {
+        const authResp = authErrorResponse(error);
+        if (authResp) return authResp;
+
         if (error instanceof Error) {
           return Response.json({ error: error.message }, { status: 400 });
         }

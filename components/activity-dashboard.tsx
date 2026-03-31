@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { ActivityFeedImports } from "@/components/activity-feed-imports";
 import { ActivityUsageToolbar } from "@/components/activity-usage-toolbar";
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
@@ -12,15 +13,19 @@ import { EmptyCard } from "@/components/ui/empty-card";
 import { Panel } from "@/components/ui/panel";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
+import type { RecentImportItem } from "@/lib/db/recent-imports";
 import { inlineSectionLabel } from "@/lib/ui-layout";
 import { peakVolumeHour, sumBucketTotals } from "@/lib/usage-sidebar-insights";
 import type { AutomationSummary } from "@/lib/types";
 import type { UsageDeltaSet, UsageOverview, UsageTotalsSnapshot } from "@/lib/usage";
 import { usageStatTileValues } from "@/lib/usage";
 
+type ActivitySidebarTab = "automations" | "imports";
+
 type ActivityDashboardProps = {
   overview: UsageOverview;
   automations: AutomationSummary[];
+  recentImports?: RecentImportItem[];
   variant?: "default" | "sidebar";
 };
 
@@ -29,6 +34,7 @@ type ActivitySidebarViewProps = {
   tileValues: UsageTotalsSnapshot;
   deltas: UsageDeltaSet;
   automations: AutomationSummary[];
+  recentImports: RecentImportItem[];
   viewsSpark: number[];
   interactionsSpark: number[];
   apiSpark: number[];
@@ -50,6 +56,7 @@ function ActivitySidebarView({
   tileValues,
   deltas,
   automations,
+  recentImports,
   viewsSpark,
   interactionsSpark,
   apiSpark,
@@ -59,32 +66,66 @@ function ActivitySidebarView({
   activeAutomations,
   onEditAutomation,
 }: ActivitySidebarViewProps) {
+  const [sidebarTab, setSidebarTab] = useState<ActivitySidebarTab>("automations");
   const peak = peakVolumeHour(overview.timeSeries);
   const totalRolling = sumBucketTotals(overview.timeSeries);
   const topRoutes = overview.routeUsage.slice(0, 4);
   const mix = overview.activityCounts;
 
   const sectionDivider = "border-t border-line pt-5";
+  const showTabs = automations.length > 0 || recentImports.length > 0;
 
   return (
     <div className="grid gap-5">
-      {automations.length > 0 ? (
+      {showTabs ? (
         <section className="grid gap-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h3 className="m-0 font-serif text-lg font-medium leading-snug tracking-[-0.02em] text-ink">
+            <div className="flex items-baseline gap-3">
+              <button
+                className={cn(
+                  "font-serif text-lg font-medium leading-snug tracking-[-0.02em] transition-colors",
+                  sidebarTab === "automations" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
+                )}
+                onClick={() => setSidebarTab("automations")}
+                type="button"
+              >
                 Automations
-              </h3>
+              </button>
+              <button
+                className={cn(
+                  "font-serif text-lg font-medium leading-snug tracking-[-0.02em] transition-colors",
+                  sidebarTab === "imports" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
+                )}
+                onClick={() => setSidebarTab("imports")}
+                type="button"
+              >
+                New imports
+                {recentImports.length > 0 && (
+                  <span className="ml-1.5 text-xs tabular-nums font-normal text-ink-faint">
+                    {recentImports.length}
+                  </span>
+                )}
+              </button>
             </div>
-            <span className="flex items-center gap-1.5 text-xs text-ink-soft">
-              <StatusDot
-                tone={activeAutomations.length > 0 ? "fresh" : "idle"}
-                pulse={activeAutomations.length > 0}
-              />
-              {activeAutomations.length} active
-            </span>
+            {sidebarTab === "automations" && (
+              <span className="flex items-center gap-1.5 text-xs text-ink-soft">
+                <StatusDot
+                  tone={activeAutomations.length > 0 ? "fresh" : "idle"}
+                  pulse={activeAutomations.length > 0}
+                />
+                {activeAutomations.length} active
+              </span>
+            )}
           </div>
-          <AutomationCalendar automations={automations} onEditAutomation={onEditAutomation} variant="sidebar" />
+          {sidebarTab === "automations" ? (
+            automations.length > 0 ? (
+              <AutomationCalendar automations={automations} onEditAutomation={onEditAutomation} variant="sidebar" />
+            ) : (
+              <EmptyCard className="border-dashed py-4 text-sm">No automations configured yet.</EmptyCard>
+            )
+          ) : (
+            <ActivityFeedImports imports={recentImports} />
+          )}
         </section>
       ) : null}
 
@@ -255,14 +296,16 @@ function hasRollingUsage(overview: UsageOverview): boolean {
 
 export function shouldShowActivityDashboard(
   overview: UsageOverview,
-  automations: AutomationSummary[]
+  automations: AutomationSummary[],
+  recentImports?: RecentImportItem[]
 ): boolean {
-  return hasRollingUsage(overview) || automations.length > 0;
+  return hasRollingUsage(overview) || automations.length > 0 || (recentImports?.length ?? 0) > 0;
 }
 
 export function ActivityDashboard({
   overview,
   automations,
+  recentImports = [],
   variant = "default",
 }: ActivityDashboardProps) {
   const mode = useUsageComparisonMode();
@@ -302,6 +345,7 @@ export function ActivityDashboard({
           latencySpark={latencySpark}
           onEditAutomation={setEditTarget}
           overview={overview}
+          recentImports={recentImports}
           tileValues={tileValues}
           viewsSpark={viewsSpark}
         />

@@ -8,7 +8,7 @@ import { listSkillUpstreams } from "@/lib/db/skill-intelligence";
 import { getBrief, parseVersionSegment } from "@/lib/format";
 import { hasUserPurchasedSkill } from "@/lib/purchases";
 import { getLoopSnapshot } from "@/lib/refresh";
-import { canSessionEditSkill } from "@/lib/skill-authoring";
+import { canSessionEditSkill, canViewPrivateSkill } from "@/lib/skill-authoring";
 import { listLoopRuns, listUsageEvents } from "@/lib/system-state";
 import { buildSkillUsageSummary } from "@/lib/usage";
 
@@ -40,8 +40,13 @@ export default async function VersionedSkillPage({ params }: VersionedSkillPageP
     notFound();
   }
 
-  const upstreams = await listSkillUpstreams(skill.slug);
   const sessionAuthor = session ? await findSkillAuthorForSession(session) : null;
+
+  if (!canViewPrivateSkill(skill, session, sessionAuthor)) {
+    notFound();
+  }
+
+  const upstreams = await listSkillUpstreams(skill.slug);
 
   const purchased = session?.userId ? await hasUserPurchasedSkill(session.userId, slug) : false;
   const canEdit = canSessionEditSkill(skill, session, sessionAuthor);
@@ -57,6 +62,7 @@ export default async function VersionedSkillPage({ params }: VersionedSkillPageP
     <SkillDetailPage
       brief={brief}
       canEdit={canEdit}
+      isSignedIn={!!session}
       latestRun={latestRun}
       previousSkill={previousSkill}
       purchased={purchased || canEdit}

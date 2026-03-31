@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { ImageIcon } from "lucide-react";
 
+import { AgentDocsEditor } from "@/components/agent-docs-editor";
 import {
   ClockIcon,
+  EyeIcon,
   GlobeIcon,
   HashIcon,
   PlusIcon,
@@ -17,7 +19,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import type { CategoryDefinition } from "@/lib/types";
+import type { AgentDocs, CategoryDefinition } from "@/lib/types";
 
 type UserSkillFormProps = {
   categories: CategoryDefinition[];
@@ -33,6 +35,8 @@ type FormState = {
   automationPrompt: string;
   body: string;
   price: string;
+  visibility: "public" | "private";
+  agentDocs: AgentDocs;
 };
 
 const STORAGE_KEY = "loop.user-skill-draft";
@@ -47,16 +51,59 @@ function createInitialState(categories: CategoryDefinition[]): FormState {
     cadence: "daily",
     automationPrompt: "",
     price: "",
+    visibility: "private",
+    agentDocs: {},
     body: [
-      "# Goal",
+      "# Skill Title",
       "",
-      "What should this skill help an agent do?",
+      "One-paragraph summary: what this skill does, who it's for, and when to use it.",
+      "",
+      "## When to use",
+      "",
+      "- Use this when [concrete trigger condition]",
+      "- Use this when [scenario]",
+      "",
+      "## When NOT to use",
+      "",
+      "- Do not use for [anti-pattern] — reach for [alternative] instead",
+      "",
+      "## Core concepts",
+      "",
+      "| Concept | Description |",
+      "|---------|-------------|",
+      "| Term 1 | Definition |",
+      "| Term 2 | Definition |",
       "",
       "## Workflow",
       "",
-      "1. Start with the latest sources.",
-      "2. Pull the concrete changes only.",
-      "3. Turn the changes into reusable guidance."
+      "### Step 1: Gather context",
+      "- Start with the latest sources",
+      "- Pull the concrete changes only",
+      "",
+      "### Step 2: Apply the skill",
+      "- Turn the changes into reusable guidance",
+      "- Include code examples where helpful",
+      "",
+      "### Step 3: Verify",
+      "- Check that the output meets evaluation criteria",
+      "",
+      "## Examples",
+      "",
+      "### Example 1: Basic usage",
+      "",
+      "```",
+      "Your code or config example here",
+      "```",
+      "",
+      "## Edge cases and gotchas",
+      "",
+      "1. [Non-obvious failure mode] — mitigation: [fix]",
+      "",
+      "## Evaluation criteria",
+      "",
+      "- [ ] Does the output meet quality standards?",
+      "- [ ] Are edge cases handled?",
+      "- [ ] Is the guidance actionable and specific?"
     ].join("\n")
   };
 }
@@ -163,6 +210,8 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
           automationCadence: state.cadence,
           automationPrompt: state.automationPrompt,
           body: state.body,
+          visibility: state.visibility,
+          agentDocs: Object.keys(state.agentDocs).length > 0 ? state.agentDocs : undefined,
           price: state.price
             ? { amount: Math.round(parseFloat(state.price) * 100), currency: "usd" }
             : null
@@ -202,7 +251,7 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
 
         <p className="text-ink-soft">Start with the text. Add the watchlist.</p>
 
-        <div className="grid grid-cols-4 gap-3 max-lg:grid-cols-1 max-md:grid-cols-1">
+        <div className="grid grid-cols-5 gap-3 max-lg:grid-cols-2 max-md:grid-cols-1">
           <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
             <small className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
               <HashIcon className="h-3 w-3" />
@@ -231,6 +280,15 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             </small>
             <strong className="text-sm font-semibold text-ink">
               {state.price && parseFloat(state.price) > 0 ? `$${parseFloat(state.price).toFixed(2)}` : "Free"}
+            </strong>
+          </div>
+          <div className="grid gap-1 rounded-[14px] border border-line bg-paper-3 p-3">
+            <small className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+              <EyeIcon className="h-3 w-3" />
+              visibility
+            </small>
+            <strong className="text-sm font-semibold text-ink">
+              {state.visibility === "public" ? "Public" : "Private"}
             </strong>
           </div>
         </div>
@@ -314,7 +372,7 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
           />
         </FieldGroup>
 
-        <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1">
+        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
             <select
@@ -328,6 +386,20 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             </select>
           </FieldGroup>
 
+          <FieldGroup>
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Visibility</span>
+            <select
+              className={cn(textFieldBase, textFieldSelect)}
+              onChange={(event) => update("visibility", event.target.value as FormState["visibility"])}
+              value={state.visibility}
+            >
+              <option value="private">Private — only you can see it</option>
+              <option value="public">Public — visible in catalog</option>
+            </select>
+          </FieldGroup>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Price (USD)</span>
             <input
@@ -353,6 +425,11 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             />
           </FieldGroup>
         </div>
+
+        <AgentDocsEditor
+          onChange={(docs) => setState((current) => ({ ...current, agentDocs: docs }))}
+          value={state.agentDocs}
+        />
 
         <details className="grid gap-4 rounded-2xl border border-line bg-paper-3 p-4">
           <summary className="cursor-pointer list-none text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">

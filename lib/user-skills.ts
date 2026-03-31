@@ -68,16 +68,17 @@ export const createUserSkillInputSchema = z.object({
   automationCadence: z.enum(["daily", "weekly", "manual"]).default("daily"),
   automationPrompt: z.string().trim().max(240).optional(),
   agentDocs: z.record(z.string()).optional(),
-  price: z.object({ amount: z.number(), currency: z.string() }).nullable().optional()
+  price: z.object({ amount: z.number(), currency: z.string() }).nullable().optional(),
+  visibility: z.enum(["public", "private"]).optional().default("private"),
 });
 
-export type CreateUserSkillInput = z.infer<typeof createUserSkillInputSchema>;
+export type CreateUserSkillInput = z.input<typeof createUserSkillInputSchema>;
 
 export const updateUserSkillInputSchema = createUserSkillInputSchema.extend({
   slug: z.string().trim().min(1)
 });
 
-export type UpdateUserSkillInput = z.infer<typeof updateUserSkillInputSchema>;
+export type UpdateUserSkillInput = z.input<typeof updateUserSkillInputSchema>;
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -322,8 +323,8 @@ export function createUserSkillDocument(input: CreateUserSkillInput, now = new D
   const parsed = createUserSkillInputSchema.parse({
     ...input,
     ownerName: input.ownerName?.trim() || undefined,
-    tags: normalizeTags(input.tags),
-    sourceUrls: Array.from(new Set(input.sourceUrls.map((url) => url.trim()).filter(Boolean)))
+    tags: normalizeTags(input.tags ?? []),
+    sourceUrls: Array.from(new Set((input.sourceUrls ?? []).map((url) => url.trim()).filter(Boolean)))
   });
 
   const slugBase = slugify(parsed.title) || `skill-${stableHash(parsed.title)}`;
@@ -338,7 +339,7 @@ export function createUserSkillDocument(input: CreateUserSkillInput, now = new D
       body: parsed.body,
       ownerName: parsed.ownerName,
       tags: normalizeTags([parsed.category, ...parsed.tags, "community"]),
-      visibility: "public",
+      visibility: parsed.visibility ?? "private",
       sources,
       automation: {
         enabled: automationEnabled,
@@ -385,8 +386,8 @@ export function updateUserSkillDocument(
   const parsed = updateUserSkillInputSchema.parse({
     ...input,
     ownerName: input.ownerName?.trim() || undefined,
-    tags: normalizeTags(input.tags),
-    sourceUrls: Array.from(new Set(input.sourceUrls.map((url) => url.trim()).filter(Boolean)))
+    tags: normalizeTags(input.tags ?? []),
+    sourceUrls: Array.from(new Set((input.sourceUrls ?? []).map((url) => url.trim()).filter(Boolean)))
   });
 
   const nextSources = parsed.sourceUrls.map((url) => normalizeSource(url, parsed.category));

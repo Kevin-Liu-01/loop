@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { LoopLogo } from "@/components/loop-logo";
@@ -18,19 +17,24 @@ import {
 import { LANDING_PALETTE } from "@/lib/home-landing/constants";
 import { useLandingParallax } from "@/components/home-landing/use-landing-parallax";
 
-const Hero3DCanvas = dynamic(
-  () =>
-    import("@/components/home-landing/hero-3d-canvas").then((m) => ({
-      default: m.Hero3DCanvas,
-    })),
-  { ssr: false }
-);
-
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.2 as const },
   transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+};
+
+const staggerChildren = {
+  initial: { opacity: 0 },
+  whileInView: { opacity: 1 },
+  viewport: { once: true, amount: 0.15 as const },
+  transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+};
+
+const staggerChild = {
+  initial: { opacity: 0, y: 16 },
+  whileInView: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -60,6 +64,30 @@ function StatPill({ value, label }: { value: string; label: string }) {
   );
 }
 
+function ActionCard({ title, description, href, linkText }: {
+  title: string;
+  description: string;
+  href: string;
+  linkText: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group grid gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5 transition-all hover:border-[#e8650a]/20 hover:bg-white/[0.03]"
+    >
+      <span className="text-[0.95rem] font-semibold text-white/80 transition-colors group-hover:text-white">
+        {title}
+      </span>
+      <span className="text-[0.82rem] leading-[1.6] text-white/30">
+        {description}
+      </span>
+      <span className="font-mono text-[0.68rem] font-medium text-[#e8650a]/70 transition-colors group-hover:text-[#e8650a]">
+        {linkText} →
+      </span>
+    </Link>
+  );
+}
+
 export function LandingShell() {
   const [brandHover, setBrandHover] = useState(false);
   const parallaxRootRef = useRef<HTMLDivElement>(null);
@@ -71,28 +99,17 @@ export function LandingShell() {
       className="relative min-h-screen overflow-x-hidden text-white"
       style={{ backgroundColor: LANDING_PALETTE.bg }}
     >
-      {/* ═══════════════════════════════════════════════════════════
-          HERO: full-bleed ASCII helmet
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ HERO ═══ */}
       <section className="relative min-h-[100dvh] w-full overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Hero3DCanvas ambient className="h-full w-full" />
-        </div>
-
-        {/* Scrims */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(108deg,#08080a_0%,rgba(8,8,10,0.96)_min(44vw,480px),transparent_min(75vw,880px))]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1] bg-linear-to-t from-[#08080a] via-transparent to-[#08080a]/50 md:from-[#08080a]/95"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(232,101,10,0.08),transparent_70%)]"
         />
 
         {/* Nav */}
         <nav className="relative z-20 mx-auto flex max-w-[1100px] items-center justify-between px-6 pt-6">
           <Link
-            href="/home"
+            href="/"
             className="flex items-center gap-2.5"
             onPointerEnter={() => setBrandHover(true)}
             onPointerLeave={() => setBrandHover(false)}
@@ -106,69 +123,114 @@ export function LandingShell() {
               Loop
             </span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
-              href="/"
-              className="text-sm text-white/35 transition-colors hover:text-white/65"
+              href="#skills"
+              className="text-sm text-white/30 transition-colors hover:text-white/60 max-sm:hidden"
             >
-              Dashboard
+              Skills
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="text-sm text-white/30 transition-colors hover:text-white/60 max-sm:hidden"
+            >
+              How it works
             </Link>
             <Link
               href="/sign-in"
-              className="rounded-full bg-white/[0.06] px-4 py-1.5 text-sm font-medium text-white/75 ring-1 ring-inset ring-white/[0.06] transition-all hover:bg-white/[0.1] hover:text-white/90"
+              className="text-sm text-white/40 transition-colors hover:text-white/70"
             >
               Sign in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="rounded-full bg-[#e8650a] px-4 py-1.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(232,101,10,0.2)] transition-all hover:bg-[#ff7a1a] hover:shadow-[0_0_28px_rgba(232,101,10,0.35)]"
+            >
+              Get started
             </Link>
           </div>
         </nav>
 
         {/* Hero copy */}
-        <div className="relative z-10 mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-[1100px] items-center gap-10 px-6 pb-24 pt-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14">
-          <motion.div className="grid gap-8" data-parallax="-0.08" {...fadeUp}>
-            <div className="grid gap-5 text-center lg:max-w-[34rem] lg:text-left">
+        <div className="relative z-10 mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-[1100px] content-center gap-10 px-6 pb-24 pt-10">
+          <motion.div className="mx-auto grid max-w-[52rem] gap-8 text-center" {...fadeUp}>
+            <div className="grid gap-5">
               <SectionLabel>Operator desk for agent skills</SectionLabel>
-              <h1 className="text-balance font-serif text-[clamp(2.4rem,4.2vw,3.75rem)] font-medium leading-[1.06] tracking-[-0.035em] text-white">
+              <h1 className="text-balance font-serif text-[clamp(2.6rem,5vw,4.2rem)] font-medium leading-[1.04] tracking-[-0.04em] text-white">
                 Skills that{"\u00A0"}never
-                <br className="max-lg:hidden" />
+                <br className="max-sm:hidden" />
                 {" "}go{"\u00A0"}stale
               </h1>
-              <p className="max-w-[34rem] text-balance text-[1.05rem] leading-[1.7] text-white/38">
+              <p className="mx-auto max-w-[38rem] text-balance text-[1.08rem] leading-[1.7] text-white/38">
                 Loop continuously monitors, evaluates, and updates your agent
                 playbooks — so every skill evolves on its own. Connect any MCP
                 server, tune models, wire tools: reviewable diffs, eval-gated.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/"
-                className="rounded-full bg-[#e8650a] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(232,101,10,0.28)] transition-all hover:bg-[#ff7a1a] hover:shadow-[0_0_36px_rgba(232,101,10,0.4)]"
+                href="/sign-up"
+                className="rounded-full bg-[#e8650a] px-7 py-3 text-[0.92rem] font-semibold text-white shadow-[0_0_24px_rgba(232,101,10,0.28)] transition-all hover:bg-[#ff7a1a] hover:shadow-[0_0_36px_rgba(232,101,10,0.4)]"
               >
-                Open Dashboard
+                Get started free
+              </Link>
+              <Link
+                href="#skills"
+                className="rounded-full border border-white/[0.08] px-6 py-3 text-[0.92rem] font-medium text-white/45 transition-colors hover:border-[#e8650a]/25 hover:text-white/75"
+              >
+                Browse skills
               </Link>
               <Link
                 href="#how-it-works"
-                className="rounded-full border border-white/[0.08] px-5 py-2.5 text-sm font-medium text-white/45 transition-colors hover:border-[#e8650a]/25 hover:text-white/75"
+                className="rounded-full border border-white/[0.08] px-6 py-3 text-[0.92rem] font-medium text-white/45 transition-colors hover:border-white/15 hover:text-white/75"
               >
                 How it works
               </Link>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 lg:gap-4">
-              <StatPill value="24/7" label="monitoring" />
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <StatPill value="40+" label="curated skills" />
               <StatPill value="< 6h" label="update cycle" />
-              <StatPill value="0.92+" label="eval threshold" />
+              <StatPill value="4" label="agent platforms" />
               <StatPill value="35+" label="MCP servers" />
             </div>
           </motion.div>
 
-          <div className="hidden lg:block" aria-hidden />
+          {/* Quick action cards */}
+          <motion.div
+            className="mx-auto grid max-w-[52rem] grid-cols-1 gap-3 sm:grid-cols-3"
+            {...staggerChildren}
+          >
+            <motion.div {...staggerChild}>
+              <ActionCard
+                title="Browse the catalog"
+                description="40+ curated skills for frontend, SEO, security, agents, and more."
+                href="/sign-up"
+                linkText="Explore skills"
+              />
+            </motion.div>
+            <motion.div {...staggerChild}>
+              <ActionCard
+                title="Create a skill"
+                description="Build custom skills with agent docs for Cursor, Codex, Claude, and AGENTS.md."
+                href="/sign-up"
+                linkText="Start creating"
+              />
+            </motion.div>
+            <motion.div {...staggerChild}>
+              <ActionCard
+                title="Connect MCP servers"
+                description="Import server definitions from the open ecosystem and wire them in."
+                href="/sign-up"
+                linkText="Discover MCPs"
+              />
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          LIVE DIFF — the animated code-changing component
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ LIVE DIFF ═══ */}
       <SectionDivider />
       <section className="relative z-10 bg-[#08080a]">
         <div className="mx-auto max-w-[1100px] px-6 pb-28 pt-20">
@@ -202,7 +264,6 @@ export function LandingShell() {
               transition={{ ...fadeUp.transition, delay: 0.12 }}
             >
               <div className="relative">
-                {/* Ambient glow behind the canvas */}
                 <div
                   aria-hidden
                   className="pointer-events-none absolute -inset-8 rounded-3xl bg-[#e8650a]/[0.03] blur-2xl"
@@ -214,11 +275,9 @@ export function LandingShell() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SKILLS SHOWCASE
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ SKILLS SHOWCASE ═══ */}
       <SectionDivider />
-      <section className="relative z-10 bg-[#07070a]">
+      <section id="skills" className="relative z-10 bg-[#07070a]">
         <div className="mx-auto max-w-[1100px] px-6 pb-28 pt-20">
           <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
             <motion.div className="grid content-start gap-6" {...fadeUp}>
@@ -280,9 +339,7 @@ export function LandingShell() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          MCP INTEGRATION
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ MCP INTEGRATION ═══ */}
       <SectionDivider />
       <section className="relative z-10 bg-[#08080a]">
         <div className="mx-auto max-w-[1100px] px-6 pb-28 pt-20">
@@ -369,9 +426,7 @@ export function LandingShell() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          HOW IT WORKS — interactive pipeline
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ HOW IT WORKS ═══ */}
       <SectionDivider />
       <section
         id="how-it-works"
@@ -396,9 +451,7 @@ export function LandingShell() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          CTA
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ CTA ═══ */}
       <SectionDivider />
       <section className="relative z-10 bg-[#08080a]">
         <div className="mx-auto grid max-w-[680px] place-items-center gap-8 px-6 pb-28 pt-24 text-center">
@@ -420,10 +473,10 @@ export function LandingShell() {
           </motion.div>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/"
+              href="/sign-up"
               className="rounded-full bg-[#e8650a] px-7 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(232,101,10,0.28)] transition-all hover:bg-[#ff7a1a] hover:shadow-[0_0_36px_rgba(232,101,10,0.4)]"
             >
-              Open Dashboard
+              Get started free
             </Link>
             <Link
               href="/sign-in"
@@ -435,19 +488,18 @@ export function LandingShell() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          Footer
-          ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ FOOTER ═══ */}
       <SectionDivider />
-      <footer className="relative z-10 bg-[#08080a] px-6 py-5">
-        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3">
+      <footer className="relative z-10 bg-[#08080a] px-6 py-6">
+        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-4">
           <p className="m-0 font-mono text-[0.62rem] tabular-nums text-white/18">
             © {new Date().getFullYear()} Loop · Operator desk for agent skills
           </p>
           <nav className="flex items-center gap-6 font-mono text-[0.62rem]">
-            <Link className="text-white/22 transition-colors hover:text-white/45" href="/">Skills</Link>
-            <Link className="text-white/22 transition-colors hover:text-white/45" href="/sandbox">Sandbox</Link>
-            <Link className="text-white/22 transition-colors hover:text-white/45" href="/settings">Settings</Link>
+            <Link className="text-white/22 transition-colors hover:text-white/45" href="/sign-up">Get started</Link>
+            <Link className="text-white/22 transition-colors hover:text-white/45" href="#skills">Skills</Link>
+            <Link className="text-white/22 transition-colors hover:text-white/45" href="#how-it-works">How it works</Link>
+            <Link className="text-white/22 transition-colors hover:text-white/45" href="/sign-in">Sign in</Link>
           </nav>
         </div>
       </footer>

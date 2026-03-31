@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
 import {
+  AutomationIcon,
   ClockIcon,
-  FlowIcon,
   RefreshIcon,
   SearchIcon,
   SettingsIcon,
@@ -208,7 +208,7 @@ export function SkillAutomationPanel({
                   Open refresh trace
                 </Button>
                 <LinkButton href="/settings/automations" size="sm" variant="soft">
-                  <FlowIcon className="h-3.5 w-3.5" />
+                  <AutomationIcon className="h-3.5 w-3.5" />
                   {canManage ? "Automation desk" : "View automation desk"}
                 </LinkButton>
               </div>

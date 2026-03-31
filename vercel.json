@@ -4,6 +4,10 @@
     {
       "path": "/api/refresh",
       "schedule": "5 12 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-import",
+      "schedule": "0 10 * * 0"
     }
   ]
 }

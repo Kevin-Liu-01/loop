@@ -4,17 +4,18 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon, WorkflowIcon } from "lucide-react";
+import { CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon } from "lucide-react";
 
 import {
   ActivityDashboard,
   shouldShowActivityDashboard,
 } from "@/components/activity-dashboard";
+import { AutomationEditModal } from "@/components/automation-edit-modal";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { McpIcon, SkillIcon } from "@/components/ui/skill-icon";
 import { UsageComparisonProvider } from "@/components/usage-comparison-context";
 import { AppGridShell } from "@/components/app-grid-shell";
-import { ArrowRightIcon, SearchIcon } from "@/components/frontier-icons";
+import { ArrowRightIcon, AutomationIcon, SearchIcon } from "@/components/frontier-icons";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { EmptyCard } from "@/components/ui/empty-card";
@@ -36,6 +37,7 @@ import { supportsSandboxMcp } from "@/lib/mcp-utils";
 import { formatNextRun } from "@/lib/schedule";
 import { pageHeaderSub, pageInsetPadX, pageInsetPadY } from "@/lib/ui-layout";
 import { RelativeTime } from "@/components/relative-time";
+import type { RecentImportItem } from "@/lib/db/recent-imports";
 import type {
   AutomationSummary,
   CategoryDefinition,
@@ -51,6 +53,7 @@ type HomeShellProps = {
   automations: AutomationSummary[];
   categories: CategoryDefinition[];
   mcps: ImportedMcpDocument[];
+  recentImports: RecentImportItem[];
   skills: SkillRecord[];
   loopRuns: LoopRunRecord[];
   usageOverview: UsageOverview;
@@ -157,13 +160,24 @@ function filterMcps(mcps: ImportedMcpDocument[], query: string, tagFilter: strin
     });
 }
 
-export function HomeShell({ automations, categories, mcps = [], skills, loopRuns, usageOverview }: HomeShellProps) {
+export function HomeShell({ automations, categories, mcps = [], recentImports = [], skills, loopRuns, usageOverview }: HomeShellProps) {
   const router = useRouter();
   const [tab, setTab] = useState<HomeTab>("skills");
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [mcpTagFilter, setMcpTagFilter] = useState("all");
   const deferredQuery = useDeferredValue(query);
+  const [editTarget, setEditTarget] = useState<AutomationSummary | null>(null);
+
+  const automationBySkillSlug = useMemo(() => {
+    const map = new Map<string, AutomationSummary>();
+    for (const a of automations) {
+      for (const slug of a.matchedSkillSlugs) {
+        if (!map.has(slug)) map.set(slug, a);
+      }
+    }
+    return map;
+  }, [automations]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("loop.home.filter");
@@ -225,7 +239,7 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
     return counts;
   }, [skills]);
 
-  const showActivitySidebar = shouldShowActivityDashboard(usageOverview, automations);
+  const showActivitySidebar = shouldShowActivityDashboard(usageOverview, automations, recentImports);
 
   const skillsList = (
     <div className="grid gap-0">
@@ -263,14 +277,14 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
               </Link>
 
               <div className="flex items-center gap-1.5 max-sm:pl-4">
-                {skill.automation?.enabled && (
+                {skill.automation?.enabled && automationBySkillSlug.has(skill.slug) && (
                   <Button
-                    onClick={() => router.push(`${skill.href}#automation`)}
+                    onClick={() => setEditTarget(automationBySkillSlug.get(skill.slug)!)}
                     size="icon-sm"
                     title="View automation"
                     variant="ghost"
                   >
-                    <WorkflowIcon className="h-3.5 w-3.5" />
+                    <AutomationIcon className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 <Button onClick={() => router.push(skill.href)} size="sm" variant="ghost">
@@ -284,8 +298,12 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => router.push(`${skill.href}#automation`)}>
-                      <WorkflowIcon />
+                    <DropdownMenuItem onSelect={() => {
+                      const target = automationBySkillSlug.get(skill.slug);
+                      if (target) setEditTarget(target);
+                      else router.push(`${skill.href}#automation`);
+                    }}>
+                      <AutomationIcon />
                       View automation
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => navigator.clipboard.writeText(skill.href)}>
@@ -549,6 +567,7 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
               <ActivityDashboard
                 automations={automations}
                 overview={usageOverview}
+                recentImports={recentImports}
                 variant="sidebar"
               />
             </aside>
@@ -567,6 +586,15 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
           </div>
         )}
       </PageShell>
+
+      {editTarget && (
+        <AutomationEditModal
+          automation={editTarget}
+          onClose={() => setEditTarget(null)}
+          open
+          skillName={skills.find((s) => editTarget.matchedSkillSlugs.includes(s.slug))?.title}
+        />
+      )}
     </AppGridShell>
   );
 }

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
-import { FlowIcon, TimelineIcon } from "@/components/frontier-icons";
+import { AutomationIcon, TimelineIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
@@ -76,7 +76,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line p-5 sm:p-6">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-paper-2 shadow-[0_1px_0_0_rgba(0,0,0,0.04)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]">
-              <FlowIcon className="h-4.5 w-4.5 text-ink-soft" />
+              <AutomationIcon className="h-4.5 w-4.5 text-ink-soft" />
             </span>
             <div>
               <p className="m-0 text-sm font-semibold tracking-tight text-ink">
@@ -91,7 +91,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
             </div>
           </div>
           <Button disabled={manageableSkills.length === 0} onClick={() => setCreateOpen(true)} size="sm">
-            <FlowIcon className="h-3.5 w-3.5" />
+            <AutomationIcon className="h-3.5 w-3.5" />
             {manageableSkills.length === 0 ? "No editable skills" : "New automation"}
           </Button>
         </div>
@@ -142,7 +142,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
             />
           ))
         ) : automations.length === 0 ? (
-          <EmptyCard icon={<FlowIcon className="h-5 w-5" />}>
+          <EmptyCard icon={<AutomationIcon className="h-5 w-5" />}>
             <p className="m-0 text-sm">No automations yet.</p>
             <p className="m-0 text-xs text-ink-faint">Create one to keep your skills up to date on a schedule.</p>
           </EmptyCard>

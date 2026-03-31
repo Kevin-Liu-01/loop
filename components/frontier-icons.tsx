@@ -27,6 +27,7 @@ import {
   Globe,
   HardDrive,
   Hash,
+  History,
   KeyRound,
   Link2,
   ListTree,
@@ -134,3 +135,4 @@ export const PackageIcon = wrapIcon(Package);
 export const PanelRightIcon = wrapIcon(PanelRight);
 export const TimerIcon = wrapIcon(Timer);
 export const ChevronLeftIcon = wrapIcon(ChevronLeft);
+export const AutomationIcon = wrapIcon(History);

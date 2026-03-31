@@ -5,14 +5,14 @@ import remarkGfm from "remark-gfm";
 import { AppGridShell } from "@/components/app-grid-shell";
 import { BuySkillButton } from "@/components/buy-skill-button";
 import { CopyButton } from "@/components/copy-button";
+import { CopySkillButton } from "@/components/copy-skill-button";
 import { ExpandableContent } from "@/components/expandable-content";
-import { FlowIcon, PlayIcon } from "@/components/frontier-icons";
+import { AutomationIcon, PlayIcon } from "@/components/frontier-icons";
 import { ShareButton } from "@/components/share-button";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { SkillAuthorStudio } from "@/components/skill-author-studio";
 import { SkillAutomationPanel } from "@/components/skill-automation-panel";
-import { SkillHeaderShaderEmbed } from "@/components/skill-header-shader-embed";
-import { GrainGradient } from "@/components/ui/grain-gradient";
+import { SkillVisibilityToggle } from "@/components/skill-visibility-toggle";
 import { SkillResearchPanel } from "@/components/skill-research-panel";
 import { SiteHeader } from "@/components/site-header";
 import { SkillDetailSidebar } from "@/components/skill-detail-sidebar";
@@ -47,6 +47,7 @@ type SkillDetailPageProps = {
   usage: SkillUsageSummary;
   purchased?: boolean;
   canEdit?: boolean;
+  isSignedIn?: boolean;
 };
 
 function formatPrice(amount: number, currency: string): string {
@@ -60,7 +61,8 @@ export function SkillDetailPage({
   latestRun,
   usage,
   purchased = false,
-  canEdit = false
+  canEdit = false,
+  isSignedIn = false,
 }: SkillDetailPageProps) {
   const isPaid = skill.price && skill.price.amount > 0;
   const priceLabel = isPaid ? formatPrice(skill.price!.amount, skill.price!.currency) : null;
@@ -107,10 +109,8 @@ export function SkillDetailPage({
         skillSlug={skill.slug}
       />
       <PageShell inset className="flex min-h-0 flex-1 flex-col">
-        <div className={cn("relative shrink-0 overflow-hidden border-b border-line py-4", pageInsetPadX)}>
-          <GrainGradient tint="accent" intensity="medium" />
-          <SkillHeaderShaderEmbed />
-          <header className="relative z-10 grid gap-4">
+        <div className={cn("shrink-0 border-b border-line py-4", pageInsetPadX)}>
+          <header className="grid gap-4">
             <Link
               className="w-fit text-xs font-medium text-ink-faint transition-colors hover:text-ink"
               href="/"
@@ -123,6 +123,14 @@ export function SkillDetailPage({
               <Badge muted>{skill.origin}</Badge>
               <Badge muted>{skill.versionLabel}</Badge>
               {priceLabel ? <Badge>{priceLabel}</Badge> : <Badge muted>Free</Badge>}
+              <SkillVisibilityToggle
+                canEdit={canEdit}
+                currentVisibility={skill.visibility}
+                slug={skill.slug}
+              />
+              {skill.forkedFromSlug && (
+                <Badge muted>Forked from {skill.forkedFromSlug}</Badge>
+              )}
             </div>
 
             <div className="flex min-w-0 flex-wrap items-center gap-3">
@@ -198,6 +206,12 @@ export function SkillDetailPage({
                 value={skill.href}
                 variant="soft"
               />
+              {!canEdit && (
+                <CopySkillButton
+                  label="Copy to my skills"
+                  slug={skill.slug}
+                />
+              )}
             </div>
           </header>
         </div>
@@ -305,7 +319,7 @@ export function SkillDetailPage({
                     </p>
                     <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-none border border-line bg-paper-3/80 p-4 dark:bg-paper-2/40">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-none border border-line bg-paper-2/80 text-ink-soft dark:bg-paper-2/50">
-                        <FlowIcon />
+                        <AutomationIcon />
                       </span>
                       <div>
                         <strong className="text-ink">What happens</strong>
