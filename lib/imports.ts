@@ -646,9 +646,79 @@ export async function saveImportedSkills(skills: ImportedSkillDocument[]): Promi
   );
 }
 
+async function fetchSiblingAgentDocs(sourceUrl: string): Promise<Record<string, string>> {
+  const isGitHubRaw = sourceUrl.includes("raw.githubusercontent.com");
+  if (!isGitHubRaw) return {};
+
+  const dirUrl = sourceUrl.replace(/\/[^/]+$/, "");
+  const SIBLING_FILENAMES: Record<string, string> = {
+    "AGENTS.md": "agents",
+    "cursor.md": "cursor",
+    "claude.md": "claude",
+    "codex.md": "codex",
+  };
+
+  const docs: Record<string, string> = {};
+  const fetches = Object.entries(SIBLING_FILENAMES).map(async ([filename, key]) => {
+    try {
+      const res = await fetch(`${dirUrl}/${filename}`, {
+        signal: AbortSignal.timeout(5000),
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const text = await res.text();
+      if (text.trim()) docs[key] = text.trim();
+    } catch {
+      // silently skip
+    }
+  });
+
+  await Promise.all(fetches);
+  return docs;
+}
+
+function inferIconUrlFromSource(sourceUrl: string): string | undefined {
+  const SI = "https://cdn.simpleicons.org";
+  const lower = sourceUrl.toLowerCase();
+
+  if (lower.includes("github.com/anthropics") || lower.includes("anthropic")) {
+    return `${SI}/anthropic`;
+  }
+  if (lower.includes("github.com/openai") || lower.includes("openai")) {
+    return "https://github.com/openai.png?size=64";
+  }
+  if (lower.includes("github.com/vercel") || lower.includes("vercel")) {
+    return `${SI}/vercel`;
+  }
+  if (lower.includes("github.com/supabase") || lower.includes("supabase")) {
+    return `${SI}/supabase`;
+  }
+
+  try {
+    const { hostname } = new URL(sourceUrl);
+    if (hostname === "github.com" || hostname === "raw.githubusercontent.com") {
+      const parts = sourceUrl.split("/");
+      const orgIdx = hostname === "raw.githubusercontent.com" ? 3 : 3;
+      const org = parts[orgIdx];
+      if (org) return `https://github.com/${org}.png?size=64`;
+    }
+  } catch {
+    // ignore
+  }
+
+  return undefined;
+}
+
 export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkillDocument> {
   const { raw, normalizedUrl } = await fetchRemoteText(inputUrl);
   const draft = buildImportedSkillDraft(raw, normalizedUrl);
+
+  const [agentDocs, iconUrl] = await Promise.all([
+    fetchSiblingAgentDocs(normalizedUrl),
+    Promise.resolve(inferIconUrlFromSource(normalizedUrl)),
+  ]);
+
+  const hasAgentDocs = Object.keys(agentDocs).length > 0;
 
   await dbCreateSkill({
     slug: draft.slug,
@@ -663,7 +733,9 @@ export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkill
     sourceUrl: draft.sourceUrl,
     canonicalUrl: draft.canonicalUrl,
     syncEnabled: draft.syncEnabled,
-    version: 1
+    agentDocs: hasAgentDocs ? agentDocs : undefined,
+    iconUrl,
+    version: 1,
   }).catch(async () => {
     await dbUpdateSkill(draft.slug, {
       title: draft.title,
@@ -674,7 +746,9 @@ export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkill
       ownerName: draft.ownerName,
       sourceUrl: draft.sourceUrl,
       canonicalUrl: draft.canonicalUrl,
-      syncEnabled: draft.syncEnabled
+      syncEnabled: draft.syncEnabled,
+      agentDocs: hasAgentDocs ? agentDocs : undefined,
+      iconUrl,
     });
   });
 

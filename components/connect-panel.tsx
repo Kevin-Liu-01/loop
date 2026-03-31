@@ -85,7 +85,7 @@ export function ConnectPanel({ hasSubscription, connectAccountId }: ConnectPanel
             <span className="font-mono text-xs tabular-nums">{connectAccountId}</span>
           </DetailRow>
           <DetailRow label="Type">
-            <Badge>express</Badge>
+            <Badge color="green">Express</Badge>
           </DetailRow>
           <DetailRow label="Payouts">
             <span className="text-success">Enabled</span>

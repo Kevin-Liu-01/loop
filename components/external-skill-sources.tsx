@@ -8,6 +8,7 @@ import { DownloadIcon } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { formatTagLabel } from "@/lib/tag-utils";
 import { cn } from "@/lib/cn";
 
 function SourceIcon({ src, size }: { src: string; size: number }) {
@@ -183,7 +184,7 @@ export function ExternalSkillSources() {
           </span>
           <h2>External Skill Sources</h2>
         </div>
-        <Badge>{data.totalSkills} available</Badge>
+        <Badge color="green">{data.totalSkills} available</Badge>
       </PanelHead>
 
       <p className="text-sm text-ink-soft">
@@ -204,9 +205,9 @@ export function ExternalSkillSources() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <strong className="text-sm font-semibold text-ink">{result.source.name}</strong>
-                  <Badge muted>{result.count} skills</Badge>
-                  <Badge muted>{result.source.trustTier}</Badge>
-                  <Badge muted>{result.source.discoveryMode}</Badge>
+                  <Badge color="blue" size="sm">{result.count} skills</Badge>
+                  <Badge color={result.source.trustTier === "official" ? "orange" : "neutral"} size="sm">{formatTagLabel(result.source.trustTier)}</Badge>
+                  <Badge color="indigo" size="sm">{formatTagLabel(result.source.discoveryMode)}</Badge>
                 </div>
                 <p className="m-0 line-clamp-1 text-xs text-ink-faint">{result.source.description}</p>
               </div>

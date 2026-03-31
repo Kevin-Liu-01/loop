@@ -131,6 +131,35 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       },
     ],
   },
+  imports: {
+    heading: "Skill imports",
+    lead:
+      "Loop pulls skill definitions from configured GitHub sources on a weekly cadence. Built-in registries stay aligned with upstream; Operator workspaces can register additional repos to scan.",
+    beforePrimary: [
+      {
+        title: "Weekly schedule",
+        body:
+          "Imports run automatically every Monday (UTC). The next run time shown here is derived from that schedule—exact wall-clock time in your locale may differ from cron drift or maintenance windows.",
+      },
+      {
+        title: "Trust tiers",
+        body:
+          "Official sources are first-party or canonical upstreams we treat as high-signal. Community sources are curated lists or mirrors used for discovery; verify content before relying on them in production workflows.",
+      },
+    ],
+    afterPrimary: [
+      {
+        title: "Import history",
+        body:
+          "Run logs from `weekly_import_runs` will surface here once wired to the UI. Until then, use server logs or your database console if you need to audit a specific import window.",
+      },
+      {
+        title: "Custom sources (Operator)",
+        body:
+          "Adding a custom GitHub source is limited to Operator subscribers so extra registry scans stay tied to paid workspaces. Upgrade from Subscription settings, then return here to register org, repo, branch, and skills path.",
+      },
+    ],
+  },
   health: {
     heading: "System health & usage",
     lead:

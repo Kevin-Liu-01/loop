@@ -53,10 +53,12 @@ import {
   Tag,
   Terminal,
   Timer,
+  Trash2,
   TriangleAlert,
   User,
   Wallet,
   Workflow,
+  X,
   Zap,
   type LucideIcon
 } from "lucide-react";
@@ -136,3 +138,5 @@ export const PanelRightIcon = wrapIcon(PanelRight);
 export const TimerIcon = wrapIcon(Timer);
 export const ChevronLeftIcon = wrapIcon(ChevronLeft);
 export const AutomationIcon = wrapIcon(History);
+export const TrashIcon = wrapIcon(Trash2);
+export const XIcon = wrapIcon(X);

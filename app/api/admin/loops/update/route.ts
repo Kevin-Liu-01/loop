@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAuth, AuthError, type SessionUser } from "@/lib/auth";
+import { getManualUpdateCooldown, isAutomationImminent } from "@/lib/skill-limits";
 import { getSkillBySlug } from "@/lib/db/skills";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { buildImportedSkillDraft, buildImportedSkillRecord, createNextImportedSkillVersion, fetchRemoteText, listImportedSkills, saveImportedSkills } from "@/lib/imports";
@@ -344,11 +345,33 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
+      const cooldown = await getManualUpdateCooldown(payload.data.slug);
+      if (!cooldown.allowed) {
+        const minutesLeft = Math.ceil(cooldown.remainingMs / 60_000);
+        return NextResponse.json(
+          { error: `Manual updates are rate-limited. Try again in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.` },
+          { status: 429 }
+        );
+      }
+
+      const skill = payload.data.origin === "user"
+        ? await getSkillBySlug(payload.data.slug)
+        : null;
+      const automationWarning = skill?.automation
+        ? isAutomationImminent(skill.automation)
+        : { imminent: false, nextRunAt: null };
+
       const encoder = new TextEncoder();
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
           const startedAt = new Date().toISOString();
           try {
+            if (automationWarning.imminent) {
+              sendEvent(controller, encoder, {
+                type: "analysis",
+                message: `Heads up: a scheduled automation is due ${automationWarning.nextRunAt ? "at " + new Date(automationWarning.nextRunAt).toLocaleString() : "soon"}. This manual run will take its place.`
+              });
+            }
             if (payload.data.origin === "user") {
               await runUserLoopUpdate(payload.data.slug, controller, encoder);
             } else {

@@ -18,7 +18,8 @@ const patchSchema = z.object({
   name: z.string().trim().min(3).max(80).optional(),
   cadence: automationCadenceSchema.optional(),
   status: z.enum(["ACTIVE", "PAUSED"]).optional(),
-  prompt: z.string().trim().max(2000).optional()
+  prompt: z.string().trim().max(2000).optional(),
+  preferredModel: z.string().trim().max(120).optional(),
 });
 
 function mapStatusToSkillStatus(status: string): UserSkillAutomationStatus {
@@ -61,6 +62,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         }
         if (patch.prompt !== undefined) {
           updated.prompt = patch.prompt;
+        }
+        if (patch.preferredModel !== undefined) {
+          updated.preferredModel = patch.preferredModel || undefined;
         }
 
         await updateSkill(skillSlug, { automation: updated });

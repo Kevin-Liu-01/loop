@@ -56,13 +56,13 @@ export function SkillVisibilityToggle({
 
   if (!canEdit) {
     return (
-      <Badge muted>{label}</Badge>
+      <Badge color={isPublic ? "green" : "neutral"}>{label}</Badge>
     );
   }
 
   return (
     <div className="flex items-center gap-2">
-      <Badge muted={!isPublic}>{label}</Badge>
+      <Badge color={isPublic ? "green" : "neutral"}>{label}</Badge>
       <Button
         disabled={isPending}
         onClick={handleToggle}

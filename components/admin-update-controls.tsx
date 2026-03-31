@@ -112,7 +112,7 @@ export function AdminUpdateControls({ currentAdminEmail, primaryAdminEmail }: Ad
       {hasAccess ? (
         <div className="grid gap-4">
           <div className="flex flex-wrap items-center gap-3 text-ink-soft">
-            <Badge>signed in</Badge>
+            <Badge color="green">Signed in</Badge>
             <span className="text-ink-soft leading-7">This session can run a full refresh.</span>
           </div>
           <div className="flex flex-wrap gap-3">

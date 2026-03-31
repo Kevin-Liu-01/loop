@@ -90,15 +90,114 @@ async function fetchAgentDocs(
   return docs;
 }
 
+async function discoverFromReadmeLinks(
+  source: ExternalSkillSource,
+  result: WeeklyImportResult
+): Promise<void> {
+  const readmeUrl = getRawUrl(source, "README.md");
+  const readme = await fetchText(readmeUrl);
+  if (!readme) {
+    result.errors.push({ slug: source.id, error: "Could not fetch README.md" });
+    return;
+  }
+
+  const linkPattern = /\[([^\]]+)\]\((https?:\/\/github\.com\/[^\s)]+)\)/g;
+  const candidates: { label: string; url: string }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = linkPattern.exec(readme)) !== null) {
+    const url = match[2];
+    if (url.includes("/tree/") || url.includes("/blob/")) continue;
+    if (url.split("/").filter(Boolean).length < 4) continue;
+    candidates.push({ label: match[1], url });
+  }
+
+  const CONCURRENCY = 3;
+  for (let i = 0; i < candidates.length; i += CONCURRENCY) {
+    await Promise.all(
+      candidates.slice(i, i + CONCURRENCY).map(async (candidate) => {
+        try {
+          const parts = new URL(candidate.url).pathname.split("/").filter(Boolean);
+          if (parts.length < 2) return;
+          const [org, repo] = parts;
+          const slug = slugify(repo);
+          if (!slug) return;
+
+          const existing = await getSkillBySlug(slug);
+          if (existing) {
+            result.skipped.push(slug);
+            return;
+          }
+
+          const skillMdUrl = `https://raw.githubusercontent.com/${org}/${repo}/main/SKILL.md`;
+          const raw = await fetchText(skillMdUrl);
+          if (!raw) {
+            result.skipped.push(slug);
+            return;
+          }
+
+          const { data, content } = matter(raw);
+          const title =
+            content.match(/^#\s+(.+)$/m)?.[1]?.trim() ??
+            slug.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+          const description = String(data.description ?? createExcerpt(content, 160));
+          const category = inferCategory(slug, `${description}\n${content}`);
+
+          await createSkill({
+            slug,
+            title,
+            description,
+            category,
+            body: content.trim(),
+            visibility: "public",
+            origin: "remote",
+            tags: normalizeTags([
+              category,
+              source.trustTier,
+              "community",
+              ...((data.tags as string[]) ?? []),
+            ]),
+            ownerName: candidate.label,
+            sources: [normalizeSource(candidate.url, category)],
+            automation: {
+              enabled: true,
+              cadence: "weekly",
+              status: "active",
+              prompt: `Refresh ${title} from upstream.`,
+            },
+            updates: [],
+            iconUrl: `https://github.com/${org}.png?size=64`,
+            version: 1,
+          });
+
+          result.imported.push({
+            slug,
+            title,
+            category,
+            sourceId: source.id,
+            sourceName: source.name,
+            description,
+          });
+        } catch (err) {
+          result.errors.push({
+            slug: candidate.url,
+            error: err instanceof Error ? err.message : "Readme link import failed",
+          });
+        }
+      })
+    );
+  }
+}
+
 async function discoverAndImportFromSource(
   source: ExternalSkillSource,
   result: WeeklyImportResult
 ): Promise<void> {
-  let dirs: { name: string; path: string }[] = [];
-
   if (source.skillsPath === "__readme_links__") {
+    await discoverFromReadmeLinks(source, result);
     return;
   }
+
+  let dirs: { name: string; path: string }[] = [];
 
   try {
     const url = getContentsUrl(source);
@@ -179,6 +278,7 @@ async function discoverAndImportFromSource(
         automation,
         updates: [],
         agentDocs: Object.keys(agentDocs).length > 0 ? agentDocs : undefined,
+        iconUrl: source.iconUrl || undefined,
         version: 1,
       });
 

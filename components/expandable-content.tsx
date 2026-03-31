@@ -43,7 +43,7 @@ export function ExpandableContent({
 
       {clamped && (
         <button
-          className="relative z-10 mt-2 flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+          className="relative z-10 my-2 mx-4 flex items-center gap-1 text-sm font-medium text-accent hover:underline"
           onClick={() => setExpanded((prev) => !prev)}
           type="button"
         >

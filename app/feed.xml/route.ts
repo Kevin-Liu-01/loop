@@ -1,4 +1,5 @@
 import { getLoopSnapshot } from "@/lib/refresh";
+import { getSiteUrlString } from "@/lib/seo";
 
 function xmlEscape(value: string): string {
   return value
@@ -11,7 +12,7 @@ function xmlEscape(value: string): string {
 
 export async function GET() {
   const snapshot = await getLoopSnapshot();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const baseUrl = getSiteUrlString();
 
   const items = snapshot.dailyBriefs
     .map((brief) => {

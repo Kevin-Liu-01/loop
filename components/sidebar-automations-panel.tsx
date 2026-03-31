@@ -23,7 +23,7 @@ export function SidebarAutomationsPanel({ automations }: SidebarAutomationsPanel
         <PanelHead>
           <div className="flex items-center gap-2">
             <h3 className="m-0 text-sm font-semibold tracking-tight text-ink">Automations</h3>
-            <Badge>{automations.length}</Badge>
+            <Badge color="blue">{automations.length}</Badge>
           </div>
           <LinkButton href="/settings/automations" size="sm" variant="ghost">
             Open desk
@@ -43,7 +43,7 @@ export function SidebarAutomationsPanel({ automations }: SidebarAutomationsPanel
               >
                 <div className="flex items-center gap-2">
                   <strong className="min-w-0 flex-1 truncate text-sm text-ink">{auto.name}</strong>
-                  <Badge muted={!isActive}>{isActive ? "active" : "paused"}</Badge>
+                  <Badge color={isActive ? "green" : "neutral"}>{isActive ? "active" : "paused"}</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-ink-soft">
                   <div className="grid gap-0.5 rounded-none border border-line bg-paper-2/70 px-2.5 py-2 dark:bg-paper-2/40">

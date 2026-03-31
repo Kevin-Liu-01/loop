@@ -1,0 +1,41 @@
+export const clerkAppearance = {
+  variables: {
+    colorPrimary: "#e8650a",
+    colorDanger: "#ef4444",
+    colorSuccess: "#22c55e",
+    colorWarning: "#f59e0b",
+    colorBackground: "var(--color-paper)",
+    colorInputBackground: "var(--color-paper-2)",
+    colorInputText: "var(--color-ink)",
+    colorText: "var(--color-ink)",
+    colorTextSecondary: "var(--color-ink-soft)",
+    borderRadius: "0.5rem",
+    fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
+    fontFamilyButtons: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
+  },
+  elements: {
+    card: "shadow-none border border-[var(--color-line)] bg-[var(--color-paper)] rounded-xl",
+    headerTitle: "font-serif tracking-[-0.02em]",
+    headerSubtitle: "text-[var(--color-ink-soft)]",
+    socialButtonsBlockButton:
+      "border-[var(--color-line)] bg-[var(--color-paper-2)] text-[var(--color-ink)] hover:bg-[var(--color-paper-3)] transition-colors",
+    socialButtonsBlockButtonText: "font-medium",
+    formFieldLabel: "text-[var(--color-ink-soft)] text-xs font-medium",
+    formFieldInput:
+      "border-[var(--color-line)] bg-[var(--color-paper-2)] text-[var(--color-ink)] focus:border-[#e8650a] focus:ring-[#e8650a]/20",
+    formButtonPrimary:
+      "bg-[#e8650a] hover:bg-[#ff7a1a] shadow-[0_0_16px_rgba(232,101,10,0.15)] transition-all text-sm font-semibold",
+    footerActionLink: "text-[#e8650a] hover:text-[#ff7a1a] font-medium",
+    footerActionText: "text-[var(--color-ink-soft)]",
+    identityPreviewEditButton: "text-[#e8650a]",
+    formFieldAction: "text-[#e8650a]",
+    otpCodeFieldInput: "border-[var(--color-line)] bg-[var(--color-paper-2)]",
+    dividerLine: "bg-[var(--color-line)]",
+    dividerText: "text-[var(--color-ink-faint)]",
+    userButtonPopoverCard: "border border-[var(--color-line)] bg-[var(--color-paper)] shadow-lg",
+    userButtonPopoverActionButton: "hover:bg-[var(--color-paper-2)]",
+    userButtonPopoverActionButtonText: "text-[var(--color-ink)]",
+    userButtonPopoverFooter: "hidden",
+    badge: "bg-[#e8650a]/10 text-[#e8650a] border-[#e8650a]/20",
+  },
+};

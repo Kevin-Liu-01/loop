@@ -1,10 +1,9 @@
-import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getGatewayEditorModel, getGatewayEditorModelId } from "@/lib/agents";
+import { getGatewayEditorModel, getGatewayEditorModelId, getGatewayModelForSkill } from "@/lib/agents";
 import {
   getSkillCatalogue,
   findSkillFiles,
@@ -297,7 +296,8 @@ export async function synthesizeSkillUpdate(
   skill: UserSkillDocument,
   items: DailySignal[],
   sourceLogs: LoopUpdateSourceLog[] = [],
-  onReasoningStep?: (step: AgentReasoningStep) => void
+  onReasoningStep?: (step: AgentReasoningStep) => void,
+  preferredModel?: string
 ): Promise<SynthesizeResult> {
   const generatedAt = new Date().toISOString();
   const fallbackUpdate = fallbackSkillUpdate(skill, items);
@@ -322,7 +322,7 @@ export async function synthesizeSkillUpdate(
     reasoningSteps: []
   };
 
-  const editorModel = getGatewayEditorModel();
+  const editorModel = getGatewayModelForSkill(preferredModel);
   if (items.length === 0 || !editorModel) {
     return fallbackDraft;
   }
@@ -333,7 +333,7 @@ export async function synthesizeSkillUpdate(
       items,
       sourceLogs,
       editorModel,
-      getGatewayEditorModelId(),
+      getGatewayEditorModelId(preferredModel),
       onReasoningStep
     );
     return result;
@@ -387,7 +387,7 @@ export async function runTrackedUserSkillUpdate(
   hooks.onMessage?.(messages[messages.length - 1] ?? "");
 
   const flattened = sortSignals(sourceLogs.flatMap((entry) => entry.items));
-  const draft = await synthesizeSkillUpdate(skill, flattened, sourceLogs, hooks.onReasoningStep);
+  const draft = await synthesizeSkillUpdate(skill, flattened, sourceLogs, hooks.onReasoningStep, skill.automation.preferredModel);
   const nextUpdatedAt = draft.update.generatedAt;
   const nextSkill = createNextUserSkillVersion(
     skill,
@@ -690,10 +690,22 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
   }
 }
 
+/**
+ * Legacy filesystem sync — only runs in local dev when LOOP_SYNC_FS=1 is set.
+ * In production, all skills live in Supabase and this is a no-op.
+ */
 async function syncFilesystemSkillsToDb(): Promise<void> {
+  if (process.env.NODE_ENV !== "development" || process.env.LOOP_SYNC_FS !== "1") {
+    return;
+  }
+
   const repoSkillFiles = await findSkillFiles(WORKSPACE_ROOT);
   const codexSkillFiles = await findSkillFiles(CODEX_SKILLS_ROOT);
   const allSkillFiles = [...repoSkillFiles, ...codexSkillFiles];
+
+  if (allSkillFiles.length === 0) return;
+
+  console.info(`[refresh] LOOP_SYNC_FS=1 — syncing ${allSkillFiles.length} filesystem skills to DB`);
 
   await Promise.all(
     allSkillFiles.map(async (skillFile) => {

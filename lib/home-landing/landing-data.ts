@@ -1,196 +1,134 @@
 /**
- * Static demo data for the landing page — real skill shapes, real diff lines,
- * real update entries. Keeps landing-shell pure presentation.
+ * Static demo data for the landing page — shapes that match real types
+ * so the landing can reuse catalog components directly.
  */
 
-export type LandingSkillCard = {
+import type { AutomationSummary, ImportedMcpDocument } from "@/lib/types";
+
+export type LandingSkillRow = {
   slug: string;
   title: string;
   category: string;
-  version: string;
+  versionLabel: string;
   tone: "fresh" | "stale" | "idle";
   updatedAt: string;
-  origin: string;
   description: string;
-  tags: string[];
+  iconUrl?: string;
+  ownerName: string;
 };
 
-export type LandingTimelineEntry = {
-  version: string;
-  date: string;
-  summary: string;
-  badge?: "model-swap" | "parameter" | "tool-add" | "guardrail";
-};
-
-export const LANDING_SKILLS: LandingSkillCard[] = [
+export const LANDING_SKILLS: LandingSkillRow[] = [
+  {
+    slug: "frontend-frontier",
+    title: "Frontend Frontier",
+    category: "frontend",
+    versionLabel: "v7",
+    tone: "fresh",
+    updatedAt: "18 min ago",
+    description: "Art-direction, design-system tokens, motion, and 3D patterns for modern frontends.",
+    ownerName: "Loop",
+  },
   {
     slug: "reasoning-agent",
     title: "Reasoning Agent",
     category: "infra",
-    version: "v4",
+    versionLabel: "v4",
     tone: "fresh",
-    updatedAt: "2 hours ago",
-    origin: "auto",
+    updatedAt: "2h ago",
     description: "Chain-of-thought reasoning with eval-gated deploys and source citation.",
-    tags: ["reasoning", "chain-of-thought", "eval"],
-  },
-  {
-    slug: "frontend-reviewer",
-    title: "Frontend Reviewer",
-    category: "frontend",
-    version: "v7",
-    tone: "fresh",
-    updatedAt: "18 min ago",
-    origin: "tracked",
-    description: "Automated code review for React, Next.js, and Tailwind — catches perf issues.",
-    tags: ["react", "next.js", "review"],
+    ownerName: "Loop",
   },
   {
     slug: "seo-auditor",
-    title: "SEO Auditor",
+    title: "Google SEO & GEO",
     category: "seo-geo",
-    version: "v3",
+    versionLabel: "v3",
     tone: "stale",
-    updatedAt: "3 days ago",
-    origin: "auto",
+    updatedAt: "3d ago",
     description: "Crawl-based SEO analysis with Core Web Vitals and structured data checks.",
-    tags: ["seo", "cwv", "lighthouse"],
+    ownerName: "Loop",
   },
   {
     slug: "mcp-orchestrator",
     title: "MCP Orchestrator",
     category: "a2a",
-    version: "v5",
+    versionLabel: "v5",
     tone: "fresh",
     updatedAt: "45 min ago",
-    origin: "tracked",
-    description: "Connects GitHub, Notion, and Slack MCPs — routes tool calls across servers in one agent run.",
-    tags: ["mcp", "orchestration", "tools"],
-  },
-];
-
-export const LANDING_TIMELINE: LandingTimelineEntry[] = [
-  { version: "v4", date: "2h ago", summary: "Switched engine to gpt-4-turbo, lowered temperature to 0.3", badge: "model-swap" },
-  { version: "v3", date: "6h ago", summary: "Added file_analysis and knowledge_retrieval tools", badge: "tool-add" },
-  { version: "v2", date: "1d ago", summary: "Enabled sandbox guardrails, set rate limit to 60/min", badge: "guardrail" },
-  { version: "v1", date: "3d ago", summary: "Initial creation — chain-of-thought strategy, source citation", badge: "parameter" },
-];
-
-export const LANDING_SKILL_TOML = `[model]
-name = "reasoning-agent"
-engine = "gpt-4-turbo-2025-01"
-temperature = 0.3
-
-[behavior]
-Follow user instructions.
-strategy = "chain-of-thought"
-cite_sources = true
-
-[tools]
-web_search = true
-code_interpreter = true
-file_analysis = true
-knowledge_retrieval = true
-
-[mcp]
-servers = ["github", "filesystem", "brave-search"]
-transport = "stdio"
-auto_discover = true
-
-[guardrails]
-max_tokens = 4096
-rate_limit = "60/min"
-sandbox = "strict"
-
-[evaluation]
-benchmark = "mmlu-pro"
-threshold = 0.92
-auto_rollback = true
-
-[loop]
-interval = "6h"
-trigger = "source_change"
-notify = ["slack", "email"]
-diff_review = "auto"`;
-
-export const LANDING_DIFF_LINES: Array<{ kind: "context" | "added" | "removed"; text: string }> = [
-  { kind: "context", text: '[model]' },
-  { kind: "context", text: 'name = "reasoning-agent"' },
-  { kind: "removed", text: 'engine = "gpt-4"' },
-  { kind: "added", text: 'engine = "gpt-4-turbo-2025-01"' },
-  { kind: "removed", text: "temperature = 0.7" },
-  { kind: "added", text: "temperature = 0.3" },
-  { kind: "context", text: "" },
-  { kind: "context", text: "[behavior]" },
-  { kind: "context", text: "Follow user instructions." },
-  { kind: "added", text: 'strategy = "chain-of-thought"' },
-  { kind: "added", text: "cite_sources = true" },
-];
-
-// ---------------------------------------------------------------------------
-// MCP showcase — real servers from the seed catalog
-// ---------------------------------------------------------------------------
-
-export type LandingMcpServer = {
-  name: string;
-  transport: "stdio" | "http";
-  category: string;
-};
-
-export const LANDING_MCP_SERVERS: LandingMcpServer[] = [
-  { name: "GitHub", transport: "stdio", category: "Dev platforms" },
-  { name: "Vercel", transport: "http", category: "Dev platforms" },
-  { name: "Slack", transport: "http", category: "Productivity" },
-  { name: "Notion", transport: "http", category: "Productivity" },
-  { name: "Linear", transport: "http", category: "Productivity" },
-  { name: "Stripe", transport: "http", category: "Payments" },
-  { name: "Figma", transport: "http", category: "Design" },
-  { name: "Supabase", transport: "stdio", category: "Databases" },
-  { name: "Sentry", transport: "stdio", category: "Observability" },
-  { name: "Playwright", transport: "stdio", category: "Browser" },
-  { name: "Brave Search", transport: "stdio", category: "Search" },
-  { name: "Cloudflare", transport: "stdio", category: "Infra" },
-];
-
-export type LandingMcpCapability = {
-  label: string;
-  mono: string;
-};
-
-export const LANDING_MCP_CAPABILITIES: LandingMcpCapability[] = [
-  { label: "Import from URL", mono: "manifest.json → catalog" },
-  { label: "Runtime execution", mono: "stdio · http transport" },
-  { label: "Versioned catalog", mono: "tracked alongside skills" },
-];
-
-// ---------------------------------------------------------------------------
-// Pipeline steps
-// ---------------------------------------------------------------------------
-
-export type LandingStep = {
-  id: string;
-  label: string;
-  mono: string;
-  description: string;
-};
-
-export const LANDING_PIPELINE_STEPS: LandingStep[] = [
-  {
-    id: "monitor",
-    label: "Monitor",
-    mono: "source_change",
-    description: "Loop watches repos, docs, APIs, and RSS feeds. When something changes upstream it flags every skill that might need attention.",
+    description: "Routes tool calls across GitHub, Notion, and Slack MCPs in a single agent run.",
+    ownerName: "Loop",
   },
   {
-    id: "evaluate",
-    label: "Evaluate",
-    mono: "benchmark",
-    description: "An agent proposes targeted updates — model swaps, MCP server wiring, new tool integrations — then runs them through your benchmarks.",
+    slug: "clerk-auth-patterns",
+    title: "Clerk Auth Patterns",
+    category: "security",
+    versionLabel: "v2",
+    tone: "idle",
+    updatedAt: "5d ago",
+    description: "Middleware auth, sign-in flows, organizations, and webhook patterns for Clerk + Next.js.",
+    ownerName: "Loop",
+  },
+];
+
+export const LANDING_AUTOMATIONS: AutomationSummary[] = [
+  {
+    id: "demo-auto-1",
+    name: "Frontend Frontier refresh",
+    prompt: "Scrape tracked sources for new art-direction references, motion-library API changes.",
+    schedule: "RRULE:FREQ=DAILY;BYHOUR=9;BYMINUTE=0;BYSECOND=0",
+    status: "ACTIVE",
+    path: "/automations/demo-1",
+    cwd: [],
+    matchedSkillSlugs: ["frontend-frontier"],
+    matchedCategorySlugs: ["frontend"],
   },
   {
-    id: "deploy",
-    label: "Deploy",
-    mono: "diff_review",
-    description: "Only changes that measurably improve get merged. You review a clean diff, approve, and the skill is live — or let auto-merge handle it.",
+    id: "demo-auto-2",
+    name: "SEO & GEO audit",
+    prompt: "Check Google algorithm updates, schema.org changes, and Core Web Vitals thresholds.",
+    schedule: "RRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0;BYSECOND=0",
+    status: "ACTIVE",
+    path: "/automations/demo-2",
+    cwd: [],
+    matchedSkillSlugs: ["seo-auditor"],
+    matchedCategorySlugs: ["seo-geo"],
   },
+  {
+    id: "demo-auto-3",
+    name: "Reasoning Agent eval",
+    prompt: "Run benchmark suite, compare against previous version, auto-rollback if regression.",
+    schedule: "RRULE:FREQ=DAILY;BYHOUR=6;BYMINUTE=0;BYSECOND=0",
+    status: "ACTIVE",
+    path: "/automations/demo-3",
+    cwd: [],
+    matchedSkillSlugs: ["reasoning-agent"],
+    matchedCategorySlugs: ["infra"],
+  },
+  {
+    id: "demo-auto-4",
+    name: "MCP registry sync",
+    prompt: "Discover new MCP servers, verify manifests, update catalog.",
+    schedule: "RRULE:FREQ=WEEKLY;BYDAY=WE;BYHOUR=10;BYMINUTE=0;BYSECOND=0",
+    status: "ACTIVE",
+    path: "/automations/demo-4",
+    cwd: [],
+    matchedSkillSlugs: ["mcp-orchestrator"],
+    matchedCategorySlugs: ["a2a"],
+  },
+];
+
+export type LandingMcpRow = Pick<
+  ImportedMcpDocument,
+  "id" | "name" | "description" | "transport" | "iconUrl" | "homepageUrl"
+>;
+
+export const LANDING_MCPS: LandingMcpRow[] = [
+  { id: "mcp-github", name: "GitHub", description: "Repos, issues, PRs, and Actions", transport: "stdio", iconUrl: "https://github.com/github.png?size=64", homepageUrl: "https://github.com" },
+  { id: "mcp-vercel", name: "Vercel", description: "Deployments, domains, and env vars", transport: "http", iconUrl: "https://github.com/vercel.png?size=64", homepageUrl: "https://vercel.com" },
+  { id: "mcp-slack", name: "Slack", description: "Messages, channels, and files", transport: "http", iconUrl: "https://github.com/slackapi.png?size=64", homepageUrl: "https://slack.com" },
+  { id: "mcp-stripe", name: "Stripe", description: "Payments, subscriptions, invoices", transport: "http", iconUrl: "https://github.com/stripe.png?size=64", homepageUrl: "https://stripe.com" },
+  { id: "mcp-supabase", name: "Supabase", description: "Postgres, auth, and storage", transport: "stdio", iconUrl: "https://github.com/supabase.png?size=64", homepageUrl: "https://supabase.com" },
+  { id: "mcp-linear", name: "Linear", description: "Issues, projects, and team workflows", transport: "http", iconUrl: "https://github.com/linearapp.png?size=64", homepageUrl: "https://linear.app" },
+  { id: "mcp-notion", name: "Notion", description: "Pages, databases, and workspaces", transport: "http", iconUrl: "https://github.com/makenotion.png?size=64", homepageUrl: "https://notion.so" },
+  { id: "mcp-figma", name: "Figma", description: "Design tokens and component specs", transport: "http", iconUrl: "https://github.com/figma.png?size=64", homepageUrl: "https://figma.com" },
 ];

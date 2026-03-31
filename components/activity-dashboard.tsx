@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 
+import { ChevronDownIcon } from "@/components/frontier-icons";
 import { ActivityFeedImports } from "@/components/activity-feed-imports";
 import { ActivityUsageToolbar } from "@/components/activity-usage-toolbar";
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
+import { ImportSourcesList } from "@/components/import-sources-list";
 import { AreaChart } from "@/components/charts/area-chart";
 import { StatTile } from "@/components/charts/stat-tile";
 import { useUsageComparisonMode } from "@/components/usage-comparison-context";
@@ -51,6 +53,71 @@ function truncateRouteLabel(route: string, max = 36): string {
   return `${t.slice(0, max - 1)}…`;
 }
 
+const IMPORTS_COLLAPSED_LIMIT = 6;
+
+function CollapsibleImports({ imports }: { imports: RecentImportItem[] }) {
+  const [expanded, setExpanded] = useState(false);
+  if (imports.length === 0) return null;
+
+  const canCollapse = imports.length > IMPORTS_COLLAPSED_LIMIT;
+  const visible = canCollapse && !expanded ? imports.slice(0, IMPORTS_COLLAPSED_LIMIT) : imports;
+  const hiddenCount = imports.length - IMPORTS_COLLAPSED_LIMIT;
+
+  return (
+    <div className="border-t border-line pt-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+          Recently imported
+        </span>
+        <span className="text-[0.625rem] tabular-nums text-ink-faint/60">{imports.length}</span>
+      </div>
+      <ActivityFeedImports imports={visible} />
+      {canCollapse && (
+        <button
+          className={cn(
+            "mt-2 flex w-full items-center justify-center gap-1 py-1.5 text-[0.6875rem] font-medium text-ink-faint transition-colors hover:text-ink-soft",
+          )}
+          onClick={() => setExpanded((prev) => !prev)}
+          type="button"
+        >
+          {expanded ? "Show less" : `Show ${hiddenCount} more`}
+          <ChevronDownIcon className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SidebarSegment({
+  active,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  count?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "relative flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium transition-colors",
+        active
+          ? "bg-paper-3 text-ink dark:bg-paper-2"
+          : "bg-transparent text-ink-faint hover:text-ink-soft hover:bg-paper-3/50 dark:hover:bg-paper-2/50"
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+      {typeof count === "number" && count > 0 && (
+        <span className="tabular-nums text-[0.6rem] text-ink-faint">{count}</span>
+      )}
+    </button>
+  );
+}
+
 function ActivitySidebarView({
   overview,
   tileValues,
@@ -79,44 +146,26 @@ function ActivitySidebarView({
     <div className="grid gap-5">
       {showTabs ? (
         <section className="grid gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-baseline gap-3">
-              <button
-                className={cn(
-                  "font-serif text-lg font-medium leading-snug tracking-[-0.02em] transition-colors",
-                  sidebarTab === "automations" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
-                )}
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="m-0 font-serif text-2xl font-medium tracking-[-0.03em] text-ink">
+              Activity
+            </h2>
+            <div className="flex items-center border border-line">
+              <SidebarSegment
+                active={sidebarTab === "automations"}
+                count={activeAutomations.length}
+                label="Automations"
                 onClick={() => setSidebarTab("automations")}
-                type="button"
-              >
-                Automations
-              </button>
-              <button
-                className={cn(
-                  "font-serif text-lg font-medium leading-snug tracking-[-0.02em] transition-colors",
-                  sidebarTab === "imports" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
-                )}
+              />
+              <SidebarSegment
+                active={sidebarTab === "imports"}
+                count={recentImports.length}
+                label="Imports"
                 onClick={() => setSidebarTab("imports")}
-                type="button"
-              >
-                New imports
-                {recentImports.length > 0 && (
-                  <span className="ml-1.5 text-xs tabular-nums font-normal text-ink-faint">
-                    {recentImports.length}
-                  </span>
-                )}
-              </button>
+              />
             </div>
-            {sidebarTab === "automations" && (
-              <span className="flex items-center gap-1.5 text-xs text-ink-soft">
-                <StatusDot
-                  tone={activeAutomations.length > 0 ? "fresh" : "idle"}
-                  pulse={activeAutomations.length > 0}
-                />
-                {activeAutomations.length} active
-              </span>
-            )}
           </div>
+
           {sidebarTab === "automations" ? (
             automations.length > 0 ? (
               <AutomationCalendar automations={automations} onEditAutomation={onEditAutomation} variant="sidebar" />
@@ -124,7 +173,10 @@ function ActivitySidebarView({
               <EmptyCard className="border-dashed py-4 text-sm">No automations configured yet.</EmptyCard>
             )
           ) : (
-            <ActivityFeedImports imports={recentImports} />
+            <div className="grid gap-4">
+              <ImportSourcesList />
+              <CollapsibleImports imports={recentImports} />
+            </div>
           )}
         </section>
       ) : null}

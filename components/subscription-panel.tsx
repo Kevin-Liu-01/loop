@@ -106,7 +106,7 @@ export function SubscriptionPanel({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge>{planSlug ?? "operator"}</Badge>
+          <Badge color="orange">{(planSlug ?? "operator").charAt(0).toUpperCase() + (planSlug ?? "operator").slice(1)}</Badge>
           <StatusLabel status={status} />
         </div>
       </div>

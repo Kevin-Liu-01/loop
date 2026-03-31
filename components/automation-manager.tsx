@@ -157,18 +157,21 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
         skills={manageableSkills}
       />
 
-      {selectedAutomation && (
-        <AutomationEditModal
-          automation={selectedAutomation.automation}
-          canManage={selectedAutomation.canManage}
-          onClose={() => setSelectedAutomation(null)}
-          open
-          skillName={
-            selectedAutomation.automation.matchedSkillSlugs[0]
-              ? skillMap.get(selectedAutomation.automation.matchedSkillSlugs[0])?.title
-              : undefined
-          }
-        />
+      {selectedAutomation && (() => {
+        const linkedSlug = selectedAutomation.automation.matchedSkillSlugs[0];
+        const linkedSkill = linkedSlug ? skillMap.get(linkedSlug) : undefined;
+        return (
+          <AutomationEditModal
+            automation={selectedAutomation.automation}
+            canManage={selectedAutomation.canManage}
+            onClose={() => setSelectedAutomation(null)}
+            open
+            skillName={linkedSkill?.title}
+            skillSlug={linkedSkill?.slug}
+            sources={linkedSkill?.sources}
+          />
+        );
+      })()
       )}
     </section>
   );
@@ -206,7 +209,7 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
       <div className="grid min-w-0 gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <strong className="truncate text-sm">{automation.name}</strong>
-          <Badge muted={!isActive}>
+          <Badge color={isActive ? "green" : "neutral"}>
             <StatusDot
               className="mr-1"
               tone={isActive ? "fresh" : "idle"}
@@ -214,7 +217,7 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
             />
             {automation.status.toLowerCase()}
           </Badge>
-          {!canManage ? <Badge muted>read only</Badge> : null}
+          {!canManage ? <Badge color="neutral">read only</Badge> : null}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-faint">

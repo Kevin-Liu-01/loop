@@ -4,7 +4,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon } from "lucide-react";
+import { Clipboard, CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon } from "lucide-react";
 
 import {
   ActivityDashboard,
@@ -36,6 +36,8 @@ import { buildMcpVersionHref } from "@/lib/format";
 import { supportsSandboxMcp } from "@/lib/mcp-utils";
 import { formatNextRun } from "@/lib/schedule";
 import { pageHeaderSub, pageInsetPadX, pageInsetPadY } from "@/lib/ui-layout";
+import { getSiteUrlString } from "@/lib/seo";
+import { formatTagLabel, getTagColorForCategory, getTagColorForTransport } from "@/lib/tag-utils";
 import { RelativeTime } from "@/components/relative-time";
 import type { RecentImportItem } from "@/lib/db/recent-imports";
 import type {
@@ -262,8 +264,8 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                       <span className="truncate font-serif text-[0.94rem] font-medium text-ink group-hover:text-ink-soft">
                         {skill.title}
                       </span>
-                      <Badge>{skill.category}</Badge>
-                      <Badge muted>{skill.versionLabel}</Badge>
+                      <Badge color={getTagColorForCategory(skill.category)} size="sm">{formatTagLabel(skill.category)}</Badge>
+                      <Badge color="neutral" size="sm">{skill.versionLabel}</Badge>
                     </div>
                     <p className="m-0 line-clamp-1 text-sm text-ink-soft">{summary}</p>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-ink-faint">
@@ -299,14 +301,26 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => {
+                      const siteUrl = getSiteUrlString();
+                      const rawUrl = `${siteUrl}/api/skills/${skill.slug}/raw`;
+                      const prompt = `Use the skill at ${rawUrl}`;
+                      navigator.clipboard.writeText(prompt);
+                    }}>
+                      <Clipboard />
+                      Use in agent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => {
                       const target = automationBySkillSlug.get(skill.slug);
                       if (target) setEditTarget(target);
-                      else router.push(`${skill.href}#automation`);
+                      else router.push(`/skills/${skill.slug}#automation`);
                     }}>
                       <AutomationIcon />
                       View automation
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => navigator.clipboard.writeText(skill.href)}>
+                    <DropdownMenuItem onSelect={() => {
+                      const fullUrl = `${window.location.origin}/skills/${skill.slug}`;
+                      navigator.clipboard.writeText(fullUrl);
+                    }}>
                       <CopyIcon />
                       Copy link
                     </DropdownMenuItem>
@@ -314,7 +328,7 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                       <TerminalIcon />
                       Open in sandbox
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => window.open(skill.href, "_blank")}>
+                    <DropdownMenuItem onSelect={() => window.open(`/skills/${skill.slug}`, "_blank")}>
                       <ExternalLinkIcon />
                       Open in new tab
                     </DropdownMenuItem>
@@ -356,8 +370,8 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                       <span className="truncate font-serif text-[0.94rem] font-medium text-ink group-hover:text-ink-soft">
                         {mcp.name}
                       </span>
-                      <Badge>{mcp.transport}</Badge>
-                      <Badge muted>{mcp.versionLabel}</Badge>
+                      <Badge color={getTagColorForTransport(mcp.transport)} size="sm">{mcp.transport.toUpperCase()}</Badge>
+                      <Badge color="neutral" size="sm">{mcp.versionLabel}</Badge>
                     </div>
                     <p className="m-0 line-clamp-1 text-sm text-ink-soft">{mcp.description}</p>
                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-faint">
@@ -366,7 +380,7 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                       )}
                       {mcp.envKeys.length > 0 && mcp.tags.length > 0 && <span>·</span>}
                       {mcp.tags.slice(0, 3).map((t) => (
-                        <span className="rounded bg-paper-3 px-1.5 py-0.5 text-[0.625rem] font-medium" key={t}>{t}</span>
+                        <Badge color="neutral" key={t} size="sm">{formatTagLabel(t)}</Badge>
                       ))}
                     </div>
                   </div>
@@ -490,28 +504,39 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
 
   const pageTitle = (
     <div className="grid gap-2">
-      <h1 className="m-0 flex items-baseline gap-4 font-serif text-2xl font-medium tracking-[-0.03em]">
-        <button
-          className={cn(
-            "transition-colors",
-            tab === "skills" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
-          )}
-          onClick={() => switchTab("skills")}
-          type="button"
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="m-0 flex items-baseline gap-4 font-serif text-2xl font-medium tracking-[-0.03em]">
+          <button
+            className={cn(
+              "transition-colors",
+              tab === "skills" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
+            )}
+            onClick={() => switchTab("skills")}
+            type="button"
+          >
+            Skills
+          </button>
+          <button
+            className={cn(
+              "transition-colors",
+              tab === "mcps" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
+            )}
+            onClick={() => switchTab("mcps")}
+            type="button"
+          >
+            MCPs
+          </button>
+        </h1>
+        <Link
+          href="/api/skills/raw/all"
+          target="_blank"
+          rel="noreferrer"
+          className="flex shrink-0 items-center gap-1.5 border border-line bg-paper-3 px-2.5 py-1.5 text-[0.6875rem] font-medium text-ink-soft transition-colors hover:border-accent/30 hover:text-ink dark:bg-paper-2"
         >
-          Skills
-        </button>
-        <button
-          className={cn(
-            "transition-colors",
-            tab === "mcps" ? "text-ink" : "text-ink-faint hover:text-ink-soft"
-          )}
-          onClick={() => switchTab("mcps")}
-          type="button"
-        >
-          MCPs
-        </button>
-      </h1>
+          <TerminalIcon className="h-3 w-3" />
+          Agent catalog
+        </Link>
+      </div>
       <p className={pageHeaderSub}>
         {tab === "skills" ? (
           <>
@@ -559,11 +584,6 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                 pageInsetPadY
               )}
             >
-              <header className="min-w-0">
-                <h2 className="m-0 font-serif text-2xl font-medium tracking-[-0.03em] text-ink">
-                  Activity
-                </h2>
-              </header>
               <ActivityDashboard
                 automations={automations}
                 overview={usageOverview}
@@ -587,14 +607,19 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
         )}
       </PageShell>
 
-      {editTarget && (
-        <AutomationEditModal
-          automation={editTarget}
-          onClose={() => setEditTarget(null)}
-          open
-          skillName={skills.find((s) => editTarget.matchedSkillSlugs.includes(s.slug))?.title}
-        />
-      )}
+      {editTarget && (() => {
+        const linkedSkill = skills.find((s) => editTarget.matchedSkillSlugs.includes(s.slug));
+        return (
+          <AutomationEditModal
+            automation={editTarget}
+            onClose={() => setEditTarget(null)}
+            open
+            skillName={linkedSkill?.title}
+            skillSlug={linkedSkill?.slug}
+            sources={linkedSkill?.sources}
+          />
+        );
+      })()}
     </AppGridShell>
   );
 }

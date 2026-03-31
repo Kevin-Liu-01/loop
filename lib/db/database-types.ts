@@ -117,6 +117,9 @@ export type Database = {
           featured_rank: number;
           quality_score: number;
           research_profile: Json;
+          creator_clerk_user_id: string | null;
+          price: Json | null;
+          forked_from_slug: string | null;
         };
         Insert: {
           id?: string;
@@ -152,6 +155,9 @@ export type Database = {
           featured_rank?: number;
           quality_score?: number;
           research_profile?: Json;
+          creator_clerk_user_id?: string | null;
+          price?: Json | null;
+          forked_from_slug?: string | null;
         };
         Update: {
           id?: string;
@@ -187,6 +193,9 @@ export type Database = {
           featured_rank?: number;
           quality_score?: number;
           research_profile?: Json;
+          creator_clerk_user_id?: string | null;
+          price?: Json | null;
+          forked_from_slug?: string | null;
         };
         Relationships: [];
       };

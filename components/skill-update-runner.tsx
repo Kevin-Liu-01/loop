@@ -112,7 +112,7 @@ function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
       {metadata.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {metadata.map((entry) => (
-            <Badge key={entry} muted>
+            <Badge color="neutral" key={entry}>
               {entry}
             </Badge>
           ))}
@@ -343,7 +343,7 @@ export function SkillUpdateRunner({
   }, [slug, origin, router, startTransition]);
 
   const canRun = sourceCount > 0 && !isRunning && canManage;
-  const buttonLabel = origin === "remote" ? "Sync from source" : "Run update now";
+  const buttonLabel = origin === "remote" ? "Sync from source" : "Run automation now";
 
   return (
     <div className="grid gap-6">
@@ -352,7 +352,7 @@ export function SkillUpdateRunner({
           <PanelHead className="items-start">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-paper-3/90 text-ink-soft [&>svg]:h-4 [&>svg]:w-4 dark:bg-paper-2/50">
-                <RefreshIcon className={cn(isRunning && "animate-spin")} />
+                <AutomationIcon className={cn(isRunning && "animate-spin")} />
               </div>
               <div>
                 <h2 className={panelTitleClass}>{buttonLabel}</h2>
@@ -366,7 +366,7 @@ export function SkillUpdateRunner({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {automation ? <Badge muted>{automation.status.toLowerCase()}</Badge> : null}
+              {automation ? <Badge color={automation.status === "ACTIVE" ? "green" : "neutral"}>{automation.status.toLowerCase()}</Badge> : null}
               <Button disabled={!canRun} onClick={handleRun} type="button">
                 {isRunning ? "Running..." : buttonLabel}
               </Button>
@@ -412,9 +412,9 @@ export function SkillUpdateRunner({
             </div>
             <div className="flex items-center gap-2">
               {visibleStatus === "running" ? (
-                <Badge>streaming</Badge>
+                <Badge color="blue">streaming</Badge>
               ) : latestRun ? (
-                <Badge muted>{new Date(latestRun.finishedAt).toLocaleString()}</Badge>
+                <Badge color="neutral">{new Date(latestRun.finishedAt).toLocaleString()}</Badge>
               ) : null}
               <Button
                 onClick={() => setModalOpen(true)}

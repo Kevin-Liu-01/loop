@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   AutomationIcon,
   CreditCardIcon,
+  DownloadIcon,
   LinkIcon,
   PulseIcon,
   RefreshIcon,
@@ -26,6 +27,8 @@ function NavIcon({ id, active }: { id: SettingsNavId; active: boolean }) {
       return <LinkIcon className={cls} aria-hidden />;
     case "refresh":
       return <RefreshIcon className={cls} aria-hidden />;
+    case "imports":
+      return <DownloadIcon className={cls} aria-hidden />;
     case "automations":
       return <AutomationIcon className={cls} aria-hidden />;
     case "health":

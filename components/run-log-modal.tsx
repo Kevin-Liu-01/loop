@@ -188,7 +188,7 @@ function StepDetail({ step }: { step: AgentReasoningStep }) {
           <h4 className={cn(sectionLabel, "mb-2")}>Tool call</h4>
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              <Badge>{step.toolCall.name}</Badge>
+              <Badge color="indigo">{step.toolCall.name}</Badge>
             </div>
             <details className="group">
               <summary className="cursor-pointer text-xs font-medium text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
@@ -275,7 +275,7 @@ function ResultSummary({
               : "No material changes"
             : "Run error"}
         </strong>
-        {result?.changedSections?.length ? <Badge>{result.changedSections.length} sections</Badge> : null}
+        {result?.changedSections?.length ? <Badge color="blue">{result.changedSections.length} sections</Badge> : null}
       </div>
 
       {result?.summary ? <p className="m-0 text-sm text-ink-soft">{result.summary}</p> : null}

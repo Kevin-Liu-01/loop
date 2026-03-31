@@ -122,7 +122,7 @@ export function McpDetailSidebar({
         <Panel compact square>
           <PanelHead>
             <h3 className={sidebarTitle}>Tags</h3>
-            <Badge>{tags.length}</Badge>
+            <Badge color="neutral">{tags.length}</Badge>
           </PanelHead>
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => (

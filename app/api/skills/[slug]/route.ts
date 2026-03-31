@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 
 import { authErrorResponse, requireAuth } from "@/lib/auth";
 import { getSkillRecordBySlug } from "@/lib/content";
+import { deleteSkill } from "@/lib/db/skills";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { canSessionEditSkill } from "@/lib/skill-authoring";
 import {
@@ -86,6 +87,68 @@ export async function PATCH(
         }
 
         return Response.json({ error: "Unable to update skill." }, { status: 400 });
+      }
+    }
+  );
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  return withApiUsage(
+    {
+      route: "/api/skills/[slug]",
+      method: "DELETE",
+      label: "Delete skill"
+    },
+    async () => {
+      try {
+        const session = await requireAuth();
+        const sessionAuthor = await findSkillAuthorForSession(session);
+        const { slug } = await params;
+        const skill = await getSkillRecordBySlug(slug);
+
+        if (!skill) {
+          return Response.json({ error: "Skill not found." }, { status: 404 });
+        }
+
+        if (!canSessionEditSkill(skill, session, sessionAuthor)) {
+          return Response.json(
+            { error: "Only the skill author or an admin can delete this skill." },
+            { status: 403 }
+          );
+        }
+
+        await deleteSkill(slug);
+
+        revalidatePath("/");
+        revalidatePath("/admin");
+        revalidatePath("/skills/new");
+        revalidatePath(`/categories/${skill.category}`);
+        revalidatePath(`/skills/${slug}`);
+        revalidatePath(skill.href);
+
+        await logUsageEvent({
+          kind: "skill_delete",
+          source: "api",
+          label: "Deleted skill",
+          path: skill.href,
+          skillSlug: slug,
+          categorySlug: skill.category,
+          details: `Deleted ${skill.title}`
+        });
+
+        return Response.json({ ok: true, slug });
+      } catch (error) {
+        const authResp = authErrorResponse(error);
+        if (authResp) return authResp;
+
+        if (error instanceof Error) {
+          return Response.json({ error: error.message }, { status: 400 });
+        }
+
+        return Response.json({ error: "Unable to delete skill." }, { status: 400 });
       }
     }
   );

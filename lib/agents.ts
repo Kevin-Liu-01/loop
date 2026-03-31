@@ -205,8 +205,26 @@ export function getGatewayEditorModel(): LanguageModel | null {
   return provider(GATEWAY_EDITOR_MODEL);
 }
 
-export function getGatewayEditorModelId(): string {
-  return GATEWAY_EDITOR_MODEL;
+export function getGatewayEditorModelId(preferredModel?: string): string {
+  return preferredModel || GATEWAY_EDITOR_MODEL;
+}
+
+/**
+ * Resolve the editor model for a specific skill.
+ * Uses the skill's preferredModel when set, otherwise the global default.
+ */
+export function getGatewayModelForSkill(preferredModel?: string): LanguageModel | null {
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  if (!apiKey) {
+    if (!_gatewayKeyWarnedOnce) {
+      console.warn("[agents] AI_GATEWAY_API_KEY is not set — skill updates will use heuristic fallback (no AI)");
+      _gatewayKeyWarnedOnce = true;
+    }
+    return null;
+  }
+  const modelId = preferredModel || GATEWAY_EDITOR_MODEL;
+  const provider = createGateway({ apiKey });
+  return provider(modelId);
 }
 
 export async function listGatewayModels(): Promise<Array<{ id: string; name: string; provider: string }>> {

@@ -4,6 +4,7 @@ import { authErrorResponse, requireAuth } from "@/lib/auth";
 import { getSkillCatalogue, getSkillRecordBySlug } from "@/lib/content";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { canSessionEditSkill } from "@/lib/skill-authoring";
+import { canCreateSkill } from "@/lib/skill-limits";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 import {
   addUserSkill,
@@ -55,6 +56,18 @@ export async function POST(request: Request) {
         const session = await requireAuth();
         const sessionAuthor = await findSkillAuthorForSession(session);
         const payload = createUserSkillInputSchema.parse(await request.json());
+        const limits = await canCreateSkill(session.userId);
+        if (!limits.allowed) {
+          return Response.json(
+            {
+              error: `Free accounts can create up to ${limits.limit} skills. Upgrade to Operator to create more.`,
+              currentCount: limits.currentCount,
+              limit: limits.limit,
+              isOperator: limits.isOperator
+            },
+            { status: 403 }
+          );
+        }
         const draft = createUserSkillDocument(payload);
         const catalogue = await getSkillCatalogue();
 

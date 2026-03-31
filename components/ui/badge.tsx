@@ -1,20 +1,44 @@
 import { cn } from "@/lib/cn";
+import { TAG_COLOR_CLASSES, type TagColor } from "@/lib/tag-utils";
 
 type BadgeProps = {
+  /** @deprecated Use `color` instead for semantic coloring. Kept for backward compat. */
   muted?: boolean;
+  color?: TagColor;
+  /** Smaller size for inline/dense contexts */
+  size?: "sm" | "md";
   className?: string;
   children: React.ReactNode;
 };
 
-export function Badge({ muted, className, children }: BadgeProps) {
+const BASE =
+  "inline-flex max-w-[min(14rem,100%)] shrink-0 items-center justify-center rounded-full border font-medium leading-none tracking-tight whitespace-nowrap tabular-nums";
+
+const SIZE_CLASSES = {
+  sm: "h-5 px-2 text-[0.625rem]",
+  md: "h-6 px-2.5 text-[0.6875rem]",
+} as const;
+
+const MUTED_CLASSES =
+  "border-transparent bg-paper-2 text-ink-faint ring-1 ring-inset ring-line/50 dark:ring-line/35";
+
+const DEFAULT_CLASSES = "border-line bg-paper-3 text-ink-soft";
+
+export function Badge({
+  muted,
+  color,
+  size = "md",
+  className,
+  children,
+}: BadgeProps) {
+  const colorClass = color
+    ? TAG_COLOR_CLASSES[color]
+    : muted
+      ? MUTED_CLASSES
+      : DEFAULT_CLASSES;
+
   return (
-    <span
-      className={cn(
-        "inline-flex h-6 max-w-[min(12rem,100%)] shrink-0 items-center justify-center rounded-full border border-line bg-paper-3 px-2.5 text-[0.6875rem] font-medium leading-none tracking-tight text-ink-soft whitespace-nowrap tabular-nums",
-        muted && "border-transparent bg-paper-2 ring-1 ring-inset ring-line/50 dark:ring-line/35",
-        className
-      )}
-    >
+    <span className={cn(BASE, SIZE_CLASSES[size], colorClass, className)}>
       {children}
     </span>
   );

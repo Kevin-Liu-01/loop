@@ -5,9 +5,12 @@ import { Chevron, DayPicker } from "react-day-picker";
 import type { MonthProps } from "react-day-picker";
 
 import { AutomationDayModal, type DayAutomationEntry } from "@/components/automation-day-modal";
+import { AutomationIcon } from "@/components/frontier-icons";
 import { cn } from "@/lib/cn";
 import { formatNextRun, getRunDatesForMonth, isRRuleScheduledOnDate } from "@/lib/schedule";
 import type { AutomationSummary } from "@/lib/types";
+
+const LEGEND_COLLAPSED_LIMIT = 12;
 
 const ACCENT_COLORS = [
   "bg-accent/80",
@@ -17,6 +20,7 @@ const ACCENT_COLORS = [
   "bg-amber-500/70",
   "bg-rose-500/70"
 ];
+
 
 type AutomationCalendarProps = {
   automations: AutomationSummary[];
@@ -54,6 +58,71 @@ function AutomationMonth({ className, children, calendarMonth: _cm, displayIndex
         </div>
       </div>
       {grid}
+    </div>
+  );
+}
+
+function AutomationLegend({
+  automations,
+  legendRowsAreClickable,
+  month,
+  onEditAutomation,
+}: {
+  automations: AutomationSummary[];
+  legendRowsAreClickable: boolean;
+  month: Date;
+  onEditAutomation?: (automation: AutomationSummary) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const canCollapse = automations.length > LEGEND_COLLAPSED_LIMIT;
+  const visible = canCollapse && !expanded ? automations.slice(0, LEGEND_COLLAPSED_LIMIT) : automations;
+  const hiddenCount = automations.length - LEGEND_COLLAPSED_LIMIT;
+
+  return (
+    <div className="grid gap-0.5 border-t border-line pt-3">
+      {visible.map((automation, index) => {
+        const bgColor = ACCENT_COLORS[index % ACCENT_COLORS.length];
+        const year = month.getFullYear();
+        const m = month.getMonth();
+        const count = getRunDatesForMonth(automation.schedule, year, m).length;
+        const nextRun = formatNextRun(automation.schedule);
+        const content = (
+          <>
+            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-none shadow-sm ring-1 ring-line/40", bgColor)} />
+            <AutomationIcon className="h-3 w-3 shrink-0 text-ink-faint" />
+            <span className="min-w-0 truncate font-medium">{automation.name}</span>
+            <span className="shrink-0 tabular-nums text-ink-faint">{count} runs</span>
+            <span className="ml-auto shrink-0 tabular-nums text-ink-faint/70">{nextRun}</span>
+          </>
+        );
+
+        return legendRowsAreClickable && onEditAutomation ? (
+          <button
+            className={cn(
+              "flex min-w-0 items-center gap-1.5 rounded-lg border border-transparent px-1 py-1 text-left text-[0.6875rem] leading-tight text-ink-soft transition-colors",
+              "hover:border-accent/20 hover:bg-paper-2/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            )}
+            key={automation.id}
+            onClick={() => onEditAutomation(automation)}
+            type="button"
+          >
+            {content}
+          </button>
+        ) : (
+          <div className="flex min-w-0 items-center gap-1.5 px-1 py-1 text-[0.6875rem] leading-tight text-ink-soft" key={automation.id}>
+            {content}
+          </div>
+        );
+      })}
+      {canCollapse && (
+        <button
+          className="mt-1 px-1 text-left text-[0.6875rem] font-medium text-ink-faint transition-colors hover:text-ink-soft"
+          onClick={() => setExpanded((prev) => !prev)}
+          type="button"
+        >
+          {expanded ? "Show less" : `Show ${hiddenCount} more…`}
+        </button>
+      )}
     </div>
   );
 }
@@ -228,41 +297,12 @@ export function AutomationCalendar({
       />
 
       {activeAutomations.length > 0 && (
-        <div className="grid gap-0.5 border-t border-line pt-3">
-          {activeAutomations.map((automation, index) => {
-            const color = ACCENT_COLORS[index % ACCENT_COLORS.length];
-            const year = month.getFullYear();
-            const m = month.getMonth();
-            const count = getRunDatesForMonth(automation.schedule, year, m).length;
-            const nextRun = formatNextRun(automation.schedule);
-            const content = (
-              <>
-                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-none shadow-sm ring-1 ring-line/40", color)} />
-                <span className="min-w-0 truncate font-medium">{automation.name}</span>
-                <span className="shrink-0 tabular-nums text-ink-faint">{count} runs</span>
-                <span className="ml-auto shrink-0 tabular-nums text-ink-faint/70">{nextRun}</span>
-              </>
-            );
-
-            return legendRowsAreClickable ? (
-              <button
-                className={cn(
-                  "flex min-w-0 items-center gap-1.5 rounded-lg border border-transparent px-1 py-1 text-left text-[0.6875rem] leading-tight text-ink-soft transition-colors",
-                  "hover:border-accent/20 hover:bg-paper-2/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                )}
-                key={automation.id}
-                onClick={() => onEditAutomation(automation)}
-                type="button"
-              >
-                {content}
-              </button>
-            ) : (
-              <div className="flex min-w-0 items-center gap-1.5 px-1 py-1 text-[0.6875rem] leading-tight text-ink-soft" key={automation.id}>
-                {content}
-              </div>
-            );
-          })}
-        </div>
+        <AutomationLegend
+          automations={activeAutomations}
+          legendRowsAreClickable={legendRowsAreClickable}
+          month={month}
+          onEditAutomation={onEditAutomation}
+        />
       )}
     </div>
   );

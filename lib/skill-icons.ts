@@ -50,6 +50,8 @@ const BRAND_LOGOS = {
   upstash:    `${SI}/upstash`,
   vercel:     `${SI}/vercel`,
 
+  slack:      `${SI}/slack`,
+
   // Not on SimpleIcons — GitHub avatar fallback
   aws:        `${GH}/amazon.png?size=64`,
   context7:   `${GH}/upstash.png?size=64`,
@@ -59,7 +61,32 @@ const BRAND_LOGOS = {
   neon:       `${GH}/neondatabase.png?size=64`,
   openai:     `${GH}/openai.png?size=64`,
   playwright: `${GH}/microsoft.png?size=64`,
-  slack:      `${GH}/slack.png?size=64`,
+
+  // Brands without SimpleIcons or GitHub avatar
+  atlassian:  `${SI}/atlassian`,
+  circleci:   `${SI}/circleci`,
+  crowdstrike:`${SI}/crowdstrike`,
+  elastic:    `${SI}/elasticsearch`,
+  firebase:   `${SI}/firebase`,
+  gitlab:     `${SI}/gitlab`,
+  heroku:     `${SI}/heroku`,
+  honeycomb:  `${SI}/honeycomb`,
+  hubspot:    `${SI}/hubspot`,
+  mariadb:    `${SI}/mariadb`,
+  mongodb:    `${SI}/mongodb`,
+  monday:     `${SI}/mondaydotcom`,
+  neo4j:      `${SI}/neo4j`,
+  netlify:    `${SI}/netlify`,
+  pagerduty:  `${SI}/pagerduty`,
+  paypal:     `${SI}/paypal`,
+  perplexity: `${SI}/perplexity`,
+  posthog:    `${SI}/posthog`,
+  pulumi:     `${SI}/pulumi`,
+  redis:      `${SI}/redis`,
+  render:     `${SI}/render`,
+  semgrep:    `${SI}/semgrep`,
+  sonarqube:  `${SI}/sonarqube`,
+  storybook:  `${SI}/storybook`,
 } as const;
 
 function lucide(name: string): IconRef {
@@ -161,6 +188,7 @@ export function getCategoryIcon(slug: CategorySlug): IconRef {
 
 const MCP_ICONS: Record<string, IconRef> = {
   // Official reference
+  "Everything": lucide("layers"),
   "Filesystem": lucide("folder-open"),
   "Memory": lucide("brain"),
   "Sequential Thinking": lucide("list-ordered"),
@@ -169,9 +197,14 @@ const MCP_ICONS: Record<string, IconRef> = {
 
   // Dev platforms
   "GitHub": brand("github", "GitHub"),
+  "GitLab": brand("gitlab", "GitLab"),
   "Vercel": brand("vercel", "Vercel"),
   "Cloudflare": brand("cloudflare", "Cloudflare"),
+  "Netlify": brand("netlify", "Netlify"),
+  "Heroku": brand("heroku", "Heroku"),
   "Sentry": brand("sentry", "Sentry"),
+  "CircleCI": brand("circleci", "CircleCI"),
+  "Storybook": brand("storybook", "Storybook"),
 
   // Databases
   "Supabase": brand("supabase", "Supabase"),
@@ -179,55 +212,110 @@ const MCP_ICONS: Record<string, IconRef> = {
   "Prisma": brand("prisma", "Prisma"),
   "Turso": brand("turso", "Turso"),
   "Upstash": brand("upstash", "Upstash"),
+  "MongoDB": brand("mongodb", "MongoDB"),
+  "ClickHouse": lucide("database"),
+  "Redis": brand("redis", "Redis"),
+  "Neo4j": brand("neo4j", "Neo4j"),
+  "Elasticsearch": brand("elastic", "Elasticsearch"),
+  "MariaDB": brand("mariadb", "MariaDB"),
+
+  // Vector databases
+  "Pinecone": lucide("database"),
+  "Qdrant": lucide("database"),
+  "Chroma": lucide("database"),
+  "Milvus": lucide("database"),
 
   // Search & research
   "Context7": brand("context7", "Context7"),
   "Brave Search": brand("brave", "Brave"),
   "Exa": brand("exa", "Exa"),
   "Firecrawl": brand("firecrawl", "Firecrawl"),
+  "Perplexity": brand("perplexity", "Perplexity"),
+  "Apify": lucide("search"),
 
   // Browser
   "Playwright": brand("playwright", "Playwright"),
   "Puppeteer": brand("google", "Puppeteer"),
+  "Browserbase": lucide("globe"),
 
   // Productivity
   "Notion": brand("notion", "Notion"),
   "Slack": brand("slack", "Slack"),
   "Linear": brand("linear", "Linear"),
   "Todoist": brand("todoist", "Todoist"),
+  "Atlassian": brand("atlassian", "Atlassian"),
+  "HubSpot": brand("hubspot", "HubSpot"),
+  "Monday.com": brand("monday", "Monday.com"),
 
   // Payments
   "Stripe": brand("stripe", "Stripe"),
+  "PayPal": brand("paypal", "PayPal"),
 
   // Design
   "Figma": brand("figma", "Figma"),
+  "Cloudinary": lucide("image"),
 
   // Email
   "Resend": brand("resend", "Resend"),
 
   // Observability
   "Grafana": brand("grafana", "Grafana"),
+  "PagerDuty": brand("pagerduty", "PagerDuty"),
+  "PostHog": brand("posthog", "PostHog"),
+  "Honeycomb": brand("honeycomb", "Honeycomb"),
+  "Axiom": lucide("activity"),
 
   // AI
   "OpenAI Agents": brand("openai", "OpenAI"),
+  "Hugging Face": brand("huggingface", "Hugging Face"),
+  "E2B": lucide("box"),
 
   // Data
   "PostgreSQL": lucide("database"),
   "SQLite": lucide("database"),
 
   // Infra
-  "AWS": brand("aws", "AWS"),
+  "AWS API": brand("aws", "AWS"),
+  "Azure": lucide("cloud"),
+  "Google Cloud Run": brand("google", "Google Cloud"),
   "Terraform": brand("terraform", "Terraform"),
+  "Pulumi": brand("pulumi", "Pulumi"),
   "Docker": brand("docker", "Docker"),
   "Kubernetes": brand("kubernetes", "Kubernetes"),
+  "Render": brand("render", "Render"),
+  "Firebase": brand("firebase", "Firebase"),
 
   // Security
   "Snyk": brand("snyk", "Snyk"),
+  "Auth0": brand("auth0", "Auth0"),
+  "SonarQube": brand("sonarqube", "SonarQube"),
+  "Semgrep": brand("semgrep", "Semgrep"),
+  "CrowdStrike Falcon": brand("crowdstrike", "CrowdStrike"),
 
   // Utilities
   "MCP Proxy": lucide("arrow-right-left"),
   "Time": lucide("clock"),
 };
+
+// ---------------------------------------------------------------------------
+// Platform doc icons — brand logos for agent doc tabs (cursor.md, claude.md…)
+// ---------------------------------------------------------------------------
+
+export type PlatformDocIcon = {
+  src: string;
+  alt: string;
+};
+
+export const PLATFORM_DOC_ICONS: Record<string, PlatformDocIcon> = {
+  cursor: { src: "/brands/cursor.svg", alt: "Cursor" },
+  claude: { src: "/brands/anthropic.svg", alt: "Anthropic / Claude" },
+  codex:  { src: "/brands/openai.png", alt: "OpenAI / Codex" },
+  agents: { src: "/brands/cursor.svg", alt: "AGENTS.md" },
+};
+
+export function getPlatformDocIcon(key: string): PlatformDocIcon | null {
+  return PLATFORM_DOC_ICONS[key] ?? null;
+}
 
 export function getMcpIcon(name: string, homepageUrl?: string): IconRef {
   const match = MCP_ICONS[name];

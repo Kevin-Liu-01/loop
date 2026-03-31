@@ -5,10 +5,13 @@ import remarkGfm from "remark-gfm";
 import { AppGridShell } from "@/components/app-grid-shell";
 import { BuySkillButton } from "@/components/buy-skill-button";
 import { CopyButton } from "@/components/copy-button";
-import { CopySkillButton } from "@/components/copy-skill-button";
+import { DeleteSkillButton } from "@/components/delete-skill-button";
+import { DownloadSkillButton } from "@/components/download-skill-button";
+import { ForkSkillButton } from "@/components/fork-skill-button";
 import { ExpandableContent } from "@/components/expandable-content";
-import { AutomationIcon, PlayIcon } from "@/components/frontier-icons";
+import { PlayIcon } from "@/components/frontier-icons";
 import { ShareButton } from "@/components/share-button";
+import { SkillAgentDocsPanel } from "@/components/skill-agent-docs-panel";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { SkillAuthorStudio } from "@/components/skill-author-studio";
 import { SkillAutomationPanel } from "@/components/skill-automation-panel";
@@ -27,17 +30,18 @@ import { SimpleList, SimpleListBody, SimpleListItem } from "@/components/ui/simp
 import { buildSkillAutomationSummaries } from "@/lib/skill-automations";
 import { formatRelativeDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { inlineSectionLabel, pageInsetPadX } from "@/lib/ui-layout";
+import { pageInsetPadX } from "@/lib/ui-layout";
 import { diffMultilineText } from "@/lib/text-diff";
 import { buildUpdateDigest } from "@/lib/update-digest";
+import { SkillSectionNav, type SectionTab } from "@/components/skill-section-nav";
 import { SkillIcon } from "@/components/ui/skill-icon";
+import { getSiteUrlString } from "@/lib/seo";
+import { formatTagLabel, getTagColorForCategory, getTagColorForOrigin } from "@/lib/tag-utils";
 import type { SkillUsageSummary } from "@/lib/usage";
 import type { CategoryBrief, LoopRunRecord, SkillRecord } from "@/lib/types";
 
+const SITE_URL = getSiteUrlString();
 const sectionH2 = "m-0 font-serif text-xl font-medium tracking-[-0.02em] text-ink";
-const promptSurface =
-  "rounded-none border border-line bg-paper-2/50 p-4 dark:bg-paper-2/25";
-const sectionTitle = "m-0 text-lg font-semibold tracking-tight text-ink";
 
 type SkillDetailPageProps = {
   skill: SkillRecord;
@@ -66,8 +70,10 @@ export function SkillDetailPage({
 }: SkillDetailPageProps) {
   const isPaid = skill.price && skill.price.amount > 0;
   const priceLabel = isPaid ? formatPrice(skill.price!.amount, skill.price!.currency) : null;
-  const primaryAgentPrompt =
-    skill.agents[0]?.defaultPrompt ?? `Use $${skill.slug} for this task.`;
+  const rawUrl = `${SITE_URL}/api/skills/${skill.slug}/raw`;
+  const rawUrlVersioned = skill.version > 1 ? `${rawUrl}?v=${skill.version}` : rawUrl;
+  const primaryAgentPrompt = `Use the skill at ${rawUrl}`;
+  const downloadFilename = `${skill.slug}-v${skill.version}.md`;
   const trackedSources =
     skill.origin === "user" ? skill.sources ?? [] : skill.references;
   const attachedAutomations = buildSkillAutomationSummaries(skill);
@@ -86,9 +92,9 @@ export function SkillDetailPage({
   const updateDigestDiff =
     latestUpdate || previousSkill?.updates?.[0]
       ? diffMultilineText(
-        buildUpdateDigest(previousSkill?.updates?.[0]),
-        buildUpdateDigest(latestUpdate)
-      )
+          buildUpdateDigest(previousSkill?.updates?.[0]),
+          buildUpdateDigest(latestUpdate)
+        )
       : [];
   const rawDiff =
     updateDigestDiff.length > 0
@@ -97,6 +103,16 @@ export function SkillDetailPage({
         ? diffMultilineText(previousSkill.body, skill.body)
         : [];
   const diffLines = rawDiff.length > 80 ? rawDiff.slice(0, 80) : rawDiff;
+
+  const sectionTabs: SectionTab[] = [
+    ...(canEdit ? [{ id: "author-studio", label: "Studio" }] : []),
+    { id: "content", label: "Content" },
+    { id: "agent-docs", label: "Agent docs" },
+    { id: "automation", label: "Automation" },
+    { id: "research", label: "Research" },
+    ...(trackedSources.length > 0 ? [{ id: "sources", label: "Sources" }] : []),
+    ...(isUpdateable ? [{ id: "run-log", label: "Run log" }] : []),
+  ];
 
   return (
     <AppGridShell header={<SiteHeader />}>
@@ -109,6 +125,7 @@ export function SkillDetailPage({
         skillSlug={skill.slug}
       />
       <PageShell inset className="flex min-h-0 flex-1 flex-col">
+        {/* ── Header ── */}
         <div className={cn("shrink-0 border-b border-line py-4", pageInsetPadX)}>
           <header className="grid gap-4">
             <Link
@@ -119,17 +136,17 @@ export function SkillDetailPage({
             </Link>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{skill.category}</Badge>
-              <Badge muted>{skill.origin}</Badge>
-              <Badge muted>{skill.versionLabel}</Badge>
-              {priceLabel ? <Badge>{priceLabel}</Badge> : <Badge muted>Free</Badge>}
+              <Badge color={getTagColorForCategory(skill.category)}>{formatTagLabel(skill.category)}</Badge>
+              <Badge color={getTagColorForOrigin(skill.origin)}>{formatTagLabel(skill.origin)}</Badge>
+              <Badge color="neutral">{skill.versionLabel}</Badge>
+              {priceLabel ? <Badge color="green">{priceLabel}</Badge> : <Badge color="neutral">Free</Badge>}
               <SkillVisibilityToggle
                 canEdit={canEdit}
                 currentVisibility={skill.visibility}
                 slug={skill.slug}
               />
               {skill.forkedFromSlug && (
-                <Badge muted>Forked from {skill.forkedFromSlug}</Badge>
+                <Badge color="purple">Forked from {skill.forkedFromSlug}</Badge>
               )}
             </div>
 
@@ -186,7 +203,7 @@ export function SkillDetailPage({
                   label: "Copied prompt",
                   path: skill.href,
                   skillSlug: skill.slug,
-                  categorySlug: skill.category
+                  categorySlug: skill.category,
                 }}
                 value={primaryAgentPrompt}
                 variant="soft"
@@ -198,69 +215,45 @@ export function SkillDetailPage({
                 size="sm"
                 usageEvent={{
                   kind: "copy_url",
-                  label: "Copied skill link",
+                  label: "Copied raw skill link",
                   path: skill.href,
                   skillSlug: skill.slug,
-                  categorySlug: skill.category
+                  categorySlug: skill.category,
                 }}
-                value={skill.href}
+                value={rawUrlVersioned}
                 variant="soft"
               />
+              <DownloadSkillButton body={skill.body} filename={downloadFilename} />
               {!canEdit && (
-                <CopySkillButton
-                  label="Copy to my skills"
-                  slug={skill.slug}
-                />
+                <ForkSkillButton label="Fork to my skills" slug={skill.slug} />
+              )}
+              {canEdit && (
+                <DeleteSkillButton skillTitle={skill.title} slug={skill.slug} />
               )}
             </div>
           </header>
         </div>
 
-        {/* ── Two-column layout: Main + Sidebar (full height rule) ── */}
+        {/* ── Two-column layout ── */}
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          {/* Main column */}
           <div
-            className={cn(
-              "min-h-0 flex-1 overflow-y-auto border-line py-5 pb-16 sm:py-6 lg:border-r",
-              pageInsetPadX
-            )}
+            className="min-h-0 flex-1 overflow-y-auto border-line lg:border-r"
+            id="skill-main-scroll"
           >
-            <div className="grid gap-8">
+            <SkillSectionNav scrollContainerId="skill-main-scroll" sections={sectionTabs} />
+            <div className={cn("grid gap-8 py-5 pb-16 sm:py-6", pageInsetPadX)}>
               {canEdit ? (
                 <section id="author-studio">
                   <SkillAuthorStudio skill={skill} />
                 </section>
               ) : null}
-              {/* Content */}
-              <section id="content" className="grid gap-5">
-                <h2 className={sectionH2}>Content</h2>
 
-                <div className={promptSurface}>
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <span className={inlineSectionLabel}>Default agent prompt</span>
-                    <CopyButton
-                      className="text-xs"
-                      iconSize="sm"
-                      label="Copy"
-                      size="sm"
-                      usageEvent={{
-                        kind: "copy_prompt",
-                        label: "Copied prompt",
-                        path: skill.href,
-                        skillSlug: skill.slug,
-                        categorySlug: skill.category
-                      }}
-                      value={primaryAgentPrompt}
-                      variant="soft"
-                    />
-                  </div>
-                  <code className="block whitespace-pre-wrap wrap-break-word font-mono text-sm text-ink">
-                    {primaryAgentPrompt}
-                  </code>
-                </div>
-
-                <div className={cn(promptSurface, "p-0")}>
-                  <ExpandableContent maxHeight={400}>
-                    <div className="markdown-shell p-4">
+              {/* Skill body */}
+              <section aria-label="Skill content" id="content">
+                <div className="overflow-hidden rounded-none border border-line bg-paper-2/50 dark:bg-paper-2/25">
+                  <ExpandableContent maxHeight={600}>
+                    <div className="markdown-shell p-5 sm:p-6">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {skill.body}
                       </ReactMarkdown>
@@ -269,6 +262,13 @@ export function SkillDetailPage({
                 </div>
               </section>
 
+              {/* Agent docs (tabs per platform) */}
+              <SkillAgentDocsPanel
+                agentDocs={skill.agentDocs}
+                skillHref={skill.href}
+                skillSlug={skill.slug}
+              />
+
               <SkillAutomationPanel
                 automation={primaryAutomation}
                 canManage={canEdit}
@@ -276,116 +276,55 @@ export function SkillDetailPage({
                 skillTitle={skill.title}
                 slug={skill.slug}
                 sourceCount={sourceCount}
+                sources={skill.sources}
               />
 
               <SkillResearchPanel skill={skill} />
 
-              {/* Sources & Config */}
-              <section
-                className="grid gap-5 border-t border-line pt-8"
-                id="sources"
-              >
-                <h2 className={sectionH2}>Sources &amp; config</h2>
+              {/* Sources list */}
+              {trackedSources.length > 0 ? (
+                <section className="border-t border-line pt-8" id="sources">
+                  <h2 className={sectionH2}>Sources</h2>
+                  <Panel compact square className="mt-4">
+                    <SimpleList tight>
+                      {trackedSources.map((ref) =>
+                        "url" in ref ? (
+                          <a
+                            className="grid grid-cols-1 border-t border-line bg-transparent py-3 first:border-t-0 first:pt-0 transition-colors hover:bg-transparent"
+                            href={ref.url}
+                            key={ref.url}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            <SimpleListBody>
+                              <strong className="text-ink">{ref.label}</strong>
+                              <p className="m-0 text-sm text-ink-soft">
+                                {[
+                                  ref.tags.join(" · ") || ref.kind,
+                                  ref.mode ? `Mode: ${ref.mode}` : null,
+                                  ref.trust ? `Trust: ${ref.trust}` : null,
+                                  ref.parser ? `Parser: ${ref.parser}` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
+                            </SimpleListBody>
+                          </a>
+                        ) : (
+                          <SimpleListItem className="grid-cols-1" key={ref.path}>
+                            <SimpleListBody>
+                              <strong className="text-ink">{ref.title}</strong>
+                              <p className="m-0 text-sm text-ink-soft">{ref.excerpt}</p>
+                            </SimpleListBody>
+                          </SimpleListItem>
+                        )
+                      )}
+                    </SimpleList>
+                  </Panel>
+                </section>
+              ) : null}
 
-                {canEdit ? (
-                  <Panel square>
-                    <h3 className={sectionTitle}>Publishing controls live above</h3>
-                    <p className="text-ink-soft">
-                      The author studio is now the single place to edit metadata, markdown, automation,
-                      and branding for this skill.
-                    </p>
-                    <div className="rounded-none border border-line bg-paper-3/80 p-4 text-sm text-ink-soft dark:bg-paper-2/35">
-                      Save a version there, then use the refresh panel below to inspect logs, diffs, and
-                      source reasoning.
-                    </div>
-                  </Panel>
-                ) : skill.origin === "user" ? (
-                  <Panel square>
-                    <h3 className={sectionTitle}>Publisher-managed skill</h3>
-                    <p className="text-ink-soft">
-                      This skill is maintained by its publisher. You can use it in the sandbox, but only
-                      the attached author profile can change the source watchlist or content.
-                    </p>
-                    <div className="rounded-none border border-line bg-paper-3/80 p-4 dark:bg-paper-2/35">
-                      <SkillAuthorBadge author={skill.author} ownerName={skill.ownerName} />
-                    </div>
-                  </Panel>
-                ) : (
-                  <Panel square>
-                    <h3 className={sectionTitle}>Track this skill</h3>
-                    <p className="text-ink-soft">
-                      Create an editable copy to add sources, configure refresh, and
-                      keep it updated.
-                    </p>
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-none border border-line bg-paper-3/80 p-4 dark:bg-paper-2/40">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-none border border-line bg-paper-2/80 text-ink-soft dark:bg-paper-2/50">
-                        <AutomationIcon />
-                      </span>
-                      <div>
-                        <strong className="text-ink">What happens</strong>
-                        <p className="mt-1 text-sm text-ink-soft">
-                          Loop copies this skill into your tracked set. You can then
-                          edit sources and run refreshes.
-                        </p>
-                      </div>
-                    </div>
-                    <TrackSkillButton
-                      label="Create editable copy"
-                      redirectTo="detail"
-                      slug={skill.slug}
-                    />
-                  </Panel>
-                )}
-
-                {trackedSources.length > 0 ? (
-                  <Panel compact square>
-                    <details className="group">
-                      <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
-                        <h3 className={sectionTitle}>Tracked sources</h3>
-                        <Badge>{trackedSources.length}</Badge>
-                        <span className="ml-auto text-xs text-ink-muted transition-transform group-open:rotate-90">▶</span>
-                      </summary>
-                      <SimpleList tight className="mt-3">
-                        {trackedSources.map((ref) =>
-                          "url" in ref ? (
-                            <a
-                              className="grid grid-cols-1 border-t border-line bg-transparent py-3 first:border-t-0 first:pt-0 transition-colors hover:bg-transparent"
-                              href={ref.url}
-                              key={ref.url}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <SimpleListBody>
-                                <strong className="text-ink">{ref.label}</strong>
-                                <p className="m-0 text-sm text-ink-soft">
-                                  {[
-                                    ref.tags.join(" · ") || ref.kind,
-                                    ref.mode ? `Mode: ${ref.mode}` : null,
-                                    ref.trust ? `Trust: ${ref.trust}` : null,
-                                    ref.parser ? `Parser: ${ref.parser}` : null
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </p>
-                              </SimpleListBody>
-                            </a>
-                          ) : (
-                            <SimpleListItem className="grid-cols-1" key={ref.path}>
-                              <SimpleListBody>
-                                <strong className="text-ink">{ref.title}</strong>
-                                <p className="m-0 text-sm text-ink-soft">
-                                  {ref.excerpt}
-                                </p>
-                              </SimpleListBody>
-                            </SimpleListItem>
-                          )
-                        )}
-                      </SimpleList>
-                    </details>
-                  </Panel>
-                ) : null}
-              </section>
-
+              {/* Update runner */}
               {isUpdateable ? (
                 <section className="border-t border-line pt-8" id="run-log">
                   <SkillUpdateRunner
@@ -401,14 +340,14 @@ export function SkillDetailPage({
             </div>
           </div>
 
+          {/* Sidebar */}
           <div
             className={cn(
-              "min-h-0 w-full overflow-y-auto border-t border-line py-5 pb-16 sm:py-6 lg:w-80 lg:shrink-0 lg:border-t-0",
+              "min-h-0 w-full overflow-y-auto border-t border-line py-5 pb-16 sm:py-6 lg:w-96 lg:shrink-0 lg:border-t-0",
               pageInsetPadX
             )}
           >
             <SkillDetailSidebar
-              agentDocs={skill.agentDocs}
               agentPrompt={primaryAgentPrompt}
               automations={attachedAutomations}
               currentVersion={skill.version}

@@ -11,6 +11,7 @@ describe("SETTINGS_NAV_ITEMS", () => {
       "automations",
       "health",
       "refresh",
+      "imports",
       "subscription",
       "connect",
     ]);

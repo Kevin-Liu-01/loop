@@ -282,7 +282,7 @@ const devPlatforms: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@sentry/mcp-server",
-      homepageUrl: "https://docs.sentry.io/product/sentry-mcp",
+      homepageUrl: "https://docs.sentry.io/ai/mcp/",
       envKeys: ["SENTRY_AUTH_TOKEN"],
       tags: ["sentry", "error-tracking", "debugging", "observability"],
     }
@@ -305,7 +305,7 @@ const devPlatforms: SeedMcp[] = [
     "@storybook/addon-mcp",
     [],
     {
-      manifestUrl: "https://github.com/storybookjs/addon-mcp",
+      manifestUrl: "https://github.com/storybookjs/mcp",
       homepageUrl: "https://storybook.js.org",
       tags: ["storybook", "ui", "testing", "components", "developer-tools"],
     }
@@ -336,7 +336,7 @@ const databases: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@neondatabase/mcp-server-neon",
-      homepageUrl: "https://neon.tech/docs/mcp",
+      homepageUrl: "https://neon.tech/docs/introduction/mcp",
       envKeys: ["NEON_API_KEY"],
       tags: ["neon", "postgres", "database", "serverless", "branching"],
     }
@@ -348,7 +348,7 @@ const databases: SeedMcp[] = [
     ["mcp"],
     {
       manifestUrl: "https://www.npmjs.com/package/prisma",
-      homepageUrl: "https://www.prisma.io/docs/postgres/mcp-server",
+      homepageUrl: "https://www.prisma.io/docs/ai/tools/mcp-server",
       tags: ["prisma", "postgres", "database", "orm", "migrations"],
     }
   ),
@@ -561,8 +561,8 @@ const searchResearch: SeedMcp[] = [
     "perplexity-mcp",
     [],
     {
-      manifestUrl: "https://github.com/ppl-ai/modelcontextprotocol",
-      homepageUrl: "https://perplexity.ai",
+      manifestUrl: "https://github.com/perplexityai/modelcontextprotocol",
+      homepageUrl: "https://www.perplexity.ai",
       envKeys: ["PERPLEXITY_API_KEY"],
       tags: ["perplexity", "search", "research", "ai"],
     }
@@ -593,7 +593,7 @@ const browserAutomation: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@playwright/mcp",
-      homepageUrl: "https://github.com/playwright-community/mcp",
+      homepageUrl: "https://github.com/microsoft/playwright-mcp",
       tags: ["playwright", "browser", "automation", "testing", "e2e"],
     }
   ),
@@ -604,7 +604,7 @@ const browserAutomation: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@anthropic/mcp-server-puppeteer",
-      homepageUrl: "https://github.com/anthropics/mcp-server-puppeteer",
+      homepageUrl: "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
       tags: ["puppeteer", "browser", "automation", "scraping"],
     }
   ),
@@ -741,8 +741,8 @@ const design: SeedMcp[] = [
     "Extract design context from Figma, generate code from frames, and write to the canvas. Bridge design and development.",
     "https://mcp.figma.com/mcp",
     {
-      manifestUrl: "https://mcp.figma.com",
-      homepageUrl: "https://figma.com",
+      manifestUrl: "https://www.figma.com/developers/mcp",
+      homepageUrl: "https://www.figma.com",
       envKeys: ["FIGMA_ACCESS_TOKEN"],
       tags: ["figma", "design", "ui", "prototyping", "design-to-code"],
     }
@@ -900,7 +900,7 @@ const dataAnalytics: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@modelcontextprotocol/server-postgres",
-      homepageUrl: "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
+      homepageUrl: "https://github.com/modelcontextprotocol/servers",
       envKeys: ["POSTGRES_CONNECTION_STRING"],
       tags: ["postgres", "database", "sql", "official"],
     }
@@ -912,7 +912,7 @@ const dataAnalytics: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/@modelcontextprotocol/server-sqlite",
-      homepageUrl: "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite",
+      homepageUrl: "https://github.com/modelcontextprotocol/servers",
       tags: ["sqlite", "database", "sql", "local", "official"],
     }
   ),
@@ -966,7 +966,7 @@ const infraCloud: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/terraform-mcp-server",
-      homepageUrl: "https://www.terraform.io",
+      homepageUrl: "https://developer.hashicorp.com/terraform",
       tags: ["terraform", "iac", "infrastructure", "devops"],
     }
   ),
@@ -976,8 +976,8 @@ const infraCloud: SeedMcp[] = [
     "pulumi-mcp-server",
     [],
     {
-      manifestUrl: "https://github.com/pulumi/mcp-server",
-      homepageUrl: "https://pulumi.com",
+      manifestUrl: "https://github.com/pulumi/pulumi-mcp-server",
+      homepageUrl: "https://www.pulumi.com",
       envKeys: ["PULUMI_ACCESS_TOKEN"],
       tags: ["pulumi", "iac", "infrastructure", "devops"],
     }
@@ -1023,7 +1023,7 @@ const infraCloud: SeedMcp[] = [
     "firebase-tools",
     ["mcp"],
     {
-      manifestUrl: "https://github.com/firebase/firebase-tools/blob/master/src/mcp",
+      manifestUrl: "https://github.com/firebase/firebase-tools/tree/main/src/mcp",
       homepageUrl: "https://firebase.google.com",
       tags: ["firebase", "google", "database", "auth", "infra"],
     }
@@ -1108,7 +1108,7 @@ const utilities: SeedMcp[] = [
     [],
     {
       manifestUrl: "https://www.npmjs.com/package/mcp-proxy",
-      homepageUrl: "https://github.com/nicobailey/mcp-proxy",
+      homepageUrl: "https://github.com/punkpeye/mcp-proxy",
       tags: ["proxy", "transport", "http", "sse", "utility"],
     }
   ),

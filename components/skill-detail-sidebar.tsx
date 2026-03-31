@@ -9,7 +9,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { SimpleList, SimpleListBody, SimpleListIcon, SimpleListItem, SimpleListRow } from "@/components/ui/simple-list";
 import { cn } from "@/lib/cn";
 import { formatRelativeDate } from "@/lib/format";
-import type { AgentDocs, AutomationSummary, DiffLine, LoopRunRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
+import type { AutomationSummary, DiffLine, LoopRunRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
 import type { SkillUsageSummary } from "@/lib/usage";
 
 const sidebarTitle = "m-0 text-sm font-semibold tracking-tight text-ink";
@@ -21,7 +21,6 @@ type SkillDetailSidebarProps = {
   currentVersion: number;
   skillHref: string;
   agentPrompt: string;
-  agentDocs?: AgentDocs;
   versions: VersionReference[];
   latestRun?: LoopRunRecord | null;
   latestUpdate?: SkillUpdateEntry;
@@ -57,7 +56,6 @@ export function SkillDetailSidebar({
   currentVersion,
   skillHref,
   agentPrompt,
-  agentDocs,
   versions,
   latestRun,
   latestUpdate,
@@ -71,7 +69,6 @@ export function SkillDetailSidebar({
   return (
     <aside className="grid content-start gap-4">
       <UseSkillPanel
-        agentDocs={agentDocs}
         agentPrompt={agentPrompt}
         skillHref={skillHref}
         slug={slug}
@@ -117,7 +114,7 @@ export function SkillDetailSidebar({
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
               <h3 className={sidebarTitle}>Update history</h3>
-              <Badge>{updates.length}</Badge>
+              <Badge color="blue">{updates.length}</Badge>
               <span className="ml-auto text-xs text-ink-muted transition-transform group-open:rotate-90">▶</span>
             </summary>
             <SimpleList tight className="mt-3">
@@ -178,7 +175,7 @@ function LatestRefreshPanel({
             <h3 className={sidebarTitle}>Latest refresh</h3>
           </div>
           {latestUpdate ? (
-            <Badge>{formatRelativeDate(latestUpdate.generatedAt)}</Badge>
+            <Badge color="neutral">{formatRelativeDate(latestUpdate.generatedAt)}</Badge>
           ) : null}
         </PanelHead>
 

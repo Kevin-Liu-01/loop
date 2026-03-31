@@ -6,6 +6,7 @@ import { getSkillRecordBySlug } from "@/lib/content";
 import { createSkill as dbCreateSkill } from "@/lib/db/skills";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { buildSkillVersionHref, buildVersionLabel } from "@/lib/format";
+import { canCreateSkill } from "@/lib/skill-limits";
 import { slugify, stableHash } from "@/lib/markdown";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 
@@ -21,6 +22,19 @@ export async function POST(request: Request) {
         const session = await requireAuth();
         const sessionAuthor = await findSkillAuthorForSession(session);
         const { slug: sourceSlug } = bodySchema.parse(await request.json());
+
+        const limits = await canCreateSkill(session.userId);
+        if (!limits.allowed) {
+          return Response.json(
+            {
+              error: `Free accounts can create up to ${limits.limit} skills. Upgrade to Operator to create more.`,
+              currentCount: limits.currentCount,
+              limit: limits.limit,
+              isOperator: limits.isOperator
+            },
+            { status: 403 }
+          );
+        }
 
         const source = await getSkillRecordBySlug(sourceSlug);
         if (!source) {

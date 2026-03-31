@@ -22,6 +22,7 @@ export function buildSkillAutomationSummaries(
             cwd: [],
             matchedSkillSlugs: [skill.slug],
             matchedCategorySlugs: [],
+            preferredModel: skill.automation.preferredModel,
           },
         ]
       : [];

@@ -1,17 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
+import { formatTagLabel } from "@/lib/tag-utils";
 import type { SkillRecord } from "@/lib/types";
 
 type SkillResearchPanelProps = {
   skill: SkillRecord;
 };
-
-function titleCase(value: string): string {
-  return value
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 export function SkillResearchPanel({ skill }: SkillResearchPanelProps) {
   const profile = skill.researchProfile;
@@ -49,19 +43,19 @@ export function SkillResearchPanel({ skill }: SkillResearchPanelProps) {
           ) : null}
 
           <div className="flex flex-wrap gap-2">
-            <Badge>{trackedSources.length} sources</Badge>
+            <Badge color="blue">{trackedSources.length} sources</Badge>
             {Array.from(modeCounts.entries()).map(([mode, count]) => (
-              <Badge key={mode} muted>
-                {count} {titleCase(mode)}
+              <Badge color="teal" key={mode}>
+                {count} {formatTagLabel(mode)}
               </Badge>
             ))}
             {Array.from(trustCounts.entries()).map(([trust, count]) => (
-              <Badge key={trust} muted>
-                {count} {titleCase(trust)}
+              <Badge color="amber" key={trust}>
+                {count} {formatTagLabel(trust)}
               </Badge>
             ))}
-            {skill.featuredRank ? <Badge muted>Rank {skill.featuredRank}</Badge> : null}
-            {skill.qualityScore ? <Badge muted>Quality {skill.qualityScore}</Badge> : null}
+            {skill.featuredRank ? <Badge color="purple">Rank {skill.featuredRank}</Badge> : null}
+            {skill.qualityScore ? <Badge color="green">Quality {skill.qualityScore}</Badge> : null}
           </div>
 
           {profile?.featuredReason ? (
@@ -103,7 +97,7 @@ export function SkillResearchPanel({ skill }: SkillResearchPanelProps) {
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {profile.discoveryQueries.map((query) => (
-                  <Badge key={query} muted>
+                  <Badge color="indigo" key={query} size="sm">
                     {query}
                   </Badge>
                 ))}
@@ -130,8 +124,8 @@ export function SkillResearchPanel({ skill }: SkillResearchPanelProps) {
                     {upstream.tags.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {upstream.tags.slice(0, 4).map((tag) => (
-                          <Badge key={`${upstream.slug}-${tag}`} muted>
-                            {tag}
+                          <Badge color="neutral" key={`${upstream.slug}-${tag}`} size="sm">
+                            {formatTagLabel(tag)}
                           </Badge>
                         ))}
                       </div>

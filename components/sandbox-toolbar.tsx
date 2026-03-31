@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 
 import {
   ChevronDownIcon,
@@ -261,99 +262,162 @@ export function SandboxToolbar({
         </div>
       </div>
 
-      {/* Floating context dropdown */}
-      {contextOpen && (
-        <>
-          {/* Scrim */}
-          <div
-            className="fixed inset-0 z-40"
-            aria-hidden
-            onClick={closeDropdown}
-          />
+      {/* Floating context dropdown — portaled to body so overflow:hidden parents can't clip it */}
+      {contextOpen &&
+        createPortal(
+          <ContextDropdown
+            closeDropdown={closeDropdown}
+            config={config}
+            dropdownRef={dropdownRef}
+            executableMcps={executableMcps}
+            onToggleMcp={onToggleMcp}
+            onToggleSkill={onToggleSkill}
+            selectedMcpCount={selectedMcpCount}
+            selectedSkillCount={selectedSkillCount}
+            skills={skills}
+            triggerRef={triggerRef}
+          />,
+          document.body,
+        )}
+    </div>
+  );
+}
 
-          <div
-            ref={dropdownRef}
-            className={cn(
-              "absolute right-3 top-full z-50 mt-1.5 w-[min(560px,calc(100vw-2rem))]",
-              "origin-top-right animate-in fade-in slide-in-from-top-1 duration-150",
-              "overflow-hidden rounded-xl border border-line/60 bg-paper-3/95 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12),0_2px_8px_-2px_rgba(0,0,0,0.06)] backdrop-blur-xl",
-              "dark:border-line/40 dark:bg-paper-3/90 dark:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.4)]",
-            )}
-          >
-            <div className="max-h-[min(50vh,420px)] overflow-y-auto overscroll-contain px-4 py-3.5">
-              {/* Skills */}
+type ContextDropdownProps = {
+  closeDropdown: () => void;
+  config: SandboxToolbarConfig;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  executableMcps: ImportedMcpDocument[];
+  onToggleMcp: (id: string) => void;
+  onToggleSkill: (slug: string) => void;
+  selectedMcpCount: number;
+  selectedSkillCount: number;
+  skills: SkillRecord[];
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+};
+
+function ContextDropdown({
+  closeDropdown,
+  config,
+  dropdownRef,
+  executableMcps,
+  onToggleMcp,
+  onToggleSkill,
+  selectedMcpCount,
+  selectedSkillCount,
+  skills,
+  triggerRef,
+}: ContextDropdownProps) {
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+
+  useLayoutEffect(() => {
+    function measure() {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPos({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [triggerRef]);
+
+  if (!pos) return null;
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-[9998]"
+        aria-hidden
+        onClick={closeDropdown}
+      />
+
+      <div
+        ref={dropdownRef}
+        className={cn(
+          "fixed z-[9999] w-[min(560px,calc(100vw-2rem))]",
+          "origin-top-right animate-in fade-in slide-in-from-top-1 duration-150",
+          "overflow-hidden rounded-xl border border-line/60 bg-paper-3/95 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12),0_2px_8px_-2px_rgba(0,0,0,0.06)] backdrop-blur-xl",
+          "dark:border-line/40 dark:bg-paper-3/90 dark:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.4)]",
+        )}
+        style={{ top: pos.top, right: pos.right }}
+      >
+        <div className="max-h-[min(50vh,420px)] overflow-y-auto overscroll-contain px-4 py-3.5">
+          <ContextSectionHeader
+            label="Skills"
+            count={selectedSkillCount}
+            total={skills.length}
+          />
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {skills.slice(0, 24).map((skill) => {
+              const active = config.selectedSkillSlugs.includes(skill.slug);
+              return (
+                <button
+                  className={cn(
+                    sandboxContextCard,
+                    active && sandboxContextCardActive,
+                  )}
+                  key={skill.slug}
+                  onClick={() => onToggleSkill(skill.slug)}
+                  type="button"
+                >
+                  <SkillIcon
+                    slug={skill.slug}
+                    iconUrl={skill.iconUrl}
+                    size={15}
+                    className="shrink-0"
+                  />
+                  <span className="min-w-0 text-xs truncate">{skill.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {executableMcps.length > 0 && (
+            <div className="mt-3 border-t border-line/25 pt-3">
               <ContextSectionHeader
-                label="Skills"
-                count={selectedSkillCount}
-                total={skills.length}
+                label="MCPs"
+                count={selectedMcpCount}
+                total={executableMcps.length}
               />
               <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                {skills.slice(0, 24).map((skill) => {
-                  const active = config.selectedSkillSlugs.includes(skill.slug);
+                {executableMcps.slice(0, 24).map((mcp) => {
+                  const active = config.selectedMcpIds.includes(mcp.id);
                   return (
                     <button
                       className={cn(
                         sandboxContextCard,
                         active && sandboxContextCardActive,
                       )}
-                      key={skill.slug}
-                      onClick={() => onToggleSkill(skill.slug)}
+                      key={mcp.id}
+                      onClick={() => onToggleMcp(mcp.id)}
                       type="button"
                     >
-                      <SkillIcon
-                        slug={skill.slug}
-                        iconUrl={skill.iconUrl}
+                      <McpIcon
+                        name={mcp.name}
+                        iconUrl={mcp.iconUrl}
+                        homepageUrl={mcp.homepageUrl}
                         size={15}
                         className="shrink-0"
                       />
-                      <span className="min-w-0 text-xs truncate">{skill.title}</span>
+                      <span className="min-w-0 text-xs truncate">{mcp.name}</span>
+                      <span className="ml-auto shrink-0 rounded-md bg-paper-2/80 px-1.5 py-0.5 text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-2">
+                        {mcp.transport}
+                      </span>
                     </button>
                   );
                 })}
               </div>
-
-              {/* MCPs */}
-              {executableMcps.length > 0 && (
-                <div className="mt-3 border-t border-line/25 pt-3">
-                  <ContextSectionHeader
-                    label="MCPs"
-                    count={selectedMcpCount}
-                    total={executableMcps.length}
-                  />
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                    {executableMcps.slice(0, 24).map((mcp) => {
-                      const active = config.selectedMcpIds.includes(mcp.id);
-                      return (
-                        <button
-                          className={cn(
-                            sandboxContextCard,
-                            active && sandboxContextCardActive,
-                          )}
-                          key={mcp.id}
-                          onClick={() => onToggleMcp(mcp.id)}
-                          type="button"
-                        >
-                          <McpIcon
-                            name={mcp.name}
-                            iconUrl={mcp.iconUrl}
-                            homepageUrl={mcp.homepageUrl}
-                            size={15}
-                            className="shrink-0"
-                          />
-                          <span className="min-w-0 text-xs truncate">{mcp.name}</span>
-                          <span className="ml-auto shrink-0 rounded-md bg-paper-2/80 px-1.5 py-0.5 text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-2">
-                            {mcp.transport}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

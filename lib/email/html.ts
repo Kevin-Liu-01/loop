@@ -1,6 +1,10 @@
 import { EMAIL_FROM } from "@/lib/email/client";
+import { getSiteUrlString } from "@/lib/seo";
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://loop.so";
+export function siteUrl(): string {
+  return getSiteUrlString();
+}
+
 export const BRAND_NAME = "Loop";
 export const BRAND_COLOR = "#e8650a";
 export const BRAND_COLOR_HOVER = "#ff7a1a";
@@ -60,6 +64,7 @@ function brandHeader(): string {
 }
 
 function brandFooter(): string {
+  const base = siteUrl();
   return `<tr>
   <td style="padding:32px 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -68,18 +73,18 @@ function brandFooter(): string {
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr>
               <td style="padding-right:16px;">
-                <a href="${SITE_URL}" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Skills</a>
+                <a href="${base}" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Skills</a>
               </td>
               <td style="padding-right:16px;">
-                <a href="${SITE_URL}/settings" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Settings</a>
+                <a href="${base}/settings" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Settings</a>
               </td>
               <td>
-                <a href="${SITE_URL}/settings" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Preferences</a>
+                <a href="${base}/settings" style="font-size:12px;color:#6b6b78;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Preferences</a>
               </td>
             </tr>
           </table>
           <p style="margin:12px 0 0;font-size:11px;color:#44444e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-            Sent by ${escapeHtml(EMAIL_FROM.replace(/<.*>/, "").trim())} · <a href="${SITE_URL}/settings" style="color:#6b6b78;text-decoration:underline;">Unsubscribe</a>
+            Sent by ${escapeHtml(EMAIL_FROM.replace(/<.*>/, "").trim())} · <a href="${base}/settings" style="color:#6b6b78;text-decoration:underline;">Unsubscribe</a>
           </p>
         </td>
       </tr>

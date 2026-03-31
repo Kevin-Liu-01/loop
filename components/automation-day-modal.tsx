@@ -65,7 +65,7 @@ export function AutomationDayModal({ open, onClose, date, entries, onEditAutomat
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium leading-tight text-ink">{automation.name}</span>
                         {automation.status === "PAUSED" ? (
-                          <Badge muted className="text-[0.65rem]">
+                          <Badge color="neutral" size="sm">
                             Paused
                           </Badge>
                         ) : null}

@@ -13,4 +13,4 @@ export function getResendClient(): Resend | null {
 }
 
 export const EMAIL_FROM =
-  process.env.RESEND_FROM_EMAIL ?? "Loop <updates@loop.so>";
+  process.env.RESEND_FROM_EMAIL ?? "Loop <noreply@localhost>";

@@ -6,6 +6,7 @@ import { SkillIcon, McpIcon } from "@/components/ui/skill-icon";
 import { Badge } from "@/components/ui/badge";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { SparkIcon } from "@/components/frontier-icons";
+import { formatTagLabel } from "@/lib/tag-utils";
 import { RelativeTime } from "@/components/relative-time";
 import { buildSkillVersionHref, buildMcpVersionHref } from "@/lib/format";
 import type { RecentImportItem } from "@/lib/db/recent-imports";
@@ -58,7 +59,7 @@ export function ActivityFeedImports({ imports }: ActivityFeedImportsProps) {
                 <span className="truncate text-[0.8125rem] font-medium leading-snug text-ink group-hover:text-ink-soft">
                   {item.title}
                 </span>
-                <Badge muted>{item.kind}</Badge>
+                <Badge color={item.kind === "skill" ? "purple" : "teal"} size="sm">{formatTagLabel(item.kind)}</Badge>
               </div>
               <p className="m-0 line-clamp-1 text-xs text-ink-soft">{item.description}</p>
               <div className="flex items-center gap-1.5 text-[0.6875rem] text-ink-faint">

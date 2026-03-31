@@ -1,6 +1,6 @@
-import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 
+import { getGatewayModelForSkill, getGatewayEditorModelId } from "@/lib/agents";
 import { getLoopSnapshot } from "@/lib/refresh";
 import { withApiUsage } from "@/lib/usage-server";
 
@@ -12,8 +12,9 @@ export async function POST(request: Request) {
       label: "Desk copilot"
     },
     async () => {
-      if (!process.env.OPENAI_API_KEY) {
-        return Response.json({ error: "OPENAI_API_KEY is not configured." }, { status: 503 });
+      const model = getGatewayModelForSkill();
+      if (!model) {
+        return Response.json({ error: "AI_GATEWAY_API_KEY is not configured." }, { status: 503 });
       }
 
       const { messages } = await request.json();
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
       ].join("\n");
 
       const result = streamText({
-        model: openai(process.env.LOOP_MODEL ?? "gpt-5-mini"),
+        model,
         system: `You are the in-house Loop copilot. Answer using the local skill catalogue and daily briefs only. Prefer exact skill names, category lanes, and concrete next steps.\n\n${context}`,
         messages
       });

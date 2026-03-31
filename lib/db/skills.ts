@@ -430,3 +430,13 @@ export async function getSkillIdBySlug(slug: string): Promise<string | null> {
   if (error) throw new Error(`getSkillIdBySlug failed: ${error.message}`);
   return (data as { id: string } | null)?.id ?? null;
 }
+
+export async function countUserSkills(clerkUserId: string): Promise<number> {
+  const db = getServerSupabase();
+  const { count, error } = await db
+    .from("skills")
+    .select("*", { count: "exact", head: true })
+    .eq("creator_clerk_user_id", clerkUserId);
+  if (error) throw new Error(`countUserSkills failed: ${error.message}`);
+  return count ?? 0;
+}

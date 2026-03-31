@@ -170,6 +170,7 @@ export type AutomationSummary = {
   cwd: string[];
   matchedSkillSlugs: string[];
   matchedCategorySlugs: CategorySlug[];
+  preferredModel?: string;
 };
 
 export type SkillPrice = {
@@ -233,6 +234,7 @@ export type SkillAutomationState = {
   prompt: string;
   lastRunAt?: string;
   consecutiveFailures?: number;
+  preferredModel?: string;
 };
 
 export type SkillUpdateEntry = {
@@ -636,11 +638,13 @@ export type UsageEventKind =
   | "page_view"
   | "copy_prompt"
   | "copy_url"
+  | "copy_agent_doc"
   | "search"
   | "skill_create"
   | "skill_import"
   | "skill_track"
   | "skill_save"
+  | "skill_delete"
   | "skill_refresh"
   | "automation_create"
   | "agent_run"

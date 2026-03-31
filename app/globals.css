@@ -83,6 +83,17 @@ html[data-theme="light"] {
   --color-warning: #d97706;
   --color-glow: #e8650a;
 
+  --color-tag-red: oklch(0.55 0.19 25);
+  --color-tag-orange: oklch(0.58 0.16 55);
+  --color-tag-amber: oklch(0.62 0.16 80);
+  --color-tag-green: oklch(0.55 0.15 155);
+  --color-tag-teal: oklch(0.55 0.12 185);
+  --color-tag-blue: oklch(0.52 0.14 250);
+  --color-tag-indigo: oklch(0.50 0.16 275);
+  --color-tag-purple: oklch(0.52 0.16 300);
+  --color-tag-pink: oklch(0.55 0.16 340);
+  --color-tag-neutral: oklch(0.45 0.01 260);
+
   --radius: 0.75rem;
 }
 
@@ -103,6 +114,17 @@ html[data-theme="dark"] {
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-glow: #e8650a;
+
+  --color-tag-red: oklch(0.72 0.16 25);
+  --color-tag-orange: oklch(0.74 0.14 55);
+  --color-tag-amber: oklch(0.78 0.14 80);
+  --color-tag-green: oklch(0.72 0.14 155);
+  --color-tag-teal: oklch(0.72 0.11 185);
+  --color-tag-blue: oklch(0.70 0.12 250);
+  --color-tag-indigo: oklch(0.68 0.14 275);
+  --color-tag-purple: oklch(0.70 0.14 300);
+  --color-tag-pink: oklch(0.72 0.14 340);
+  --color-tag-neutral: oklch(0.62 0.01 260);
 
   --radius: 0.75rem;
 }
@@ -239,30 +261,148 @@ svg {
    ================================================================ */
 
 .markdown-shell {
-  @apply grid gap-4;
+  @apply grid gap-5;
+  color: var(--color-ink);
+  line-height: 1.7;
+}
+
+.markdown-shell > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-shell h1 {
+  @apply mt-6 text-xl font-semibold tracking-tight;
+  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
   color: var(--color-ink);
 }
 
-.markdown-shell h1,
-.markdown-shell h2,
-.markdown-shell h3 {
-  @apply mt-5;
-  letter-spacing: -0.03em;
+.markdown-shell h2 {
+  @apply mt-6 text-lg font-semibold tracking-tight;
+  letter-spacing: -0.02em;
   font-family: var(--font-sans);
+  color: var(--color-ink);
+}
+
+.markdown-shell h3 {
+  @apply mt-5 text-base font-semibold tracking-tight;
+  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+}
+
+.markdown-shell h4,
+.markdown-shell h5,
+.markdown-shell h6 {
+  @apply mt-4 text-sm font-semibold tracking-tight;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
 }
 
 .markdown-shell p,
 .markdown-shell li {
+  @apply text-[0.9375rem] leading-relaxed;
   color: var(--color-ink-soft);
+}
+
+.markdown-shell p {
+  @apply my-3;
+}
+
+.markdown-shell p:first-child {
+  margin-top: 0;
+}
+
+.markdown-shell p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-shell ul,
+.markdown-shell ol {
+  @apply my-3 pl-0;
+}
+
+.markdown-shell ul {
+  @apply list-disc;
+  padding-left: 1.25rem;
+}
+
+.markdown-shell ol {
+  @apply list-decimal;
+  padding-left: 1.5rem;
+}
+
+.markdown-shell li {
+  @apply my-1.5 pl-0.5;
+}
+
+.markdown-shell li > ul,
+.markdown-shell li > ol {
+  @apply my-2;
+}
+
+.markdown-shell blockquote {
+  @apply my-4 border-l-2 py-1 pl-4;
+  border-color: var(--color-line);
+  color: var(--color-ink-muted);
+  font-style: normal;
+}
+
+.markdown-shell blockquote p {
+  @apply my-2;
+}
+
+.markdown-shell hr {
+  @apply my-8 border-0 border-t;
+  border-color: var(--color-line);
+}
+
+.markdown-shell table {
+  @apply my-4 w-full border-collapse text-left text-[0.9375rem];
+}
+
+.markdown-shell thead {
+  border-bottom: 1px solid var(--color-line);
+}
+
+.markdown-shell th {
+  @apply px-3 py-2 font-semibold;
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+}
+
+.markdown-shell td {
+  @apply border-t px-3 py-2 align-top;
+  border-color: var(--color-line);
+  color: var(--color-ink-soft);
+}
+
+.markdown-shell tbody tr:nth-child(even) td {
+  background: var(--color-paper-2);
 }
 
 .markdown-shell a {
-  color: var(--color-ink);
+  color: var(--color-accent, var(--color-ink));
   font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklch, currentColor 30%, transparent);
+  transition: color 0.15s, text-decoration-color 0.15s;
 }
 
 .markdown-shell a:hover {
-  color: var(--color-ink-soft);
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+.markdown-shell img {
+  @apply my-4 max-w-full rounded-lg;
+  border: 1px solid var(--color-line);
+}
+
+.markdown-shell strong {
+  color: var(--color-ink);
+  font-weight: 600;
 }
 
 .markdown-shell code {
@@ -271,14 +411,37 @@ svg {
   background: var(--color-paper-2);
   color: var(--color-ink);
   font-family: var(--font-mono);
+  font-size: 0.85em;
 }
 
 .markdown-shell pre {
-  @apply overflow-auto p-4;
+  @apply my-4 overflow-auto p-4;
   border: 1px solid var(--color-line);
   border-radius: 18px;
   background: var(--color-paper-3);
   color: var(--color-ink);
+}
+
+.markdown-shell pre code {
+  @apply border-0 bg-transparent p-0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.markdown-shell--agent-doc {
+  @apply gap-3;
+}
+
+.markdown-shell--agent-doc h1 {
+  @apply mt-4 text-lg;
+}
+
+.markdown-shell--agent-doc h2 {
+  @apply mt-4 text-base;
+}
+
+.markdown-shell--agent-doc h3 {
+  @apply mt-3 text-sm;
 }
 
 .markdown-shell--simple {

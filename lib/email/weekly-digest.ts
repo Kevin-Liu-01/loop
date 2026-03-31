@@ -1,7 +1,7 @@
-import { getResendClient } from "@/lib/email/client";
+import { EMAIL_FROM, getResendClient } from "@/lib/email/client";
 import { getAdminEmails } from "@/lib/admin";
 import {
-  SITE_URL,
+  siteUrl,
   emailWrapper,
   escapeHtml,
   ctaButton,
@@ -12,7 +12,7 @@ import {
 import type { WeeklyImportResult, ImportedSkillSummary } from "@/lib/weekly-import";
 
 function skillCard(skill: ImportedSkillSummary): string {
-  const href = `${SITE_URL}/skills/${skill.slug}/v1`;
+  const href = `${siteUrl()}/skills/${skill.slug}/v1`;
   const desc =
     skill.description.length > 100
       ? `${skill.description.slice(0, 100)}…`
@@ -103,7 +103,7 @@ function buildDigestHtml(result: WeeklyImportResult): string {
 
   const ctaRow = `<tr>
   <td style="padding:8px 0 0;" align="center">
-    ${ctaButton(SITE_URL, "Browse catalog")}
+    ${ctaButton(siteUrl(), "Browse catalog")}
   </td>
 </tr>`;
 
@@ -122,6 +122,8 @@ function buildDigestText(result: WeeklyImportResult): string {
     "",
   ];
 
+  const base = siteUrl();
+
   if (result.imported.length > 0) {
     lines.push("NEW SKILLS");
     lines.push("----------");
@@ -129,7 +131,7 @@ function buildDigestText(result: WeeklyImportResult): string {
       lines.push(`  ${skill.title} [${skill.category}]`);
       lines.push(`  from ${skill.sourceName}`);
       lines.push(`  ${skill.description.slice(0, 100)}`);
-      lines.push(`  ${SITE_URL}/skills/${skill.slug}/v1`);
+      lines.push(`  ${base}/skills/${skill.slug}/v1`);
       lines.push("");
     }
   }
@@ -141,8 +143,8 @@ function buildDigestText(result: WeeklyImportResult): string {
     );
   }
 
-  lines.push(`Browse catalog: ${SITE_URL}`);
-  lines.push(`Manage preferences: ${SITE_URL}/settings`);
+  lines.push(`Browse catalog: ${base}`);
+  lines.push(`Manage preferences: ${base}/settings`);
   return lines.join("\n");
 }
 
@@ -163,7 +165,7 @@ export async function sendWeeklyDigest(
   const subject = `Loop digest: ${result.imported.length} new skill${result.imported.length !== 1 ? "s" : ""} this week`;
 
   await resend.emails.send({
-    from: `Loop <${process.env.RESEND_FROM_EMAIL ?? "updates@loop.so"}>`,
+    from: EMAIL_FROM,
     to: adminEmails,
     subject,
     html: buildDigestHtml(result),

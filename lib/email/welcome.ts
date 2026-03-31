@@ -1,6 +1,6 @@
-import { getResendClient } from "@/lib/email/client";
+import { EMAIL_FROM, getResendClient } from "@/lib/email/client";
 import {
-  SITE_URL,
+  siteUrl,
   BRAND_NAME,
   emailWrapper,
   escapeHtml,
@@ -104,12 +104,14 @@ function buildWelcomeHtml({ firstName }: WelcomeEmailParams): string {
   </td>
 </tr>`;
 
+  const base = siteUrl();
+
   const actionsSection = `<tr>
   <td>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-      ${actionCard("Browse the skill catalog", "Explore 40+ curated agent skills across frontend, SEO, security, infrastructure, and more.", SITE_URL, "Open catalog")}
-      ${actionCard("Create your first skill", "Build a custom skill with agent docs for Cursor, Codex, Claude, and AGENTS.md.", `${SITE_URL}/?new=1`, "Start creating")}
-      ${actionCard("Discover MCP servers", "Import server definitions from the open ecosystem and wire them into your workflows.", SITE_URL, "Explore MCPs")}
+      ${actionCard("Browse the skill catalog", "Explore 40+ curated agent skills across frontend, SEO, security, infrastructure, and more.", base, "Open catalog")}
+      ${actionCard("Create your first skill", "Build a custom skill with agent docs for Cursor, Codex, Claude, and AGENTS.md.", `${base}/?new=1`, "Start creating")}
+      ${actionCard("Discover MCP servers", "Import server definitions from the open ecosystem and wire them into your workflows.", base, "Explore MCPs")}
     </table>
   </td>
 </tr>`;
@@ -118,8 +120,8 @@ function buildWelcomeHtml({ firstName }: WelcomeEmailParams): string {
   <td align="center" style="padding:8px 0 0;">
     <table role="presentation" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="padding-right:12px;">${ctaButton(SITE_URL, "Get started")}</td>
-        <td>${secondaryButton(`${SITE_URL}/settings`, "Settings")}</td>
+        <td style="padding-right:12px;">${ctaButton(base, "Get started")}</td>
+        <td>${secondaryButton(`${base}/settings`, "Settings")}</td>
       </tr>
     </table>
   </td>
@@ -132,6 +134,7 @@ function buildWelcomeHtml({ firstName }: WelcomeEmailParams): string {
 
 function buildWelcomeText({ firstName }: WelcomeEmailParams): string {
   const greeting = firstName ? `Welcome, ${firstName}` : `Welcome to ${BRAND_NAME}`;
+  const base = siteUrl();
   return [
     greeting,
     "=".repeat(greeting.length),
@@ -141,10 +144,10 @@ function buildWelcomeText({ firstName }: WelcomeEmailParams): string {
     "",
     "WHAT YOU CAN DO",
     "---------------",
-    `  Browse skills:  ${SITE_URL}`,
-    `  Create a skill: ${SITE_URL}/?new=1`,
-    `  Explore MCPs:   ${SITE_URL}`,
-    `  Settings:       ${SITE_URL}/settings`,
+    `  Browse skills:  ${base}`,
+    `  Create a skill: ${base}/?new=1`,
+    `  Explore MCPs:   ${base}`,
+    `  Settings:       ${base}/settings`,
     "",
     "WHY LOOP",
     "--------",
@@ -152,7 +155,7 @@ function buildWelcomeText({ firstName }: WelcomeEmailParams): string {
     "  • Reviewable diffs — every change is eval-gated and visible before it ships",
     "  • MCP integration — connect any server, wire tools, version everything alongside skills",
     "",
-    `Get started: ${SITE_URL}`,
+    `Get started: ${base}`,
   ].join("\n");
 }
 
@@ -166,7 +169,7 @@ export async function sendWelcomeEmail(
   }
 
   await resend.emails.send({
-    from: `Loop <${process.env.RESEND_FROM_EMAIL ?? "updates@loop.so"}>`,
+    from: EMAIL_FROM,
     to: [params.email],
     subject: `Welcome to ${BRAND_NAME} — your skills, always current`,
     html: buildWelcomeHtml(params),

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
 import { PageShell } from "@/components/ui/page-shell";
 import { Panel } from "@/components/ui/panel";
+import { getTagColorForTransport } from "@/lib/tag-utils";
 import { cn } from "@/lib/cn";
 import { buildMcpVersionHref, formatRelativeDate } from "@/lib/format";
 import { supportsSandboxMcp } from "@/lib/mcp-utils";
@@ -123,9 +124,9 @@ export function McpDetailPage({ mcp }: McpDetailPageProps) {
             </Link>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{mcp.transport}</Badge>
-              <Badge muted>{mcp.versionLabel}</Badge>
-              <Badge muted>{formatVerificationLabel(mcp.verificationStatus)}</Badge>
+              <Badge color={getTagColorForTransport(mcp.transport)}>{mcp.transport.toUpperCase()}</Badge>
+              <Badge color="neutral">{mcp.versionLabel}</Badge>
+              <Badge color="teal">{formatVerificationLabel(mcp.verificationStatus)}</Badge>
               {isRunnable ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                   <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />

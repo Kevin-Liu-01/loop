@@ -21,7 +21,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { cn } from "@/lib/cn";
 import { formatAutomationSchedule } from "@/lib/format";
 import { countMonthlyRuns, formatNextRun } from "@/lib/schedule";
-import type { AutomationSummary, SkillOrigin } from "@/lib/types";
+import type { AutomationSummary, SkillOrigin, SourceDefinition } from "@/lib/types";
 
 type SkillAutomationPanelProps = {
   slug: string;
@@ -30,6 +30,7 @@ type SkillAutomationPanelProps = {
   sourceCount: number;
   automation?: AutomationSummary;
   canManage?: boolean;
+  sources?: SourceDefinition[];
 };
 
 function MetricCard({
@@ -91,6 +92,7 @@ export function SkillAutomationPanel({
   sourceCount,
   automation,
   canManage = false,
+  sources = [],
 }: SkillAutomationPanelProps) {
   const [editOpen, setEditOpen] = useState(false);
   const isTracked = origin === "user";
@@ -116,14 +118,14 @@ export function SkillAutomationPanel({
             <PanelHead className="items-start">
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
-                  <Badge>Track to unlock</Badge>
-                  <Badge muted>Featured on skill pages</Badge>
+                  <Badge color="orange">Track to unlock</Badge>
+                  <Badge color="neutral">Featured on skill pages</Badge>
                 </div>
                 <h3 className="m-0 text-xl font-semibold tracking-tight text-ink">
                   Make this skill self-updating
                 </h3>
                 <p className="m-0 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
-                  Tracking creates your editable copy, puts automation controls on the skill page,
+                  Tracking creates your editable fork, puts automation controls on the skill page,
                   and gives you refresh traces, diffs, and schedule management without bouncing
                   back to settings.
                 </p>
@@ -173,9 +175,9 @@ export function SkillAutomationPanel({
             <PanelHead className="items-start">
               <div className="grid gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge>{isActive ? "Active" : "Paused"}</Badge>
-                  <Badge muted>{scheduleLabel}</Badge>
-                  <Badge muted>{sourceCount} sources</Badge>
+                  <Badge color={isActive ? "green" : "neutral"}>{isActive ? "Active" : "Paused"}</Badge>
+                  <Badge color="neutral">{scheduleLabel}</Badge>
+                  <Badge color="blue">{sourceCount} sources</Badge>
                 </div>
                 <h3 className="m-0 text-xl font-semibold tracking-tight text-ink">
                   Refresh control plane
@@ -256,6 +258,8 @@ export function SkillAutomationPanel({
           onClose={() => setEditOpen(false)}
           open={editOpen}
           skillName={skillTitle}
+          skillSlug={slug}
+          sources={sources}
         />
       ) : null}
     </>

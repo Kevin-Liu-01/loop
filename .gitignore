@@ -7,11 +7,7 @@ node_modules
 output
 *.tsbuildinfo
 .cursor/.DS_Store
-content/generated/loop-snapshot.local.json
-content/generated/loop-snapshot.stdout.json
-content/generated/loop-search.local.json
-content/generated/loop-system.local.json
-content/generated/loop-user-skills.local.json
+content/generated/
 *.log
 .env
 .env.local
