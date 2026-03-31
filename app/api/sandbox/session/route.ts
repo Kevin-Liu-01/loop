@@ -95,12 +95,12 @@ export async function DELETE(request: Request) {
 
       await stopSandboxSession(sandboxId);
 
-      await logUsageEvent({
+      logUsageEvent({
         kind: "api_call",
         source: "api",
         label: "Stopped sandbox session",
         details: sandboxId
-      });
+      }).catch(() => {});
 
       return Response.json({ ok: true });
     }

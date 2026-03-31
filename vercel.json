@@ -9,5 +9,17 @@
       "path": "/api/cron/weekly-import",
       "schedule": "0 9 * * 1"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/refresh/skill/route.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "skill-refresh",
+          "retryAfterSeconds": 30,
+          "initialDelaySeconds": 0
+        }
+      ]
+    }
+  }
 }

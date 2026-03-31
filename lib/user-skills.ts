@@ -48,6 +48,8 @@ const sourceSchema = z.object({
   tags: z.array(z.string())
 });
 
+export const AUTOMATION_PROMPT_MAX_LENGTH = 600;
+
 const automationSchema = z.object({
   enabled: z.boolean(),
   cadence: z.enum(["daily", "weekly", "manual"]),
@@ -66,7 +68,7 @@ export const createUserSkillInputSchema = z.object({
   sourceUrls: z.array(z.string().url()).max(8).default([]),
   autoUpdate: z.boolean().default(true),
   automationCadence: z.enum(["daily", "weekly", "manual"]).default("daily"),
-  automationPrompt: z.string().trim().max(240).optional(),
+  automationPrompt: z.string().trim().max(AUTOMATION_PROMPT_MAX_LENGTH).optional(),
   agentDocs: z.record(z.string()).optional(),
   price: z.object({ amount: z.number(), currency: z.string() }).nullable().optional(),
   visibility: z.enum(["public", "private"]).optional().default("private"),

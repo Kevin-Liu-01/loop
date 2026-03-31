@@ -29,24 +29,28 @@ type ApiUsageContext = {
 };
 
 export async function logUsageEvent(input: UsageEventInput): Promise<void> {
-  const entry: UsageEventRecord = {
-    id: randomUUID(),
-    at: input.at ?? new Date().toISOString(),
-    kind: input.kind,
-    source: input.source,
-    label: input.label,
-    path: input.path,
-    route: input.route,
-    method: input.method,
-    status: input.status,
-    durationMs: input.durationMs,
-    ok: input.ok,
-    skillSlug: input.skillSlug,
-    categorySlug: input.categorySlug,
-    details: input.details
-  };
+  try {
+    const entry: UsageEventRecord = {
+      id: randomUUID(),
+      at: input.at ?? new Date().toISOString(),
+      kind: input.kind,
+      source: input.source,
+      label: input.label,
+      path: input.path,
+      route: input.route,
+      method: input.method,
+      status: input.status,
+      durationMs: input.durationMs,
+      ok: input.ok,
+      skillSlug: input.skillSlug,
+      categorySlug: input.categorySlug,
+      details: input.details
+    };
 
-  await recordUsageEvent(entry);
+    await recordUsageEvent(entry);
+  } catch (error) {
+    console.error("[usage] Failed to record usage event:", error);
+  }
 }
 
 export async function withApiUsage(

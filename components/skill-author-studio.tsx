@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { CATEGORY_REGISTRY } from "@/lib/registry";
+import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, LoopUpdateStreamEvent, SkillRecord } from "@/lib/types";
 
 const BODY_MAX_CHARS = 24_000;
@@ -529,7 +530,7 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
                 <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh prompt</span>
                 <textarea
                   className={cn(textFieldBase, textFieldArea)}
-                  maxLength={240}
+                  maxLength={AUTOMATION_PROMPT_MAX_LENGTH}
                   onChange={(event) => update("automationPrompt", event.target.value)}
                   placeholder="What should the refresh care about?"
                   rows={5}

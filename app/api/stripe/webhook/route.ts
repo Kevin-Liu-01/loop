@@ -51,7 +51,11 @@ export async function POST(request: Request) {
         const event = verifyWebhookSignature(payload, signature);
         const updatedAt = new Date(event.created * 1000).toISOString();
 
-        await recordBillingEvent(toBillingEventRecord(event));
+        try {
+          await recordBillingEvent(toBillingEventRecord(event));
+        } catch (billingError) {
+          console.error("[stripe] Failed to record billing event:", billingError);
+        }
 
         switch (event.type) {
           case "checkout.session.completed": {

@@ -603,6 +603,7 @@ export type RefreshRunRecord = {
   skillCount?: number;
   categoryCount?: number;
   dailyBriefCount?: number;
+  dispatchedSkillCount?: number;
   errorMessage?: string;
 };
 

@@ -12,15 +12,19 @@ export async function GET(request: Request) {
     async () => {
       const authHeader = request.headers.get("authorization");
       const expected = process.env.CRON_SECRET;
-      if (expected && authHeader !== `Bearer ${expected}`) {
+      if (!expected || authHeader !== `Bearer ${expected}`) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
 
       const result = await runWeeklyImport();
 
       if (result.imported.length > 0) {
-        revalidatePath("/");
-        revalidatePath("/skills/new");
+        try {
+          revalidatePath("/");
+          revalidatePath("/skills/new");
+        } catch (revalidateError) {
+          console.error("[weekly-import] Cache revalidation failed:", revalidateError);
+        }
 
         try {
           await sendWeeklyDigest(result);

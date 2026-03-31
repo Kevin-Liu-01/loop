@@ -43,25 +43,30 @@ async function handleRefresh(request: Request) {
   }
 
   const scope = parseRefreshScope(request.url);
-  await refreshLoopSnapshot(scope);
+  const { dispatchedSkillCount } = await refreshLoopSnapshot(scope);
 
   const catalogue = await getSkillCatalogue();
 
-  revalidatePath("/");
-  revalidatePath("/agents");
-  revalidatePath("/feed.xml");
-  revalidatePath("/skills/new");
-  catalogue.categories.forEach((category) => revalidatePath(`/categories/${category.slug}`));
-  catalogue.skills.forEach((skill) => {
-    revalidatePath(`/skills/${skill.slug}`);
-    revalidatePath(skill.href);
-  });
+  try {
+    revalidatePath("/");
+    revalidatePath("/agents");
+    revalidatePath("/feed.xml");
+    revalidatePath("/skills/new");
+    catalogue.categories.forEach((category) => revalidatePath(`/categories/${category.slug}`));
+    catalogue.skills.forEach((skill) => {
+      revalidatePath(`/skills/${skill.slug}`);
+      revalidatePath(skill.href);
+    });
+  } catch (revalidateError) {
+    console.error("[refresh] Cache revalidation failed:", revalidateError);
+  }
 
   return Response.json({
     ok: true,
     generatedAt: new Date().toISOString(),
     skills: catalogue.skills.length,
-    categories: catalogue.categories.length
+    categories: catalogue.categories.length,
+    dispatchedSkillRefreshes: dispatchedSkillCount
   });
 }
 

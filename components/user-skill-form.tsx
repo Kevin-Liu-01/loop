@@ -19,6 +19,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, CategoryDefinition } from "@/lib/types";
 
 type UserSkillFormProps = {
@@ -418,7 +419,7 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh prompt</span>
             <input
               className={cn(textFieldBase)}
-              maxLength={240}
+              maxLength={AUTOMATION_PROMPT_MAX_LENGTH}
               onChange={(event) => update("automationPrompt", event.target.value)}
               placeholder="What should the updater prioritize?"
               value={state.automationPrompt}

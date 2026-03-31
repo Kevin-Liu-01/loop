@@ -90,16 +90,26 @@ async function runUserLoopUpdate(
   });
 
   await saveUserSkillDocuments([cycle.nextSkill]);
-  await recordLoopRun(cycle.loopRun);
-  await logUsageEvent({
-    kind: "skill_refresh",
-    source: "api",
-    label: "Refreshed skill",
-    path: cycle.result.href,
-    skillSlug: cycle.result.slug,
-    categorySlug: cycle.nextSkill.category,
-    details: cycle.result.changed ? cycle.result.nextVersionLabel : "No diff"
-  });
+
+  try {
+    await recordLoopRun(cycle.loopRun);
+  } catch (recordError) {
+    console.error(`[loops/update] Failed to record loop run for "${slug}":`, recordError);
+  }
+
+  try {
+    await logUsageEvent({
+      kind: "skill_refresh",
+      source: "api",
+      label: "Refreshed skill",
+      path: cycle.result.href,
+      skillSlug: cycle.result.slug,
+      categorySlug: cycle.nextSkill.category,
+      details: cycle.result.changed ? cycle.result.nextVersionLabel : "No diff"
+    });
+  } catch (usageError) {
+    console.error(`[loops/update] Failed to log usage event for "${slug}":`, usageError);
+  }
 
   sendEvent(controller, encoder, {
     type: "complete",
@@ -292,16 +302,25 @@ async function runImportedLoopUpdate(
     diffLines: result.diffLines.slice(0, 120)
   };
 
-  await recordLoopRun(loopRun);
-  await logUsageEvent({
-    kind: "skill_refresh",
-    source: "api",
-    label: "Refreshed imported skill",
-    path: afterRecord.href,
-    skillSlug: afterRecord.slug,
-    categorySlug: afterRecord.category,
-    details: changed ? afterRecord.versionLabel : "No diff"
-  });
+  try {
+    await recordLoopRun(loopRun);
+  } catch (recordError) {
+    console.error(`[loops/update] Failed to record imported loop run for "${slug}":`, recordError);
+  }
+
+  try {
+    await logUsageEvent({
+      kind: "skill_refresh",
+      source: "api",
+      label: "Refreshed imported skill",
+      path: afterRecord.href,
+      skillSlug: afterRecord.slug,
+      categorySlug: afterRecord.category,
+      details: changed ? afterRecord.versionLabel : "No diff"
+    });
+  } catch (usageError) {
+    console.error(`[loops/update] Failed to log usage event for imported "${slug}":`, usageError);
+  }
 
   sendEvent(controller, encoder, {
     type: "complete",
@@ -379,23 +398,27 @@ export async function POST(request: Request) {
             }
           } catch (error) {
             const message = error instanceof Error ? error.message : "Manual loop update failed.";
-            await recordLoopRun({
-              id: randomUUID(),
-              slug: payload.data.slug,
-              title: payload.data.slug,
-              origin: payload.data.origin,
-              trigger: "manual",
-              status: "error",
-              startedAt,
-              finishedAt: new Date().toISOString(),
-              changedSections: [],
-              sourceCount: 0,
-              signalCount: 0,
-              messages: [message],
-              sources: [],
-              diffLines: [],
-              errorMessage: message
-            });
+            try {
+              await recordLoopRun({
+                id: randomUUID(),
+                slug: payload.data.slug,
+                title: payload.data.slug,
+                origin: payload.data.origin,
+                trigger: "manual",
+                status: "error",
+                startedAt,
+                finishedAt: new Date().toISOString(),
+                changedSections: [],
+                sourceCount: 0,
+                signalCount: 0,
+                messages: [message],
+                sources: [],
+                diffLines: [],
+                errorMessage: message
+              });
+            } catch (recordError) {
+              console.error(`[loops/update] Failed to record error loop run for "${payload.data.slug}":`, recordError);
+            }
             sendEvent(controller, encoder, {
               type: "error",
               message

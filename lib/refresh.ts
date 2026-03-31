@@ -21,6 +21,7 @@ import {
   syncImportedSkill
 } from "@/lib/imports";
 import { buildLoopUpdateSourceLog, buildLoopUpdateTarget } from "@/lib/loop-updates";
+import { publishSkillRefresh } from "@/lib/queues";
 import { runSkillEditorAgent } from "@/lib/skill-editor-agent";
 import { fetchSignals } from "@/lib/source-signals";
 import { recordLoopRun, recordRefreshRun } from "@/lib/system-state";
@@ -31,8 +32,7 @@ import {
   buildUserSkillRecord,
   createNextUserSkillVersion,
   isUserSkillAutomationDue,
-  listUserSkillDocuments,
-  saveUserSkillDocuments
+  listUserSkillDocuments
 } from "@/lib/user-skills";
 import type {
   AgentReasoningStep,
@@ -62,7 +62,6 @@ type RefreshOptions = {
   refreshImportedSkills?: boolean;
   focusSkillSlugs?: string[];
   focusImportedSkillSlugs?: string[];
-  maxDurationMs?: number;
 };
 
 type SkillRevisionDraft = {
@@ -89,28 +88,6 @@ export type UserSkillRefreshCycle = {
   messages: string[];
   loopRun: LoopRunRecord;
 };
-
-const MAX_CONCURRENT_SKILL_REFRESHES = 3;
-
-async function runWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<T>
-): Promise<T[]> {
-  const results: T[] = new Array(items.length);
-  let nextIndex = 0;
-
-  async function worker(): Promise<void> {
-    while (nextIndex < items.length) {
-      const index = nextIndex++;
-      results[index] = await fn(items[index]);
-    }
-  }
-
-  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
-  await Promise.all(workers);
-  return results;
-}
 
 function replaceManagedSection(body: string, sectionTitle: string, sectionBody: string): string {
   const trimmed = body.trim();
@@ -215,7 +192,7 @@ function sortSignals(items: DailySignal[]): DailySignal[] {
     .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
 }
 
-function buildFailedLoopRun(
+export function buildFailedLoopRun(
   skill: Pick<UserSkillDocument, "slug" | "title" | "sources" | "version">,
   trigger: LoopRunRecord["trigger"],
   startedAt: string,
@@ -486,15 +463,13 @@ function sortByMostOverdue(skills: UserSkillDocument[]): UserSkillDocument[] {
   });
 }
 
-async function refreshTrackedUserSkills(options: RefreshOptions): Promise<void> {
+async function refreshTrackedUserSkills(options: RefreshOptions): Promise<number> {
   const editorModel = getGatewayEditorModel();
-  console.info(`[refresh] Starting user skill refresh — model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}`);
+  console.info(`[refresh] Starting user skill refresh fan-out — model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}`);
 
   const skills = await listUserSkillDocuments();
   const focusSet = options.focusSkillSlugs ? new Set(options.focusSkillSlugs) : null;
   const now = new Date();
-  let didChange = false;
-  const loopRuns: LoopRunRecord[] = [];
 
   const eligibleSkills = skills.filter((skill) => {
     const canRefresh = skill.automation.enabled && skill.automation.status === "active" && skill.sources.length > 0;
@@ -504,54 +479,29 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<void> 
   });
 
   const sorted = sortByMostOverdue(eligibleSkills);
-  const budgetMs = options.maxDurationMs ?? 240_000;
-  const deadline = Date.now() + budgetMs;
-  const HEADROOM_MS = 30_000;
 
-  const refreshedMap = new Map<string, UserSkillDocument>();
+  if (sorted.length === 0) {
+    console.info("[refresh] No eligible user skills — nothing to dispatch");
+    return 0;
+  }
 
-  for (const skill of sorted) {
-    if (Date.now() > deadline - HEADROOM_MS) {
-      const remaining = sorted.length - refreshedMap.size;
-      console.warn(`[refresh] Time budget exhausted with ~${remaining} skills deferred to next run`);
-      break;
-    }
+  const results = await Promise.allSettled(
+    sorted.map((skill) => publishSkillRefresh(skill.slug, "automation"))
+  );
 
-    try {
-      const cycle = await runTrackedUserSkillUpdate(skill, "automation");
-      didChange = true;
-      loopRuns.push(cycle.loopRun);
-      const successSkill = {
-        ...cycle.nextSkill,
-        automation: { ...cycle.nextSkill.automation, consecutiveFailures: 0 }
-      };
-      refreshedMap.set(skill.slug, successSkill);
-    } catch (error) {
-      const failedAt = new Date().toISOString();
-      loopRuns.push(
-        buildFailedLoopRun(
-          skill,
-          "automation",
-          failedAt,
-          error instanceof Error ? error.message : "Agent automation failed before a new revision could be saved."
-        )
-      );
-      didChange = true;
-      const failures = (skill.automation.consecutiveFailures ?? 0) + 1;
-      refreshedMap.set(skill.slug, {
-        ...skill,
-        automation: { ...skill.automation, lastRunAt: failedAt, consecutiveFailures: failures }
-      });
+  let dispatched = 0;
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (!result) continue;
+    if (result.status === "fulfilled") {
+      dispatched++;
+    } else {
+      console.error(`[refresh] Failed to enqueue "${sorted[i]?.slug}":`, result.reason);
     }
   }
 
-  if (refreshedMap.size > 0) {
-    await saveUserSkillDocuments([...refreshedMap.values()]);
-  }
-
-  for (const run of loopRuns) {
-    await recordLoopRun(run);
-  }
+  console.info(`[refresh] Dispatched ${dispatched}/${sorted.length} user skill refreshes to queue`);
+  return dispatched;
 }
 
 async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<void> {
@@ -683,7 +633,11 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
   }
 
   for (const run of loopRuns) {
-    await recordLoopRun(run);
+    try {
+      await recordLoopRun(run);
+    } catch (recordError) {
+      console.error(`[refresh] Failed to record imported loop run for "${run.slug}":`, recordError);
+    }
   }
 }
 
@@ -732,7 +686,7 @@ async function syncFilesystemSkillsToDb(): Promise<void> {
 
 export async function refreshLoopSnapshot(
   options: RefreshOptions = {}
-): Promise<void> {
+): Promise<{ dispatchedSkillCount: number }> {
   const startedAt = new Date().toISOString();
   const refreshUserSkills = options.refreshUserSkills ?? true;
   const shouldRefreshImportedSkills = options.refreshImportedSkills ?? true;
@@ -742,8 +696,10 @@ export async function refreshLoopSnapshot(
     await seedCategories(CATEGORY_REGISTRY);
     await syncFilesystemSkillsToDb();
 
+    let dispatchedSkillCount = 0;
+
     if (refreshUserSkills) {
-      await refreshTrackedUserSkills(options);
+      dispatchedSkillCount = await refreshTrackedUserSkills(options);
     }
 
     if (shouldRefreshImportedSkills) {
@@ -754,52 +710,67 @@ export async function refreshLoopSnapshot(
       const categories = CATEGORY_REGISTRY;
       await Promise.all(
         categories.map(async (category) => {
-          const signalBuckets = await Promise.all(category.sources.map(fetchSignals));
-          const flattened = signalBuckets
-            .flat()
-            .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
+          try {
+            const signalBuckets = await Promise.all(category.sources.map(fetchSignals));
+            const flattened = signalBuckets
+              .flat()
+              .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
 
-          const brief = await synthesizeBrief(category.slug, category.title, flattened);
-          await upsertBrief(brief);
+            const brief = await synthesizeBrief(category.slug, category.title, flattened);
+            await upsertBrief(brief);
+          } catch (briefError) {
+            console.error(`[refresh] Brief failed for "${category.slug}":`, briefError);
+          }
         })
       );
     }
 
     const catalogue = await getSkillCatalogue();
 
-    await recordRefreshRun({
-      id: randomUUID(),
-      status: "success",
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      generatedAt: new Date().toISOString(),
-      generatedFrom: refreshCategorySignals ? "remote-refresh" : "local-scan",
-      writeLocal: false,
-      uploadBlob: false,
-      refreshCategorySignals,
-      refreshUserSkills,
-      refreshImportedSkills: shouldRefreshImportedSkills,
-      focusSkillSlugs: options.focusSkillSlugs ?? [],
-      focusImportedSkillSlugs: options.focusImportedSkillSlugs ?? [],
-      skillCount: catalogue.skills.length,
-      categoryCount: catalogue.categories.length,
-      dailyBriefCount: 0
-    });
+    try {
+      await recordRefreshRun({
+        id: randomUUID(),
+        status: "success",
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        generatedAt: new Date().toISOString(),
+        generatedFrom: refreshCategorySignals ? "remote-refresh" : "local-scan",
+        writeLocal: false,
+        uploadBlob: false,
+        refreshCategorySignals,
+        refreshUserSkills,
+        refreshImportedSkills: shouldRefreshImportedSkills,
+        focusSkillSlugs: options.focusSkillSlugs ?? [],
+        focusImportedSkillSlugs: options.focusImportedSkillSlugs ?? [],
+        skillCount: catalogue.skills.length,
+        categoryCount: catalogue.categories.length,
+        dailyBriefCount: 0,
+        dispatchedSkillCount
+      });
+    } catch (recordError) {
+      console.error("[refresh] Failed to record successful refresh run:", recordError);
+    }
+
+    return { dispatchedSkillCount };
   } catch (error) {
-    await recordRefreshRun({
-      id: randomUUID(),
-      status: "error",
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      writeLocal: false,
-      uploadBlob: false,
-      refreshCategorySignals,
-      refreshUserSkills,
-      refreshImportedSkills: shouldRefreshImportedSkills,
-      focusSkillSlugs: options.focusSkillSlugs ?? [],
-      focusImportedSkillSlugs: options.focusImportedSkillSlugs ?? [],
-      errorMessage: error instanceof Error ? error.message : "Unknown refresh failure."
-    });
+    try {
+      await recordRefreshRun({
+        id: randomUUID(),
+        status: "error",
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        writeLocal: false,
+        uploadBlob: false,
+        refreshCategorySignals,
+        refreshUserSkills,
+        refreshImportedSkills: shouldRefreshImportedSkills,
+        focusSkillSlugs: options.focusSkillSlugs ?? [],
+        focusImportedSkillSlugs: options.focusImportedSkillSlugs ?? [],
+        errorMessage: error instanceof Error ? error.message : "Unknown refresh failure."
+      });
+    } catch (recordError) {
+      console.error("[refresh] Failed to record error refresh run:", recordError);
+    }
     throw error;
   }
 }
