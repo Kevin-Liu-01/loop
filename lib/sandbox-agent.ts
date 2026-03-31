@@ -1,22 +1,26 @@
 import type { LanguageModel } from "ai";
 import type { Sandbox } from "@vercel/sandbox";
 
-import { serializeSkill } from "@/lib/agents";
+import { serializeMcp, serializeSkill } from "@/lib/agents";
 import { buildSandboxTools } from "@/lib/sandbox-tools";
-import type { SkillRecord } from "@/lib/types";
+import type { ImportedMcpDocument, SkillRecord } from "@/lib/types";
 
 export type SandboxAgentConfig = {
   model: LanguageModel;
   skills: SkillRecord[];
+  mcps?: ImportedMcpDocument[];
   sandbox: Sandbox;
   runtime: string;
   systemPrompt?: string;
+  attachmentContext?: string;
 };
 
 function buildSandboxInstructions(
   skillContext: string,
+  mcpContext: string,
   runtime: string,
-  userPrompt?: string
+  userPrompt?: string,
+  attachmentContext?: string
 ): string {
   const base =
     userPrompt?.trim() ||
@@ -26,6 +30,10 @@ function buildSandboxInstructions(
     base,
     "",
     `## Knowledge (attached skills):\n${skillContext || "No skills attached."}`,
+    "",
+    `## MCP definitions:\n${mcpContext || "No MCPs attached."}`,
+    "",
+    `## Current message attachments:\n${attachmentContext || "No message-scoped attachments were provided."}`,
     "",
     "## Environment:",
     `You have a ${runtime} sandbox. Use these tools to interact with it:`,
@@ -46,12 +54,15 @@ function buildSandboxInstructions(
 export function buildSandboxAgentConfig(config: SandboxAgentConfig) {
   const sandboxTools = buildSandboxTools(config.sandbox);
   const skillContext = config.skills.map(serializeSkill).join("\n\n");
+  const mcpContext = (config.mcps ?? []).map(serializeMcp).join("\n\n");
 
   return {
     system: buildSandboxInstructions(
       skillContext,
+      mcpContext,
       config.runtime,
-      config.systemPrompt
+      config.systemPrompt,
+      config.attachmentContext
     ),
     tools: sandboxTools,
     maxToolSteps: 20

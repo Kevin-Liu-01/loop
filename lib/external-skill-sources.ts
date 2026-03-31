@@ -13,6 +13,10 @@ export type ExternalSkillSource = {
   iconUrl: string;
   description: string;
   homepage: string;
+  trustTier: "official" | "community";
+  discoveryMode: "canonical" | "lead-list";
+  searchQueries: string[];
+  discoveryRationale: string;
 };
 
 export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
@@ -26,6 +30,10 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     iconUrl: "https://cdn.simpleicons.org/anthropic",
     description: "Official Claude agent skills from Anthropic — PDF generation, MCP building, frontend design, and more.",
     homepage: "https://github.com/anthropics/skills",
+    trustTier: "official",
+    discoveryMode: "canonical",
+    searchQueries: ["anthropic skills github", "claude skills official"],
+    discoveryRationale: "Canonical upstream repo. Import bodies directly from the maintained skills directory.",
   },
   {
     id: "openai-skills",
@@ -37,6 +45,10 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     iconUrl: "https://github.com/openai.png?size=64",
     description: "Official Codex agent skills from OpenAI — curated skills for coding, research, and development.",
     homepage: "https://github.com/openai/skills",
+    trustTier: "official",
+    discoveryMode: "canonical",
+    searchQueries: ["openai skills github", "codex skills official"],
+    discoveryRationale: "Canonical upstream repo. Pull from the curated skills directory instead of scraping mirrors.",
   },
   {
     id: "awesome-agent-skills",
@@ -48,6 +60,10 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     iconUrl: "https://cdn.simpleicons.org/github",
     description: "Community-curated list of agent skill repos — links parsed from the README.",
     homepage: "https://github.com/heilcheng/awesome-agent-skills",
+    trustTier: "community",
+    discoveryMode: "lead-list",
+    searchQueries: ["awesome agent skills github", "mcp skills repos"],
+    discoveryRationale: "Lead-generation surface only. Use it to discover candidates, then verify and transplant from canonical upstreams.",
   },
 ];
 

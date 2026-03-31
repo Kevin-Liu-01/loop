@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { SKILL_SOURCE_CONFIGS } from "@/lib/db/seed-data/skill-sources";
 import { normalizeFeedItems } from "@/lib/source-signals";
 import type { SourceDefinition } from "@/lib/types";
 
@@ -9,7 +10,7 @@ const stubSource: SourceDefinition = {
   label: "Test Source",
   url: "https://example.com/feed.xml",
   kind: "rss",
-  tags: ["test"]
+  tags: ["test"],
 };
 
 test("normalizeFeedItems parses a valid RSS 2.0 feed", () => {
@@ -163,4 +164,57 @@ test("normalizeFeedItems strips HTML from title and summary", () => {
   assert.equal(items.length, 1);
   assert.ok(!items[0].title.includes("<b>"), "Title should not contain HTML tags");
   assert.ok(!items[0].summary.includes("<p>"), "Summary should not contain HTML tags");
+});
+
+test("all seeded sources expose discovery metadata", () => {
+  const missing = SKILL_SOURCE_CONFIGS.flatMap((config) =>
+    config.sources
+      .filter(
+        (source) =>
+          !source.mode ||
+          !source.trust ||
+          !source.parser ||
+          !source.searchQueries ||
+          source.searchQueries.length === 0,
+      )
+      .map((source) => `${config.slug}:${source.id}`),
+  );
+
+  assert.deepEqual(missing, []);
+});
+
+test("normalizeFeedItems ranks sitemap links against query hints", () => {
+  const source: SourceDefinition = {
+    id: "anthropic-docs",
+    label: "Anthropic Docs Index",
+    url: "https://docs.anthropic.com/en/sitemap.xml",
+    kind: "sitemap",
+    tags: ["anthropic", "claude", "api"],
+    mode: "discover",
+    trust: "official",
+    parser: "sitemap",
+    searchQueries: ["tool use", "mcp", "json schema"],
+  };
+
+  const payload = `
+    <urlset>
+      <url>
+        <loc>https://docs.anthropic.com/en/docs/build-with-claude/tool-use</loc>
+        <lastmod>2026-03-30T10:00:00.000Z</lastmod>
+      </url>
+      <url>
+        <loc>https://docs.anthropic.com/en/docs/resources/mcp</loc>
+        <lastmod>2026-03-29T10:00:00.000Z</lastmod>
+      </url>
+      <url>
+        <loc>https://docs.anthropic.com/en/docs/resources/account-management</loc>
+        <lastmod>2026-03-31T10:00:00.000Z</lastmod>
+      </url>
+    </urlset>
+  `;
+
+  const items = normalizeFeedItems(source, payload);
+
+  assert.equal(items[0]?.url, "https://docs.anthropic.com/en/docs/build-with-claude/tool-use");
+  assert.match(items[1]?.url ?? "", /mcp/);
 });

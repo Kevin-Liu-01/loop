@@ -8,6 +8,7 @@ const parser = new XMLParser({
 });
 
 const MAX_FEED_ITEMS = 12;
+const MAX_SITEMAP_LINKS = 200;
 
 function asArray<T>(value: T | T[] | undefined): T[] {
   if (!value) {
@@ -23,6 +24,28 @@ function cleanHtml(value: string | undefined): string {
   }
 
   return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function titleFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const segment =
+      parsed.pathname
+        .split("/")
+        .filter(Boolean)
+        .at(-1)
+        ?.replace(/\.(html|xml|md)$/i, "")
+        .replace(/[-_]+/g, " ")
+        .trim() ?? parsed.hostname;
+
+    return segment
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  } catch {
+    return "Untitled signal";
+  }
 }
 
 function pickDate(value?: string): string {
@@ -57,6 +80,46 @@ function looksLikeFeed(payload: string): boolean {
   return head.includes("<?xml") || head.includes("<rss") || head.includes("<feed") || head.includes("<atom");
 }
 
+function tokenizeQueries(source: SourceDefinition): string[] {
+  const querySeeds = [
+    ...(source.searchQueries ?? []),
+    source.label,
+    ...source.tags,
+    ...(source.signalHints ?? [])
+  ];
+
+  return Array.from(
+    new Set(
+      querySeeds
+        .flatMap((seed) => seed.toLowerCase().split(/[^a-z0-9.+#-]+/g))
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 3)
+    )
+  );
+}
+
+function scoreSignal(source: SourceDefinition, item: Pick<DailySignal, "title" | "url" | "summary">): number {
+  const haystack = `${item.title} ${item.url} ${item.summary}`.toLowerCase();
+  const queryTokens = tokenizeQueries(source);
+  if (queryTokens.length === 0) return 0;
+
+  return queryTokens.reduce((score, token) => {
+    if (haystack.includes(token)) return score + 2;
+    return score;
+  }, 0);
+}
+
+function rankSignals(source: SourceDefinition, items: DailySignal[]): DailySignal[] {
+  return items
+    .slice()
+    .sort((left, right) => {
+      const scoreDelta = scoreSignal(source, right) - scoreSignal(source, left);
+      if (scoreDelta !== 0) return scoreDelta;
+      return +new Date(right.publishedAt) - +new Date(left.publishedAt);
+    })
+    .slice(0, MAX_FEED_ITEMS);
+}
+
 function extractLinksFromHtml(source: SourceDefinition, html: string): DailySignal[] {
   const linkPattern = /<a[^>]+href=["']([^"']+)["'][^>]*>([^<]+)<\/a>/gi;
   const seen = new Set<string>();
@@ -88,6 +151,33 @@ function extractLinksFromHtml(source: SourceDefinition, html: string): DailySign
   return items;
 }
 
+function extractLinksFromSitemap(source: SourceDefinition, payload: string): DailySignal[] {
+  const parsed = parser.parse(payload);
+  const urlEntries = asArray(parsed?.urlset?.url).slice(0, MAX_SITEMAP_LINKS);
+  const sitemapIndexEntries = asArray(parsed?.sitemapindex?.sitemap).slice(0, MAX_SITEMAP_LINKS);
+  const entries = urlEntries.length > 0 ? urlEntries : sitemapIndexEntries;
+
+  return entries
+    .map((entry) => {
+      const loc = typeof entry?.loc === "string" ? entry.loc : "";
+      if (!loc) return null;
+
+      const publishedAt = pickDate(
+        String(entry.lastmod ?? entry.published ?? entry.updated ?? new Date().toISOString())
+      );
+
+      return {
+        title: titleFromUrl(loc),
+        url: loc,
+        source: source.label,
+        publishedAt,
+        summary: source.rationale ?? "",
+        tags: source.tags
+      } satisfies DailySignal;
+    })
+    .filter((item): item is DailySignal => item !== null);
+}
+
 function resolveLink(link: unknown, fallbackId: unknown, fallbackUrl: string): string {
   if (typeof link === "string") return link;
   if (Array.isArray(link)) {
@@ -101,8 +191,12 @@ function resolveLink(link: unknown, fallbackId: unknown, fallbackUrl: string): s
 }
 
 export function normalizeFeedItems(source: SourceDefinition, payload: string): DailySignal[] {
+  if (source.parser === "sitemap" || source.kind === "sitemap") {
+    return rankSignals(source, extractLinksFromSitemap(source, payload));
+  }
+
   if (looksLikeHtmlPage(payload) && !looksLikeFeed(payload)) {
-    return extractLinksFromHtml(source, payload);
+    return rankSignals(source, extractLinksFromHtml(source, payload));
   }
 
   const parsed = parser.parse(payload);
@@ -111,27 +205,28 @@ export function normalizeFeedItems(source: SourceDefinition, payload: string): D
   const normalized = rssItems.length > 0 ? rssItems : atomEntries;
 
   if (normalized.length === 0 && payload.length > 100) {
-    return extractLinksFromHtml(source, payload);
+    return rankSignals(source, extractLinksFromHtml(source, payload));
   }
 
-  return normalized
-    .map((item) => {
-      const linkValue = resolveLink(item.link, item.id ?? item.guid?.["#text"], source.url);
-      const publishedAt =
-        item.pubDate ?? item.published ?? item.updated ?? item["dc:date"] ?? new Date().toISOString();
+  return rankSignals(
+    source,
+    normalized
+      .map((item) => {
+        const linkValue = resolveLink(item.link, item.id ?? item.guid?.["#text"], source.url);
+        const publishedAt =
+          item.pubDate ?? item.published ?? item.updated ?? item["dc:date"] ?? new Date().toISOString();
 
-      return {
-        title: cleanHtml(item.title ?? "Untitled signal"),
-        url: String(linkValue),
-        source: source.label,
-        publishedAt: pickDate(String(publishedAt)),
-        summary: cleanHtml(item.description ?? item.summary ?? item.content ?? item["content:encoded"]),
-        tags: source.tags
-      } satisfies DailySignal;
-    })
-    .filter((item) => item.title.length > 0)
-    .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt))
-    .slice(0, MAX_FEED_ITEMS);
+        return {
+          title: cleanHtml(item.title ?? "Untitled signal"),
+          url: String(linkValue),
+          source: source.label,
+          publishedAt: pickDate(String(publishedAt)),
+          summary: cleanHtml(item.description ?? item.summary ?? item.content ?? item["content:encoded"]),
+          tags: source.tags
+        } satisfies DailySignal;
+      })
+      .filter((item) => item.title.length > 0)
+  );
 }
 
 export async function fetchSignals(source: SourceDefinition): Promise<DailySignal[]> {

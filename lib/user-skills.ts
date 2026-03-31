@@ -104,7 +104,7 @@ function inferSourceKind(url: string): SourceKind {
   return "watchlist";
 }
 
-function normalizeTags(input: string[]): string[] {
+export function normalizeTags(input: string[]): string[] {
   return Array.from(
     new Set(
       input
@@ -115,7 +115,7 @@ function normalizeTags(input: string[]): string[] {
   ).slice(0, 8);
 }
 
-function normalizeSource(url: string, category: CategorySlug): SourceDefinition {
+export function normalizeSource(url: string, category: CategorySlug): SourceDefinition {
   const parsed = new URL(url);
   const hostnameLabel = titleCaseFromHost(parsed.hostname) || "Watchlist";
   const pathLabel = parsed.pathname
@@ -136,7 +136,7 @@ function normalizeSource(url: string, category: CategorySlug): SourceDefinition 
   };
 }
 
-function buildAutomationPrompt(
+export function buildAutomationPrompt(
   input: Pick<CreateUserSkillInput, "automationPrompt">,
   slug: string
 ): string {
@@ -263,11 +263,11 @@ function buildEditableTags(existing: string[], category: CategorySlug, nextTags:
   return normalizeTags([category, ...filtered, marker]);
 }
 
-function sameSourceList(left: SourceDefinition[], right: SourceDefinition[]): boolean {
+export function sameSourceList(left: SourceDefinition[], right: SourceDefinition[]): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function sameAutomation(left: SkillAutomationState, right: SkillAutomationState): boolean {
+export function sameAutomation(left: SkillAutomationState, right: SkillAutomationState): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
@@ -541,7 +541,7 @@ export function buildSkillUpdateSignals(
 // DB-backed storage operations
 // ---------------------------------------------------------------------------
 
-function skillRecordToUserDoc(record: SkillRecord): UserSkillDocument {
+export function skillRecordToUserDoc(record: SkillRecord): UserSkillDocument {
   const versions: UserSkillVersion[] = record.availableVersions.map((vRef) => ({
     version: vRef.version,
     updatedAt: vRef.updatedAt,
@@ -593,8 +593,20 @@ export async function listUserSkillDocuments(): Promise<UserSkillDocument[]> {
   return records.map(skillRecordToUserDoc);
 }
 
-export async function addUserSkill(input: CreateUserSkillInput): Promise<UserSkillDocument> {
-  const document = createUserSkillDocument(input);
+type SkillCreatorIdentity = {
+  creatorClerkUserId?: string;
+  authorId?: string;
+  ownerName?: string;
+};
+
+export async function addUserSkill(
+  input: CreateUserSkillInput,
+  identity?: SkillCreatorIdentity
+): Promise<UserSkillDocument> {
+  const document = createUserSkillDocument({
+    ...input,
+    ownerName: identity?.ownerName ?? input.ownerName
+  });
   const existing = await dbGetSkillBySlug(document.slug);
   if (existing) {
     throw new Error("A user skill with that slug already exists.");
@@ -616,7 +628,8 @@ export async function addUserSkill(input: CreateUserSkillInput): Promise<UserSki
     agentDocs: document.agentDocs,
     version: 1,
     price: document.price ?? null,
-    creatorClerkUserId: document.creatorClerkUserId
+    creatorClerkUserId: identity?.creatorClerkUserId,
+    authorId: identity?.authorId
   });
 
   return document;

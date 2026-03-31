@@ -137,15 +137,21 @@ export function serializeSkill(skill: SkillRecord): string {
   ].join("\n");
 }
 
-function serializeMcp(mcp: ImportedMcpDocument): string {
+export function serializeMcp(mcp: ImportedMcpDocument): string {
   return [
     `MCP: ${mcp.name}`,
     `Version: ${mcp.versionLabel}`,
     `Transport: ${mcp.transport}`,
     `Manifest: ${mcp.manifestUrl}`,
+    mcp.docsUrl ? `Docs: ${mcp.docsUrl}` : null,
     mcp.url ? `Endpoint: ${mcp.url}` : null,
     mcp.command ? `Command: ${mcp.command} ${mcp.args.join(" ")}`.trim() : null,
+    mcp.installStrategy ? `Install: ${mcp.installStrategy}` : null,
+    mcp.authType ? `Auth: ${mcp.authType}` : null,
+    mcp.verificationStatus ? `Verification: ${mcp.verificationStatus}` : null,
+    mcp.sandboxSupported !== undefined ? `Sandbox supported: ${mcp.sandboxSupported}` : null,
     mcp.envKeys.length > 0 ? `Env keys: ${mcp.envKeys.join(", ")}` : null,
+    mcp.sandboxNotes ? `Sandbox notes: ${mcp.sandboxNotes}` : null,
     `Description: ${mcp.description}`
   ]
     .filter(Boolean)

@@ -8,7 +8,29 @@ export type CategorySlug =
   | "security"
   | "ops";
 
-export type SourceKind = "rss" | "atom" | "docs" | "blog" | "github" | "watchlist";
+export type SourceKind =
+  | "rss"
+  | "atom"
+  | "docs"
+  | "blog"
+  | "github"
+  | "watchlist"
+  | "sitemap"
+  | "changelog"
+  | "releases"
+  | "docs-index"
+  | "registry"
+  | "github-search";
+export type SourceMode = "track" | "discover" | "search";
+export type SourceTrustTier = "official" | "vendor" | "standards" | "community";
+export type SourceParser =
+  | "feed"
+  | "html-links"
+  | "sitemap"
+  | "release-feed"
+  | "docs-index"
+  | "manifest"
+  | "manual";
 export type SkillVisibility = "public" | "member";
 export type CategoryStatus = "live" | "seeded";
 export type SkillOrigin = "repo" | "codex" | "user" | "remote";
@@ -17,6 +39,9 @@ export type UserSkillAutomationStatus = "active" | "paused";
 export type AgentProviderKind = "gateway" | "openai" | "compatible";
 export type ImportedMcpTransport = "stdio" | "http" | "sse" | "ws" | "unknown";
 export type LoopUpdateTargetOrigin = "user" | "remote";
+export type McpInstallStrategy = "npx" | "uvx" | "binary" | "remote-http" | "manual";
+export type McpAuthType = "none" | "oauth" | "api-key" | "pat" | "session" | "mixed";
+export type McpVerificationStatus = "verified" | "partial" | "unverified" | "broken";
 
 export type VersionReference = {
   version: number;
@@ -31,6 +56,63 @@ export type SourceDefinition = {
   kind: SourceKind;
   tags: string[];
   logoUrl?: string;
+  mode?: SourceMode;
+  trust?: SourceTrustTier;
+  parser?: SourceParser;
+  searchQueries?: string[];
+  rationale?: string;
+  signalHints?: string[];
+};
+
+export type SkillResearchProfile = {
+  summary: string;
+  process: Array<{
+    title: string;
+    detail: string;
+  }>;
+  discoveryQueries?: string[];
+  featuredReason?: string;
+};
+
+export type TrustedSkillSourceRecord = {
+  id: string;
+  slug: string;
+  name: string;
+  trustTier: SourceTrustTier;
+  sourceType: "official-docs" | "official-repo" | "vendor-docs" | "community-curated";
+  homepageUrl: string;
+  repoUrl?: string;
+  logoUrl?: string;
+  discoveryMode: SourceMode;
+  searchQueries: string[];
+  tags: string[];
+};
+
+export type SkillUpstreamRecord = {
+  slug: string;
+  title: string;
+  description: string;
+  category: CategorySlug;
+  upstreamUrl: string;
+  upstreamKind: "skill" | "docs-pack" | "plugin-skill" | "repo-skill";
+  sourceId: string;
+  logoUrl?: string;
+  tags: string[];
+  body: string;
+};
+
+export type SkillAuthorRecord = {
+  id: string;
+  slug: string;
+  displayName: string;
+  bio: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+  primaryEmail?: string;
+  clerkUserId?: string;
+  verified: boolean;
+  isOfficial: boolean;
+  badgeLabel: string;
 };
 
 export type CategoryDefinition = {
@@ -119,6 +201,8 @@ export type SkillRecord = {
   versionLabel: string;
   availableVersions: VersionReference[];
   ownerName?: string;
+  authorId?: string;
+  author?: SkillAuthorRecord;
   sources?: SourceDefinition[];
   automation?: SkillAutomationState;
   updates?: SkillUpdateEntry[];
@@ -126,6 +210,10 @@ export type SkillRecord = {
   price?: SkillPrice | null;
   creatorClerkUserId?: string;
   iconUrl?: string;
+  featuredRank?: number;
+  qualityScore?: number;
+  researchProfile?: SkillResearchProfile;
+  upstreams?: SkillUpstreamRecord[];
 };
 
 export type DailySignal = {
@@ -181,6 +269,10 @@ export type LoopUpdateTarget = {
     url: string;
     kind: SourceKind;
     logoUrl: string;
+    mode?: SourceMode;
+    trust?: SourceTrustTier;
+    parser?: SourceParser;
+    searchQueries?: string[];
   }>;
 };
 
@@ -206,10 +298,16 @@ export type LoopUpdateSourceLog = {
   url: string;
   kind: SourceKind;
   logoUrl: string;
+  mode?: SourceMode;
+  trust?: SourceTrustTier;
+  parser?: SourceParser;
+  searchQueries?: string[];
   status: "pending" | "running" | "done" | "error";
   itemCount: number;
   items: DailySignal[];
   note?: string;
+  reasoning?: string;
+  discoveredCount?: number;
 };
 
 export type LoopUpdateResult = {
@@ -354,6 +452,7 @@ export type ImportedMcpDocument = {
   description: string;
   manifestUrl: string;
   homepageUrl?: string;
+  docsUrl?: string;
   transport: ImportedMcpTransport;
   url?: string;
   command?: string;
@@ -368,6 +467,15 @@ export type ImportedMcpDocument = {
   versionLabel: string;
   versions: ImportedMcpVersion[];
   iconUrl?: string;
+  slug?: string;
+  packageName?: string;
+  packageRegistry?: string;
+  installStrategy?: McpInstallStrategy;
+  authType?: McpAuthType;
+  verificationStatus?: McpVerificationStatus;
+  sandboxSupported?: boolean;
+  sandboxNotes?: string;
+  normalizedConfig?: Record<string, unknown>;
 };
 
 export type ImportedResourceStore = {
@@ -399,6 +507,7 @@ export type ImportedMcpVersion = {
   description: string;
   manifestUrl: string;
   homepageUrl?: string;
+  docsUrl?: string;
   transport: ImportedMcpTransport;
   url?: string;
   command?: string;
@@ -407,6 +516,14 @@ export type ImportedMcpVersion = {
   headers?: Record<string, string>;
   tags: string[];
   raw: string;
+  packageName?: string;
+  packageRegistry?: string;
+  installStrategy?: McpInstallStrategy;
+  authType?: McpAuthType;
+  verificationStatus?: McpVerificationStatus;
+  sandboxSupported?: boolean;
+  sandboxNotes?: string;
+  normalizedConfig?: Record<string, unknown>;
 };
 
 export type AgentProviderPreset = {
@@ -580,11 +697,34 @@ export type SkillPurchaseRecord = {
 
 export type ConversationChannel = "copilot" | "agent-studio" | "sandbox";
 
+export type SkillAttachment = {
+  slug: string;
+  title: string;
+  versionLabel: string;
+  iconUrl?: string;
+};
+
+export type McpAttachment = {
+  id: string;
+  name: string;
+  transport: ImportedMcpTransport;
+  iconUrl?: string;
+  sandboxSupported?: boolean;
+};
+
+export type ConversationMessageMetadata = {
+  attachments?: {
+    skills: SkillAttachment[];
+    mcps: McpAttachment[];
+  };
+};
+
 export type ConversationMessage = {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   createdAt: string;
+  metadata?: ConversationMessageMetadata;
 };
 
 export type ConversationRecord = {

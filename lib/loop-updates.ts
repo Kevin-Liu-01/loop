@@ -39,7 +39,11 @@ export function buildLoopUpdateTarget(skill: SkillRecord): LoopUpdateTarget {
       label: source.label,
       url: source.url,
       kind: source.kind,
-      logoUrl: source.logoUrl || buildSourceLogoUrl(source.url)
+      logoUrl: source.logoUrl || buildSourceLogoUrl(source.url),
+      mode: source.mode,
+      trust: source.trust,
+      parser: source.parser,
+      searchQueries: source.searchQueries
     }))
   };
 }
@@ -54,6 +58,10 @@ export function buildLoopUpdateSourceLog(
     url: source.url,
     kind: source.kind,
     logoUrl: source.logoUrl || buildSourceLogoUrl(source.url),
+    mode: source.mode,
+    trust: source.trust,
+    parser: source.parser,
+    searchQueries: source.searchQueries,
     status,
     itemCount: 0,
     items: []
