@@ -171,8 +171,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
             sources={linkedSkill?.sources}
           />
         );
-      })()
-      )}
+      })()}
     </section>
   );
 }
