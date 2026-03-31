@@ -1,7 +1,9 @@
 import { revalidatePath } from "next/cache";
 
-import { getSkillCatalogue } from "@/lib/content";
-import { refreshLoopSnapshot } from "@/lib/refresh";
+import { authErrorResponse, requireAuth } from "@/lib/auth";
+import { getSkillCatalogue, getSkillRecordBySlug } from "@/lib/content";
+import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
+import { canSessionEditSkill } from "@/lib/skill-authoring";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 import {
   addUserSkill,
@@ -10,6 +12,7 @@ import {
   createUserSkillInputSchema,
   listUserSkillDocuments,
   saveUserSkillDocuments,
+  skillRecordToUserDoc,
   updateUserSkillDocument,
   updateUserSkillInputSchema
 } from "@/lib/user-skills";
@@ -49,6 +52,8 @@ export async function POST(request: Request) {
     },
     async () => {
       try {
+        const session = await requireAuth();
+        const sessionAuthor = await findSkillAuthorForSession(session);
         const payload = createUserSkillInputSchema.parse(await request.json());
         const draft = createUserSkillDocument(payload);
         const catalogue = await getSkillCatalogue();
@@ -62,7 +67,11 @@ export async function POST(request: Request) {
           );
         }
 
-        const created = await addUserSkill(payload);
+        const created = await addUserSkill(payload, {
+          creatorClerkUserId: session.userId,
+          authorId: sessionAuthor?.id,
+          ownerName: sessionAuthor?.displayName ?? payload.ownerName
+        });
         const createdRecord = buildUserSkillRecord(created);
 
         revalidatePath("/");
@@ -87,6 +96,9 @@ export async function POST(request: Request) {
           href: createdRecord.href
         });
       } catch (error) {
+        const authResp = authErrorResponse(error);
+        if (authResp) return authResp;
+
         if (error instanceof Error) {
           return Response.json({ error: error.message }, { status: 400 });
         }
@@ -106,17 +118,25 @@ export async function PATCH(request: Request) {
     },
     async () => {
       try {
+        const session = await requireAuth();
+        const sessionAuthor = await findSkillAuthorForSession(session);
         const payload = updateUserSkillInputSchema.parse(await request.json());
-        const skills = await listUserSkillDocuments();
-        const current = skills.find((skill) => skill.slug === payload.slug);
+        const current = await getSkillRecordBySlug(payload.slug);
 
         if (!current) {
           return Response.json({ error: "That tracked skill could not be found." }, { status: 404 });
         }
 
-        const result = updateUserSkillDocument(current, payload);
+        if (!canSessionEditSkill(current, session, sessionAuthor)) {
+          return Response.json(
+            { error: "Only the skill author or an admin can edit this skill." },
+            { status: 403 }
+          );
+        }
+
+        const result = updateUserSkillDocument(skillRecordToUserDoc(current), payload);
         if (result.changed) {
-          await saveUserSkillDocuments(skills.map((skill) => (skill.slug === payload.slug ? result.skill : skill)));
+          await saveUserSkillDocuments([result.skill]);
         }
 
         const record = buildUserSkillRecord(result.skill);
@@ -146,6 +166,9 @@ export async function PATCH(request: Request) {
           changed: result.changed
         });
       } catch (error) {
+        const authResp = authErrorResponse(error);
+        if (authResp) return authResp;
+
         if (error instanceof Error) {
           return Response.json({ error: error.message }, { status: 400 });
         }

@@ -1,7 +1,8 @@
 import { requireAuth, authErrorResponse } from "@/lib/auth";
-import { getAuthorizedAdminEmail } from "@/lib/admin";
+import { getSkillBySlug } from "@/lib/db/skills";
+import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { uploadIcon, validateIconFile, updateSkillIconUrl } from "@/lib/icon-storage";
-import { getSkillRecordBySlug } from "@/lib/content";
+import { canSessionEditSkill } from "@/lib/skill-authoring";
 
 export async function POST(
   request: Request,
@@ -9,18 +10,17 @@ export async function POST(
 ) {
   try {
     const session = await requireAuth();
+    const sessionAuthor = await findSkillAuthorForSession(session);
     const { slug } = await params;
 
-    const skill = await getSkillRecordBySlug(slug);
+    const skill = await getSkillBySlug(slug);
     if (!skill) {
       return Response.json({ error: "Skill not found." }, { status: 404 });
     }
 
-    const isAdmin = getAuthorizedAdminEmail(request) !== null;
-    const isCreator = skill.creatorClerkUserId === session.userId;
-    if (!isAdmin && !isCreator) {
+    if (!canSessionEditSkill(skill, session, sessionAuthor)) {
       return Response.json(
-        { error: "Only the skill creator or an admin can change the icon." },
+        { error: "Only the skill author or an admin can change the icon." },
         { status: 403 }
       );
     }

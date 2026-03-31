@@ -3,10 +3,12 @@ import { z } from "zod";
 
 import { resolveLanguageModel } from "@/lib/agents";
 import { buildMcpToolRuntime } from "@/lib/mcp-runtime";
+import { supportsSandboxMcp } from "@/lib/mcp-utils";
 import { buildSandboxAgentConfig } from "@/lib/sandbox-agent";
 import { getSandboxInstance } from "@/lib/sandbox";
 import { getLoopSnapshot } from "@/lib/refresh";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
+import type { ConversationMessageMetadata } from "@/lib/types";
 
 const runSchema = z.object({
   messages: z.array(z.any()),
@@ -45,17 +47,51 @@ export async function POST(request: Request) {
 
         const selectedMcps =
           payload.selectedMcpIds && payload.selectedMcpIds.length > 0
-            ? snapshot.mcps.filter((mcp) => payload.selectedMcpIds?.includes(mcp.id))
+            ? snapshot.mcps.filter(
+                (mcp) =>
+                  payload.selectedMcpIds?.includes(mcp.id) && supportsSandboxMcp(mcp)
+              )
             : [];
+        const unsupportedMcps =
+          payload.selectedMcpIds && payload.selectedMcpIds.length > 0
+            ? snapshot.mcps.filter(
+                (mcp) =>
+                  payload.selectedMcpIds?.includes(mcp.id) && !supportsSandboxMcp(mcp)
+              )
+            : [];
+        const latestUserMessage = [...payload.messages]
+          .reverse()
+          .find(
+            (message) =>
+              typeof message === "object" &&
+              message !== null &&
+              "role" in message &&
+              message.role === "user"
+          ) as { metadata?: ConversationMessageMetadata } | undefined;
+        const latestAttachments = latestUserMessage?.metadata?.attachments;
+        const attachmentContext = latestAttachments
+          ? [
+              latestAttachments.skills.length > 0
+                ? `Skills: ${latestAttachments.skills.map((skill) => `${skill.title} ($${skill.slug})`).join(", ")}`
+                : "Skills: none",
+              latestAttachments.mcps.length > 0
+                ? `MCPs: ${latestAttachments.mcps
+                    .map((mcp) => `${mcp.name}${mcp.sandboxSupported === false ? " (unsupported)" : ""}`)
+                    .join(", ")}`
+                : "MCPs: none"
+            ].join("\n")
+          : undefined;
 
         const [agentConfig, mcpRuntime] = await Promise.all([
           Promise.resolve(
             buildSandboxAgentConfig({
               model,
               skills: selectedSkills,
+              mcps: selectedMcps,
               sandbox,
               runtime: payload.runtime,
-              systemPrompt: payload.systemPrompt
+              systemPrompt: payload.systemPrompt,
+              attachmentContext
             })
           ),
           buildMcpToolRuntime(selectedMcps)
@@ -72,8 +108,13 @@ export async function POST(request: Request) {
             : "";
 
         const mcpWarnings =
-          mcpRuntime.warnings.length > 0
-            ? `\n\nMCP runtime warnings:\n- ${mcpRuntime.warnings.join("\n- ")}`
+          mcpRuntime.warnings.length > 0 || unsupportedMcps.length > 0
+            ? `\n\nMCP runtime warnings:\n- ${[
+                ...mcpRuntime.warnings,
+                ...unsupportedMcps.map(
+                  (mcp) => `${mcp.name} is not marked sandbox-compatible and was not attached to the run.`
+                )
+              ].join("\n- ")}`
             : "";
 
         const tools = { ...agentConfig.tools, ...mcpRuntime.tools };

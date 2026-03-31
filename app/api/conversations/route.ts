@@ -4,6 +4,30 @@ import { authErrorResponse, getSessionUser } from "@/lib/auth";
 import { listConversations, upsertConversation } from "@/lib/db/conversations";
 import { withApiUsage } from "@/lib/usage-server";
 
+const messageMetadataSchema = z.object({
+  attachments: z
+    .object({
+      skills: z.array(
+        z.object({
+          slug: z.string(),
+          title: z.string(),
+          versionLabel: z.string(),
+          iconUrl: z.string().optional()
+        })
+      ),
+      mcps: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          transport: z.enum(["stdio", "http", "sse", "ws", "unknown"]),
+          iconUrl: z.string().optional(),
+          sandboxSupported: z.boolean().optional()
+        })
+      )
+    })
+    .optional()
+});
+
 const upsertSchema = z.object({
   id: z.string().uuid().nullable().optional(),
   channel: z.enum(["copilot", "agent-studio", "sandbox"]),
@@ -13,7 +37,8 @@ const upsertSchema = z.object({
       id: z.string(),
       role: z.enum(["user", "assistant", "system"]),
       content: z.string(),
-      createdAt: z.string()
+      createdAt: z.string(),
+      metadata: messageMetadataSchema.optional()
     })
   ),
   model: z.string().optional(),

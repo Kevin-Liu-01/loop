@@ -4,10 +4,13 @@ import { NextResponse } from "next/server";
 
 import { z } from "zod";
 
-import { requireAuth, AuthError } from "@/lib/auth";
+import { requireAuth, AuthError, type SessionUser } from "@/lib/auth";
+import { getSkillBySlug } from "@/lib/db/skills";
+import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { buildImportedSkillDraft, buildImportedSkillRecord, createNextImportedSkillVersion, fetchRemoteText, listImportedSkills, saveImportedSkills } from "@/lib/imports";
 import { buildLoopUpdateSourceLog, buildLoopUpdateTarget } from "@/lib/loop-updates";
 import { runTrackedUserSkillUpdate } from "@/lib/refresh";
+import { canSessionEditSkill } from "@/lib/skill-authoring";
 import { diffMultilineText } from "@/lib/text-diff";
 import { listUserSkillDocuments, saveUserSkillDocuments } from "@/lib/user-skills";
 import { recordLoopRun } from "@/lib/system-state";
@@ -125,6 +128,34 @@ function buildImportedSourceLog(source: SourceDefinition, items: DailySignal[], 
     items,
     note
   };
+}
+
+async function assertManualUpdateAccess(
+  session: SessionUser,
+  slug: string,
+  origin: "user" | "remote"
+): Promise<void> {
+  const sessionAuthor = await findSkillAuthorForSession(session);
+
+  if (origin === "user") {
+    const skill = await getSkillBySlug(slug);
+    if (!skill) {
+      throw new Error("This loop could not be found in the local user store.");
+    }
+
+    if (!canSessionEditSkill(skill, session, sessionAuthor)) {
+      throw new AuthError("Only the skill owner can trigger manual refreshes.", 403);
+    }
+
+    return;
+  }
+
+  if (!canSessionEditSkill({ authorId: undefined, creatorClerkUserId: undefined }, session, null)) {
+    throw new AuthError(
+      "Track the skill or use the owner account before triggering manual refreshes.",
+      403
+    );
+  }
 }
 
 async function runImportedLoopUpdate(
@@ -286,8 +317,9 @@ export async function POST(request: Request) {
       label: "Manual loop update"
     },
     async () => {
+      let session: SessionUser;
       try {
-        await requireAuth();
+        session = await requireAuth();
       } catch (error) {
         if (error instanceof AuthError) {
           return NextResponse.json({ error: error.message }, { status: error.status });
@@ -298,6 +330,18 @@ export async function POST(request: Request) {
       const payload = bodySchema.safeParse(await request.json());
       if (!payload.success) {
         return NextResponse.json({ error: "Invalid update payload." }, { status: 400 });
+      }
+
+      try {
+        await assertManualUpdateAccess(session, payload.data.slug, payload.data.origin);
+      } catch (error) {
+        if (error instanceof AuthError) {
+          return NextResponse.json({ error: error.message }, { status: error.status });
+        }
+        if (error instanceof Error) {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
       const encoder = new TextEncoder();

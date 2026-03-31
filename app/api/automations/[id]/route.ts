@@ -9,6 +9,8 @@ import {
   type CadenceValue
 } from "@/lib/automation-constants";
 import { getSkillBySlug, updateSkill } from "@/lib/db/skills";
+import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
+import { canSessionEditSkill } from "@/lib/skill-authoring";
 import { withApiUsage } from "@/lib/usage-server";
 import type { SkillAutomationState, UserSkillAutomationStatus } from "@/lib/types";
 
@@ -30,12 +32,20 @@ export async function PATCH(request: Request, context: RouteContext) {
     { route: "/api/automations/[id]", method: "PATCH", label: "Update automation" },
     async () => {
       try {
-        await requireActiveSubscription();
+        const session = await requireActiveSubscription();
+        const sessionAuthor = await findSkillAuthorForSession(session);
         const { id: skillSlug } = await context.params;
 
         const skill = await getSkillBySlug(skillSlug);
         if (!skill?.automation) {
           return Response.json({ error: "Automation not found." }, { status: 404 });
+        }
+
+        if (!canSessionEditSkill(skill, session, sessionAuthor)) {
+          return Response.json(
+            { error: "Only the skill owner can update this automation." },
+            { status: 403 }
+          );
         }
 
         const patch = patchSchema.parse(await request.json());
@@ -79,12 +89,20 @@ export async function DELETE(_request: Request, context: RouteContext) {
     { route: "/api/automations/[id]", method: "DELETE", label: "Delete automation" },
     async () => {
       try {
-        await requireActiveSubscription();
+        const session = await requireActiveSubscription();
+        const sessionAuthor = await findSkillAuthorForSession(session);
         const { id: skillSlug } = await context.params;
 
         const skill = await getSkillBySlug(skillSlug);
         if (!skill?.automation) {
           return Response.json({ error: "Automation not found." }, { status: 404 });
+        }
+
+        if (!canSessionEditSkill(skill, session, sessionAuthor)) {
+          return Response.json(
+            { error: "Only the skill owner can disable this automation." },
+            { status: 403 }
+          );
         }
 
         const disabled: SkillAutomationState = {

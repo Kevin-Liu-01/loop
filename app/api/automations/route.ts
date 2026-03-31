@@ -9,7 +9,9 @@ import {
   type CadenceValue
 } from "@/lib/automation-constants";
 import { getSkillCatalogue, getSkillRecordBySlug } from "@/lib/content";
+import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { updateSkill } from "@/lib/db/skills";
+import { canSessionEditSkill } from "@/lib/skill-authoring";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 import type { SkillAutomationState } from "@/lib/types";
 
@@ -45,12 +47,20 @@ export async function POST(request: Request) {
     { route: "/api/automations", method: "POST", label: "Create automation" },
     async () => {
       try {
-        await requireActiveSubscription();
+        const session = await requireActiveSubscription();
+        const sessionAuthor = await findSkillAuthorForSession(session);
         const payload = createSchema.parse(await request.json());
         const skill = await getSkillRecordBySlug(payload.skillSlug);
 
         if (!skill) {
           return Response.json({ error: "That skill no longer exists." }, { status: 404 });
+        }
+
+        if (!canSessionEditSkill(skill, session, sessionAuthor)) {
+          return Response.json(
+            { error: "Only the skill owner can create or trigger automation for this skill." },
+            { status: 403 }
+          );
         }
 
         const prompt = buildPrompt(skill.slug, skill.title, payload.note);
