@@ -228,7 +228,7 @@ export function AutomationCalendar({
       />
 
       {activeAutomations.length > 0 && (
-        <div className="grid gap-2.5 border-t border-line pt-4">
+        <div className="grid gap-0.5 border-t border-line pt-3">
           {activeAutomations.map((automation, index) => {
             const color = ACCENT_COLORS[index % ACCENT_COLORS.length];
             const year = month.getFullYear();
@@ -237,7 +237,7 @@ export function AutomationCalendar({
             const nextRun = formatNextRun(automation.schedule);
             const content = (
               <>
-                <span className={cn("h-2 w-2 shrink-0 rounded-none shadow-sm ring-1 ring-line/40", color)} />
+                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-none shadow-sm ring-1 ring-line/40", color)} />
                 <span className="min-w-0 truncate font-medium">{automation.name}</span>
                 <span className="shrink-0 tabular-nums text-ink-faint">{count} runs</span>
                 <span className="ml-auto shrink-0 tabular-nums text-ink-faint/70">{nextRun}</span>
@@ -247,7 +247,7 @@ export function AutomationCalendar({
             return legendRowsAreClickable ? (
               <button
                 className={cn(
-                  "flex min-w-0 items-center gap-2 rounded-xl border border-transparent px-2 py-1.5 text-left text-xs text-ink-soft transition-colors",
+                  "flex min-w-0 items-center gap-1.5 rounded-lg border border-transparent px-1 py-1 text-left text-[0.6875rem] leading-tight text-ink-soft transition-colors",
                   "hover:border-accent/20 hover:bg-paper-2/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 )}
                 key={automation.id}
@@ -257,7 +257,7 @@ export function AutomationCalendar({
                 {content}
               </button>
             ) : (
-              <div className="flex min-w-0 items-center gap-2 px-2 py-1.5 text-xs text-ink-soft" key={automation.id}>
+              <div className="flex min-w-0 items-center gap-1.5 px-1 py-1 text-[0.6875rem] leading-tight text-ink-soft" key={automation.id}>
                 {content}
               </div>
             );

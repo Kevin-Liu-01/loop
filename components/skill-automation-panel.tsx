@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
 import {
   ClockIcon,
@@ -237,6 +238,13 @@ export function SkillAutomationPanel({
               value={`${sourceCount}`}
             />
           </div>
+
+          {automation?.schedule?.trim() && (
+            <AutomationCalendar
+              automations={[automation]}
+              variant="sidebar"
+            />
+          )}
 
           <PromptPreview prompt={automation?.prompt} />
         </Panel>

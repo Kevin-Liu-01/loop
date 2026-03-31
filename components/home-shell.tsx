@@ -4,7 +4,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon } from "lucide-react";
+import { CopyIcon, ExternalLinkIcon, MoreHorizontalIcon, PlugIcon, TerminalIcon, WorkflowIcon } from "lucide-react";
 
 import {
   ActivityDashboard,
@@ -263,6 +263,16 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
               </Link>
 
               <div className="flex items-center gap-1.5 max-sm:pl-4">
+                {skill.automation?.enabled && (
+                  <Button
+                    onClick={() => router.push(`${skill.href}#automation`)}
+                    size="icon-sm"
+                    title="View automation"
+                    variant="ghost"
+                  >
+                    <WorkflowIcon className="h-3.5 w-3.5" />
+                  </Button>
+                )}
                 <Button onClick={() => router.push(skill.href)} size="sm" variant="ghost">
                   Open
                   <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -274,6 +284,10 @@ export function HomeShell({ automations, categories, mcps = [], skills, loopRuns
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => router.push(`${skill.href}#automation`)}>
+                      <WorkflowIcon />
+                      View automation
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => navigator.clipboard.writeText(skill.href)}>
                       <CopyIcon />
                       Copy link
