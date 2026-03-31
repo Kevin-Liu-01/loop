@@ -14,12 +14,11 @@ import { ShareButton } from "@/components/share-button";
 import { SkillAgentDocsPanel } from "@/components/skill-agent-docs-panel";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { SkillAuthorStudio } from "@/components/skill-author-studio";
-import { SkillAutomationPanel } from "@/components/skill-automation-panel";
+import { SkillActivitySection } from "@/components/skill-activity-section";
 import { SkillVisibilityToggle } from "@/components/skill-visibility-toggle";
 import { SkillResearchPanel } from "@/components/skill-research-panel";
 import { SiteHeader } from "@/components/site-header";
 import { SkillDetailSidebar } from "@/components/skill-detail-sidebar";
-import { SkillUpdateRunner } from "@/components/skill-update-runner";
 import { TrackSkillButton } from "@/components/track-skill-button";
 import { UsageBeacon } from "@/components/usage-beacon";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +79,7 @@ export function SkillDetailPage({
   const attachedAutomations = buildSkillAutomationSummaries(skill);
   const primaryAutomation = attachedAutomations[0];
   const latestUpdate = skill.updates?.[0];
-  const isUpdateable = skill.origin === "user" || skill.origin === "remote";
+
   const sourceCount =
     skill.origin === "user"
       ? (skill.sources ?? []).length
@@ -109,10 +108,9 @@ export function SkillDetailPage({
     ...(canEdit ? [{ id: "author-studio", label: "Studio" }] : []),
     { id: "content", label: "Content" },
     { id: "agent-docs", label: "Agent docs" },
-    { id: "automation", label: "Automation" },
+    { id: "activity", label: "Activity" },
     { id: "research", label: "Research" },
     ...(trackedSources.length > 0 ? [{ id: "sources", label: "Sources" }] : []),
-    ...(isUpdateable ? [{ id: "run-log", label: "Run log" }] : []),
   ];
 
   return (
@@ -278,9 +276,12 @@ export function SkillDetailPage({
                 skillSlug={skill.slug}
               />
 
-              <SkillAutomationPanel
+              <SkillActivitySection
                 automation={primaryAutomation}
                 canManage={canEdit}
+                category={skill.category}
+                iconUrl={skill.iconUrl}
+                latestRun={latestRun}
                 origin={skill.origin}
                 skillTitle={skill.title}
                 slug={skill.slug}
@@ -332,20 +333,6 @@ export function SkillDetailPage({
                   </Panel>
                 </section>
               ) : null}
-
-              {/* Update runner */}
-              {isUpdateable ? (
-                <section className="border-t border-line pt-8" id="run-log">
-                  <SkillUpdateRunner
-                    automation={primaryAutomation}
-                    canManage={canEdit}
-                    latestRun={latestRun}
-                    origin={skill.origin === "user" ? "user" : "remote"}
-                    slug={skill.slug}
-                    sourceCount={sourceCount}
-                  />
-                </section>
-              ) : null}
             </div>
           </div>
 
@@ -365,6 +352,7 @@ export function SkillDetailPage({
               latestUpdate={latestUpdate}
               rawDiffLength={rawDiff.length}
               skillHref={skill.href}
+              skills={[skill]}
               slug={skill.slug}
               updates={skill.updates}
               usage={usage}

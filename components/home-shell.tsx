@@ -628,6 +628,8 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
             automation={editTarget}
             onClose={() => setEditTarget(null)}
             open
+            skillCategory={linkedSkill?.category}
+            skillIconUrl={linkedSkill?.iconUrl}
             skillName={linkedSkill?.title}
             skillSlug={linkedSkill?.slug}
             sources={linkedSkill?.sources}

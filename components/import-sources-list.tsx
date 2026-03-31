@@ -12,7 +12,8 @@ import { getNextWeeklyImportRunUtc } from "@/lib/weekly-import-schedule";
 const SOURCE_ICON_OVERRIDES: Record<string, string> = {
   "cursor-directory": "/brands/cursor.svg",
   "anthropic-skills": "/brands/anthropic.svg",
-  "awesome-mcp-servers": "/brands/anthropic.svg",
+  "codex-community": "/brands/openai.png",
+  "awesome-mcp-servers": "/brands/mcp.svg",
 };
 
 function formatRelativeDate(date: Date): string {

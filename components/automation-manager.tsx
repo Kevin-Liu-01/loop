@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
 import { AutomationIcon, TimelineIcon } from "@/components/frontier-icons";
+import { SkillInline } from "@/components/skill-inline";
 import { Badge } from "@/components/ui/badge";
+import { SkillIcon } from "@/components/ui/skill-icon";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { FieldGroup, textFieldBase, textFieldArea, textFieldSelect } from "@/components/ui/field";
@@ -109,7 +110,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
                   </p>
                 </div>
               </PanelHead>
-              <AutomationCalendar automations={automations} onEditAutomation={handleOpenAutomationModal} />
+              <AutomationCalendar automations={automations} onEditAutomation={handleOpenAutomationModal} skillMap={skillMap} />
             </Panel>
           </div>
         ) : null}
@@ -166,6 +167,8 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
             canManage={selectedAutomation.canManage}
             onClose={() => setSelectedAutomation(null)}
             open
+            skillCategory={linkedSkill?.category}
+            skillIconUrl={linkedSkill?.iconUrl}
             skillName={linkedSkill?.title}
             skillSlug={linkedSkill?.slug}
             sources={linkedSkill?.sources}
@@ -201,8 +204,12 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
           : "opacity-60 hover:opacity-80"
       )}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-paper-2 text-ink-soft [&>svg]:h-4 [&>svg]:w-4">
-        <TimelineIcon />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none border border-line bg-paper-2 text-ink-soft [&>svg]:h-4 [&>svg]:w-4">
+        {linkedSkill ? (
+          <SkillIcon iconUrl={linkedSkill.iconUrl} size={24} slug={linkedSkill.slug} />
+        ) : (
+          <TimelineIcon />
+        )}
       </div>
 
       <div className="grid min-w-0 gap-1.5">
@@ -232,12 +239,15 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
         </div>
 
         {linkedSkill && (
-          <Link
-            className="mt-0.5 text-xs font-medium text-ink-soft transition-colors hover:text-accent"
+          <SkillInline
+            category={linkedSkill.category}
             href={linkedSkill.href}
-          >
-            {linkedSkill.title} · {linkedSkill.versionLabel}
-          </Link>
+            iconUrl={linkedSkill.iconUrl}
+            size="sm"
+            slug={linkedSkill.slug}
+            title={linkedSkill.title}
+            versionLabel={linkedSkill.versionLabel}
+          />
         )}
       </div>
 
@@ -357,6 +367,26 @@ function CreateAutomationModal({ open, onClose, skills }: CreateAutomationModalP
                 </option>
               ))}
             </select>
+            {(() => {
+              const selected = skillMap.get(selectedSkillSlug);
+              if (!selected) return null;
+              return (
+                <div className="flex items-start gap-3 rounded-none border border-line bg-paper-2/40 px-3 py-2.5">
+                  <SkillInline
+                    category={selected.category}
+                    iconUrl={selected.iconUrl}
+                    slug={selected.slug}
+                    title={selected.title}
+                    versionLabel={selected.versionLabel}
+                  />
+                  {selected.description ? (
+                    <p className="m-0 hidden line-clamp-1 text-xs text-ink-soft sm:block">
+                      {selected.description}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })()}
           </FieldGroup>
 
           <FieldGroup>

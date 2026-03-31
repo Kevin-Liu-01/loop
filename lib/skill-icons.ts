@@ -54,7 +54,7 @@ const BRAND_LOGOS = {
 
   // Not on SimpleIcons — GitHub avatar fallback
   aws:        `${GH}/amazon.png?size=64`,
-  context7:   `${GH}/upstash.png?size=64`,
+  context7:   `${GH}/context7.png?size=64`,
   exa:        `${GH}/exa-labs.png?size=64`,
   firecrawl:  `${GH}/firecrawl.png?size=64`,
   moz:        `${GH}/moz.png?size=64`,

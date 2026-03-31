@@ -10,6 +10,8 @@ export type ExternalSkillSource = {
   repo: string;
   branch: string;
   skillsPath: string;
+  /** When set, discover individual files matching these extensions instead of sub-directories. */
+  fileExtensions?: string[];
   iconUrl: string;
   description: string;
   homepage: string;
@@ -68,11 +70,12 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
   {
     id: "cursor-directory",
     name: "Cursor Directory",
-    org: "pontusab",
-    repo: "cursor.directory",
+    org: "leerob",
+    repo: "directories",
     branch: "main",
     skillsPath: "src/data/rules",
-    iconUrl: "https://cursor.directory/favicon.ico",
+    fileExtensions: [".ts"],
+    iconUrl: "/brands/cursor.svg",
     description: "Community-curated Cursor rules from cursor.directory — the largest public collection of .cursorrules files.",
     homepage: "https://cursor.directory",
     trustTier: "community",
@@ -83,13 +86,13 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
   {
     id: "awesome-mcp-servers",
     name: "Awesome MCP Servers",
-    org: "punkpeye",
+    org: "appcypher",
     repo: "awesome-mcp-servers",
     branch: "main",
     skillsPath: "__readme_links__",
-    iconUrl: "https://cdn.simpleicons.org/anthropic",
+    iconUrl: "/brands/mcp.svg",
     description: "Community-curated list of MCP servers — the definitive awesome-list for Model Context Protocol integrations.",
-    homepage: "https://github.com/punkpeye/awesome-mcp-servers",
+    homepage: "https://github.com/appcypher/awesome-mcp-servers",
     trustTier: "community",
     discoveryMode: "lead-list",
     searchQueries: ["awesome mcp servers", "model context protocol servers list"],
@@ -99,16 +102,16 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     id: "codex-community",
     name: "Codex Community Skills",
     org: "openai",
-    repo: "codex",
+    repo: "skills",
     branch: "main",
-    skillsPath: "__readme_links__",
+    skillsPath: "skills/.system",
     iconUrl: "https://github.com/openai.png?size=64",
-    description: "Community skills and examples from the OpenAI Codex repository.",
-    homepage: "https://github.com/openai/codex",
+    description: "System-level skills from the OpenAI Codex skills catalog — auto-installed utilities.",
+    homepage: "https://github.com/openai/skills",
     trustTier: "community",
-    discoveryMode: "lead-list",
+    discoveryMode: "canonical",
     searchQueries: ["openai codex community skills", "codex agent examples"],
-    discoveryRationale: "Parse README for linked community skill repos and examples.",
+    discoveryRationale: "Discover system skill directories from the OpenAI skills catalog (complements .curated in openai-skills).",
   },
 ];
 

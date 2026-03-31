@@ -9,7 +9,7 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { SimpleList, SimpleListBody, SimpleListIcon, SimpleListItem, SimpleListRow } from "@/components/ui/simple-list";
 import { cn } from "@/lib/cn";
 import { formatRelativeDate } from "@/lib/format";
-import type { AutomationSummary, DiffLine, LoopRunRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
+import type { AutomationSummary, DiffLine, LoopRunRecord, SkillRecord, SkillUpdateEntry, VersionReference } from "@/lib/types";
 import type { SkillUsageSummary } from "@/lib/usage";
 
 const sidebarTitle = "m-0 text-sm font-semibold tracking-tight text-ink";
@@ -30,6 +30,7 @@ type SkillDetailSidebarProps = {
   updates?: SkillUpdateEntry[];
   automations: AutomationSummary[];
   usage: SkillUsageSummary;
+  skills?: SkillRecord[];
 };
 
 function formatTriggerLabel(trigger: LoopRunRecord["trigger"]): string {
@@ -64,7 +65,8 @@ export function SkillDetailSidebar({
   rawDiffLength,
   updates,
   automations,
-  usage
+  usage,
+  skills = [],
 }: SkillDetailSidebarProps) {
   return (
     <aside className="grid content-start gap-4">
@@ -144,7 +146,7 @@ export function SkillDetailSidebar({
       ) : null}
 
       {automations.length > 0 ? (
-        <SidebarAutomationsPanel automations={automations} />
+        <SidebarAutomationsPanel automations={automations} skills={skills} />
       ) : null}
     </aside>
   );

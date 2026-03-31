@@ -102,14 +102,27 @@ function inferCategory(title: string, content: string, url: string): CategorySlu
 }
 
 function inferOwnerName(url: string): string | undefined {
-  const hostname = new URL(url).hostname.replace(/^www\./, "");
-  const root = hostname.split(".").slice(0, -1).join(" ");
-  if (!root) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.hostname === "raw.githubusercontent.com" ||
+      parsed.hostname === "github.com"
+    ) {
+      const org = parsed.pathname.split("/").filter(Boolean)[0];
+      if (org) return org;
+    }
 
-  return root
-    .split(/[-_]/g)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+    const hostname = parsed.hostname.replace(/^www\./, "");
+    const root = hostname.split(".").slice(0, -1).join(" ");
+    if (!root) return undefined;
+
+    return root
+      .split(/[-_]/g)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  } catch {
+    return undefined;
+  }
 }
 
 function inferTitle(raw: string, fallbackUrl: string): string {
@@ -709,14 +722,25 @@ function inferIconUrlFromSource(sourceUrl: string): string | undefined {
   return undefined;
 }
 
-export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkillDocument> {
+export type ImportSourceMeta = {
+  sourceName?: string;
+  sourceIconUrl?: string;
+};
+
+export async function importRemoteSkill(
+  inputUrl: string,
+  sourceMeta?: ImportSourceMeta
+): Promise<ImportedSkillDocument> {
   const { raw, normalizedUrl } = await fetchRemoteText(inputUrl);
   const draft = buildImportedSkillDraft(raw, normalizedUrl);
 
-  const [agentDocs, iconUrl] = await Promise.all([
+  const [agentDocs, inferredIcon] = await Promise.all([
     fetchSiblingAgentDocs(normalizedUrl),
     Promise.resolve(inferIconUrlFromSource(normalizedUrl)),
   ]);
+
+  const ownerName = sourceMeta?.sourceName || draft.ownerName;
+  const iconUrl = sourceMeta?.sourceIconUrl || inferredIcon;
 
   const hasAgentDocs = Object.keys(agentDocs).length > 0;
 
@@ -729,7 +753,7 @@ export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkill
     visibility: draft.visibility,
     origin: "remote",
     tags: draft.tags,
-    ownerName: draft.ownerName,
+    ownerName,
     sourceUrl: draft.sourceUrl,
     canonicalUrl: draft.canonicalUrl,
     syncEnabled: draft.syncEnabled,
@@ -743,7 +767,7 @@ export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkill
       category: draft.category,
       body: draft.body,
       tags: draft.tags,
-      ownerName: draft.ownerName,
+      ownerName,
       sourceUrl: draft.sourceUrl,
       canonicalUrl: draft.canonicalUrl,
       syncEnabled: draft.syncEnabled,
@@ -752,7 +776,7 @@ export async function importRemoteSkill(inputUrl: string): Promise<ImportedSkill
     });
   });
 
-  return draft;
+  return { ...draft, ownerName };
 }
 
 export async function importRemoteMcps(inputUrl: string): Promise<ImportedMcpDocument[]> {

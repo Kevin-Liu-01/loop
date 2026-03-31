@@ -8,6 +8,7 @@ describe("SETTINGS_NAV_ITEMS", () => {
     const ids = SETTINGS_NAV_ITEMS.map((i) => i.id);
     assert.equal(new Set(ids).size, ids.length);
     assert.deepEqual(ids, [
+      "skills",
       "automations",
       "health",
       "refresh",

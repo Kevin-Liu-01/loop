@@ -23,23 +23,31 @@ async function discoverFromReadmeLinks(source: ExternalSkillSource): Promise<Dis
   if (!res.ok) return [];
 
   const text = await res.text();
-  const seen = new Set<string>();
+  const seenUrls = new Set<string>();
+  const slugCounts = new Map<string, number>();
   const skills: DiscoveredSkill[] = [];
 
   for (const match of text.matchAll(GITHUB_SKILL_RE)) {
-    const label = match[1];
+    const rawLabel = match[1];
     const url = match[2];
-    if (seen.has(url)) continue;
-    seen.add(url);
+    if (seenUrls.has(url)) continue;
+    seenUrls.add(url);
 
     const parts = url.replace("https://github.com/", "").split("/");
     if (parts.length < 2) continue;
-    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+    const containsHtml = /<[^>]+>/.test(rawLabel);
+    const label = containsHtml ? parts[1] : rawLabel;
+    let slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || parts[1];
+
+    const count = slugCounts.get(slug) ?? 0;
+    slugCounts.set(slug, count + 1);
+    if (count > 0) slug = `${slug}-${parts[0]}`;
 
     skills.push({
       sourceId: source.id,
       sourceName: source.name,
-      slug: slug || parts[1],
+      slug,
       path: `${parts[0]}/${parts[1]}`,
       skillMdUrl: url,
     });
@@ -58,6 +66,25 @@ async function discoverFromDirectory(source: ExternalSkillSource): Promise<Disco
   if (!res.ok) return [];
 
   const items = (await res.json()) as GitHubItem[];
+
+  if (source.fileExtensions?.length) {
+    const files = items.filter(
+      (item) =>
+        item.type === "file" &&
+        source.fileExtensions!.some((ext) => item.name.endsWith(ext))
+    );
+    return files.map((file) => {
+      const slug = file.name.replace(/\.[^.]+$/, "");
+      return {
+        sourceId: source.id,
+        sourceName: source.name,
+        slug,
+        path: file.path,
+        skillMdUrl: getRawUrl(source, file.path),
+      };
+    });
+  }
+
   const dirs = items.filter((item) => item.type === "dir" && !item.name.startsWith("."));
 
   return dirs.map((dir) => ({

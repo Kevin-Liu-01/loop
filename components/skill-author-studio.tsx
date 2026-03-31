@@ -222,32 +222,95 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
     }
   }
 
+  function buildFormPayload() {
+    return {
+      title: state.title,
+      description: state.description,
+      category: state.category,
+      body: state.body,
+      ownerName: state.ownerName,
+      tags: tagList,
+      sourceUrls: state.sourceUrls
+        .split("\n")
+        .map((value) => value.trim())
+        .filter(Boolean),
+      autoUpdate: state.cadence !== "manual",
+      automationCadence: state.cadence,
+      automationPrompt: state.automationPrompt,
+      agentDocs: Object.keys(state.agentDocs).length > 0 ? state.agentDocs : undefined
+    };
+  }
+
+  async function consumeNdjsonStream(body: ReadableStream<Uint8Array>) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+
+      buffer += decoder.decode(chunk.value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        const event = JSON.parse(line) as LoopUpdateStreamEvent;
+        if (event.type === "analysis") {
+          setRunMessage(event.message);
+        } else if (event.type === "source") {
+          setRunMessage(`${event.source.label}: ${event.source.note ?? event.source.status}`);
+        } else if (event.type === "complete") {
+          router.push(event.result.href);
+          router.refresh();
+          return;
+        } else if (event.type === "error") {
+          setError(event.message);
+          setRunMessage(null);
+          return;
+        }
+      }
+    }
+  }
+
   async function save(refreshAfter: boolean) {
     setError(null);
     setNotice(null);
-    setRunMessage(refreshAfter ? "Saving author changes." : null);
+
+    if (refreshAfter) {
+      setRunMessage("Saving edits and running refresh.");
+
+      try {
+        await uploadIcon();
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : "Unable to upload the icon.");
+        setRunMessage(null);
+        return;
+      }
+
+      const response = await fetch(`/api/skills/${encodeURIComponent(skill.slug)}/refresh`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(buildFormPayload())
+      });
+
+      if (!response.ok || !response.body) {
+        const failedPayload = (await response.json().catch(() => ({}))) as { error?: string };
+        setError(failedPayload.error ?? "Unable to start the refresh.");
+        setRunMessage(null);
+        return;
+      }
+
+      await consumeNdjsonStream(response.body);
+      return;
+    }
 
     const response = await fetch(`/api/skills/${encodeURIComponent(skill.slug)}`, {
       method: "PATCH",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        title: state.title,
-        description: state.description,
-        category: state.category,
-        body: state.body,
-        ownerName: state.ownerName,
-        tags: tagList,
-        sourceUrls: state.sourceUrls
-          .split("\n")
-          .map((value) => value.trim())
-          .filter(Boolean),
-        autoUpdate: state.cadence !== "manual",
-        automationCadence: state.cadence,
-        automationPrompt: state.automationPrompt,
-        agentDocs: Object.keys(state.agentDocs).length > 0 ? state.agentDocs : undefined
-      })
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(buildFormPayload())
     });
 
     const payload = (await response.json().catch(() => ({}))) as {
@@ -259,7 +322,6 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
 
     if (!response.ok || !payload.href || !payload.slug) {
       setError(payload.error ?? "Unable to save the skill.");
-      setRunMessage(null);
       return;
     }
 
@@ -267,84 +329,19 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
       await uploadIcon();
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Unable to upload the icon.");
-      setRunMessage(null);
       return;
     }
 
-    if (!refreshAfter) {
-      const wroteBranding = iconFile !== null;
-      setNotice(
-        payload.changed
-          ? "Saved a new version."
-          : wroteBranding
-            ? "Updated branding."
-            : "No changes to save."
-      );
-      router.push(payload.href);
-      router.refresh();
-      return;
-    }
-
-    setRunMessage("Running refresh from the updated draft.");
-
-    const updateResponse = await fetch("/api/admin/loops/update", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        slug: payload.slug,
-        origin: skill.origin === "remote" ? "remote" : "user"
-      })
-    });
-
-    if (!updateResponse.ok || !updateResponse.body) {
-      const failedPayload = (await updateResponse.json().catch(() => ({}))) as { error?: string };
-      setError(failedPayload.error ?? "Unable to start the refresh.");
-      setRunMessage(null);
-      return;
-    }
-
-    const reader = updateResponse.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const chunk = await reader.read();
-      if (chunk.done) {
-        break;
-      }
-
-      buffer += decoder.decode(chunk.value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (!line.trim()) {
-          continue;
-        }
-
-        const event = JSON.parse(line) as LoopUpdateStreamEvent;
-        if (event.type === "analysis") {
-          setRunMessage(event.message);
-          continue;
-        }
-        if (event.type === "source") {
-          setRunMessage(`${event.source.label}: ${event.source.note ?? event.source.status}`);
-          continue;
-        }
-        if (event.type === "complete") {
-          router.push(event.result.href);
-          router.refresh();
-          return;
-        }
-        if (event.type === "error") {
-          setError(event.message);
-          setRunMessage(null);
-          return;
-        }
-      }
-    }
+    const wroteBranding = iconFile !== null;
+    setNotice(
+      payload.changed
+        ? "Saved a new version."
+        : wroteBranding
+          ? "Updated branding."
+          : "No changes to save."
+    );
+    router.push(payload.href);
+    router.refresh();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

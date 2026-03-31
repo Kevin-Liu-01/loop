@@ -10,11 +10,13 @@ import { ConversationHistory } from "@/components/conversation-history";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { FieldGroup, FieldLabel, textFieldArea, textFieldBase, textFieldSelect } from "@/components/ui/field";
 
+import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { messageToTextVerbose } from "@/lib/chat";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
-import { McpIcon } from "@/components/ui/skill-icon";
+import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
+import { McpIcon, SkillIcon } from "@/components/ui/skill-icon";
 import type { AgentProviderPreset, ImportedMcpDocument, SkillRecord } from "@/lib/types";
 
 type AgentStudioProps = {
@@ -354,7 +356,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
 
         <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
           <div className="grid content-start gap-4">
-            <strong className="text-base font-semibold text-ink">Skill pack</strong>
+            <strong className="text-sm font-semibold text-ink">Skill pack</strong>
             <div className="grid max-h-[360px] gap-3 overflow-auto">
               {skills.slice(0, 32).map((skill) => (
                 <label className={selectionChipClass} key={skill.slug}>
@@ -363,9 +365,14 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                     onChange={() => toggleListValue("selectedSkillSlugs", skill.slug)}
                     type="checkbox"
                   />
-                  <span className="grid min-w-0 gap-1">
-                    {skill.title}
-                    <small className="text-xs text-ink-soft">{skill.category}</small>
+                  <span className="flex min-w-0 items-center gap-3">
+                    <SkillIcon className="shrink-0 rounded-md" iconUrl={skill.iconUrl} size={20} slug={skill.slug} />
+                    <span className="grid min-w-0 gap-1">
+                      <span className="truncate text-sm">{skill.title}</span>
+                      <Badge color={getTagColorForCategory(skill.category)} size="sm">
+                        {formatTagLabel(skill.category)}
+                      </Badge>
+                    </span>
                   </span>
                 </label>
               ))}
@@ -373,7 +380,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
           </div>
 
           <div className="grid content-start gap-4">
-            <strong className="text-base font-semibold text-ink">MCP registry</strong>
+            <strong className="text-sm font-semibold text-ink">MCP registry</strong>
             <div className="grid max-h-[360px] gap-3 overflow-auto">
               {mcps.length > 0 ? (
                 mcps.map((mcp) => (
@@ -399,7 +406,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                 ))
               ) : (
                 <div className="grid gap-2 rounded-2xl border border-line p-4">
-                  <strong className="text-base font-semibold text-ink">No MCP imported yet</strong>
+                  <strong className="text-sm font-semibold text-ink">No MCP imported yet</strong>
                   <span className="text-sm text-ink-soft">Pull one in from a public manifest URL below.</span>
                 </div>
               )}
@@ -490,15 +497,21 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
 
         <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
           <div className="grid content-start gap-4">
-            <strong className="text-base font-semibold text-ink">Imported skills</strong>
+            <strong className="text-sm font-semibold text-ink">Imported skills</strong>
             <div className="grid gap-3">
               {skills
                 .filter((skill) => skill.origin === "remote")
                 .slice(0, 8)
                 .map((skill) => (
-                  <div className="grid gap-2 rounded-2xl border border-line p-4" key={skill.slug}>
-                    <strong className="text-base font-semibold text-ink">{skill.title}</strong>
-                    <span className="text-sm text-ink-soft">
+                  <div className="grid gap-2 rounded-none border border-line p-4" key={skill.slug}>
+                    <div className="flex items-center gap-2.5">
+                      <SkillIcon className="shrink-0 rounded-md" iconUrl={skill.iconUrl} size={24} slug={skill.slug} />
+                      <strong className="truncate text-sm font-semibold text-ink">{skill.title}</strong>
+                      <Badge color={getTagColorForCategory(skill.category)} size="sm">
+                        {formatTagLabel(skill.category)}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-ink-soft">
                       {skill.versionLabel} · {skill.path}
                     </span>
                   </div>
@@ -507,13 +520,13 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
           </div>
 
           <div className="grid content-start gap-4">
-            <strong className="text-base font-semibold text-ink">Imported MCPs</strong>
+            <strong className="text-sm font-semibold text-ink">Imported MCPs</strong>
             <div className="grid gap-3">
               {mcps.slice(0, 8).map((mcp) => (
                 <div className="flex items-start gap-3 rounded-2xl border border-line p-4" key={mcp.id}>
                   <McpIcon className="mt-0.5" homepageUrl={mcp.homepageUrl} iconUrl={mcp.iconUrl} name={mcp.name} size={28} />
                   <div className="grid min-w-0 gap-1">
-                    <strong className="text-base font-semibold text-ink">{mcp.name}</strong>
+                    <strong className="text-sm font-semibold text-ink">{mcp.name}</strong>
                     <span className="text-sm text-ink-soft">
                       {mcp.versionLabel} · {mcp.transport} · {mcp.manifestUrl}
                     </span>

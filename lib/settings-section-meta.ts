@@ -15,6 +15,35 @@ export type SettingsSectionMeta = {
 };
 
 export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> = {
+  skills: {
+    heading: "Your skills",
+    lead:
+      "All your authored skills in one place. See automation status, latest run outcomes, and jump into any skill to edit or trigger a refresh.",
+    beforePrimary: [
+      {
+        title: "Skill lifecycle",
+        body:
+          "Each skill starts as a draft. Once you add sources and enable automation, Loop refreshes it on schedule — fetching signals, running the editor agent, and minting new revisions automatically.",
+      },
+      {
+        title: "Automation at a glance",
+        body:
+          "The status column shows whether automation is active, paused, or disabled. Skills with consecutive failures are automatically paused until you intervene.",
+      },
+    ],
+    afterPrimary: [
+      {
+        title: "Managing skills",
+        body:
+          "Click any skill to open its detail page. Use the Studio tab to edit content, trigger refreshes, and tune automation. Use the Activity tab to inspect run traces and diffs.",
+      },
+      {
+        title: "Imports vs authored",
+        body:
+          "This page shows skills you authored. Imported skills from external registries appear under Imports — they sync automatically and don't count toward your authoring limits.",
+      },
+    ],
+  },
   subscription: {
     heading: "Subscription & billing",
     lead:

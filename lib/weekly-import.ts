@@ -197,7 +197,7 @@ async function discoverAndImportFromSource(
     return;
   }
 
-  let dirs: { name: string; path: string }[] = [];
+  let entries: { name: string; path: string; isFile: boolean }[] = [];
 
   try {
     const url = getContentsUrl(source);
@@ -210,7 +210,20 @@ async function discoverAndImportFromSource(
       return;
     }
     const items = (await res.json()) as GitHubItem[];
-    dirs = items.filter((i) => i.type === "dir" && !i.name.startsWith("."));
+
+    if (source.fileExtensions?.length) {
+      entries = items
+        .filter(
+          (i) =>
+            i.type === "file" &&
+            source.fileExtensions!.some((ext) => i.name.endsWith(ext))
+        )
+        .map((i) => ({ name: i.name.replace(/\.[^.]+$/, ""), path: i.path, isFile: true }));
+    } else {
+      entries = items
+        .filter((i) => i.type === "dir" && !i.name.startsWith("."))
+        .map((i) => ({ name: i.name, path: i.path, isFile: false }));
+    }
   } catch (err) {
     result.errors.push({
       slug: source.id,
@@ -219,8 +232,8 @@ async function discoverAndImportFromSource(
     return;
   }
 
-  const importPromises = dirs.map(async (dir) => {
-    const slug = dir.name;
+  const importPromises = entries.map(async (entry) => {
+    const slug = entry.name;
 
     const existing = await getSkillBySlug(slug);
     if (existing) {
@@ -228,7 +241,9 @@ async function discoverAndImportFromSource(
       return;
     }
 
-    const skillMdUrl = getRawUrl(source, `${dir.path}/SKILL.md`);
+    const skillMdUrl = entry.isFile
+      ? getRawUrl(source, entry.path)
+      : getRawUrl(source, `${entry.path}/SKILL.md`);
     const raw = await fetchText(skillMdUrl);
     if (!raw) {
       result.skipped.push(slug);
@@ -245,11 +260,11 @@ async function discoverAndImportFromSource(
       );
       const category = inferCategory(slug, `${description}\n${content}`);
 
-      const [agentDocs] = await Promise.all([
-        fetchAgentDocs(source, dir.path),
-      ]);
+      const agentDocs = entry.isFile
+        ? ({} as AgentDocs)
+        : await fetchAgentDocs(source, entry.path);
 
-      const sourceUrl = `https://github.com/${source.org}/${source.repo}/tree/${source.branch}/${dir.path}`;
+      const sourceUrl = `https://github.com/${source.org}/${source.repo}/tree/${source.branch}/${entry.path}`;
       const sources: SourceDefinition[] = [normalizeSource(sourceUrl, category)];
 
       const automation: SkillAutomationState = {

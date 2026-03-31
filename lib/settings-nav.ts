@@ -2,6 +2,7 @@
  * Route segments and labels for settings sub-pages (`/settings/[segment]`).
  */
 export const SETTINGS_NAV_ITEMS = [
+  { id: "skills", label: "Skills" },
   { id: "automations", label: "Automations" },
   { id: "health", label: "System health" },
   { id: "refresh", label: "Refresh" },

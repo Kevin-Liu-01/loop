@@ -15,7 +15,7 @@ test("buildImportedSkillDraft normalizes markdown imports into remote skills", (
   assert.equal(skill.slug.startsWith("mcp-notes-"), true);
   assert.equal(skill.visibility, "public");
   assert.equal(skill.syncEnabled, true);
-  assert.equal(skill.ownerName, "Raw githubusercontent");
+  assert.equal(skill.ownerName, "acme");
   assert.equal(skill.version, 1);
   assert.deepEqual(skill.versions.map((version) => version.version), [1]);
 });

@@ -93,7 +93,7 @@ export function ExternalSkillSources() {
   }, []);
 
   const handleImport = useCallback(
-    (skill: DiscoveredSkill) => {
+    (skill: DiscoveredSkill, source?: { name: string; iconUrl: string }) => {
       setImportingSlug(skill.slug);
       setMessage(null);
 
@@ -108,7 +108,12 @@ export function ExternalSkillSources() {
         const res = await fetch("/api/imports", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: "skill", url: skill.skillMdUrl }),
+          body: JSON.stringify({
+            kind: "skill",
+            url: skill.skillMdUrl,
+            sourceName: source?.name,
+            sourceIconUrl: source?.iconUrl,
+          }),
         });
 
         const payload = (await res.json().catch(() => ({}))) as {
@@ -264,7 +269,7 @@ export function ExternalSkillSources() {
                       "flex items-center gap-3 rounded-xl border border-line bg-paper-3 px-3 py-2.5",
                       importingSlug === skill.slug && "opacity-60"
                     )}
-                    key={`${skill.sourceId}:${skill.slug}`}
+                    key={`${skill.sourceId}:${skill.path}`}
                   >
                     <div className="min-w-0 flex-1">
                       <span className="text-sm font-medium text-ink">{skill.slug}</span>
@@ -275,7 +280,7 @@ export function ExternalSkillSources() {
                     <Tip content="Import skill and start tracking updates" side="left">
                       <Button
                         disabled={isPending && importingSlug === skill.slug}
-                        onClick={() => handleImport(skill)}
+                        onClick={() => handleImport(skill, result.source)}
                         size="sm"
                         variant="ghost"
                       >

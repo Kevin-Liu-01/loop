@@ -17,6 +17,15 @@ import {
 } from "@/lib/home-landing/skill-diff-scenes";
 import { useMouseParallax } from "@/hooks/use-mouse-parallax";
 
+const CATEGORY_ACCENT: Record<string, string> = {
+  frontend: "oklch(0.72 0.16 55)",
+  a2a: "oklch(0.68 0.14 265)",
+  security: "oklch(0.68 0.16 25)",
+  ops: "oklch(0.70 0.14 155)",
+  infra: "oklch(0.65 0.12 230)",
+  social: "oklch(0.70 0.15 330)",
+};
+
 const SCENE_INTERVAL_MS = 5_500;
 
 /* ── Card placement presets ─────────────────────────────────── */
@@ -34,13 +43,13 @@ type CardPlacement = {
 
 const CARD_PLACEMENTS: CardPlacement[] = [
   {
-    xPx: -340,
-    yPx: 18,
-    zPx: -80,
-    rotateYDeg: 8,
-    rotateZDeg: 2.5,
-    scale: 0.85,
-    baseOpacity: 0.4,
+    xPx: -360,
+    yPx: 10,
+    zPx: -60,
+    rotateYDeg: 6,
+    rotateZDeg: 1.5,
+    scale: 0.88,
+    baseOpacity: 0.55,
     parallaxStrength: 0.35,
   },
   {
@@ -54,13 +63,13 @@ const CARD_PLACEMENTS: CardPlacement[] = [
     parallaxStrength: 0.7,
   },
   {
-    xPx: 340,
-    yPx: 18,
-    zPx: -80,
-    rotateYDeg: -8,
-    rotateZDeg: -2.5,
-    scale: 0.85,
-    baseOpacity: 0.4,
+    xPx: 360,
+    yPx: 10,
+    zPx: -60,
+    rotateYDeg: -6,
+    rotateZDeg: -1.5,
+    scale: 0.88,
+    baseOpacity: 0.55,
     parallaxStrength: 0.35,
   },
 ];
@@ -112,29 +121,42 @@ function HeroDiffLine({ line, index }: { line: DiffSceneLine; index: number }) {
 function HeroCardHeader({ scene }: { scene: DiffScene }) {
   const added = scene.lines.filter((l) => l.type === "added").length;
   const removed = scene.lines.filter((l) => l.type === "removed").length;
+  const accent = CATEGORY_ACCENT[scene.category] ?? "oklch(0.70 0.12 55)";
 
   return (
-    <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
-      <span className="truncate text-[0.6875rem] font-semibold text-white/90">
-        {scene.skillTitle}
-      </span>
-      <span className="shrink-0 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[0.55rem] font-medium text-white/50">
-        {formatTagLabel(scene.category)}
-      </span>
-      <span className="shrink-0 text-[0.55rem] tabular-nums text-white/35">
-        {scene.versionFrom} &rarr; {scene.versionTo}
-      </span>
-      <div className="ml-auto flex items-center gap-1.5">
-        {added > 0 && (
-          <span className="rounded-md bg-[oklch(0.42_0.12_145/0.25)] px-1.5 py-0.5 text-[0.55rem] font-bold tabular-nums text-[oklch(0.78_0.14_145)]">
-            +{added}
-          </span>
-        )}
-        {removed > 0 && (
-          <span className="rounded-md bg-[oklch(0.42_0.10_25/0.25)] px-1.5 py-0.5 text-[0.55rem] font-bold tabular-nums text-[oklch(0.78_0.12_25)]">
-            &minus;{removed}
-          </span>
-        )}
+    <div className="relative border-b border-white/[0.06]">
+      <div
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ background: accent, opacity: 0.5 }}
+      />
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5">
+        <span className="truncate font-serif text-[0.8rem] font-medium tracking-[-0.02em] text-white/90">
+          {scene.skillTitle}
+        </span>
+        <span
+          className="shrink-0 px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-wide"
+          style={{
+            background: `color-mix(in oklch, ${accent}, transparent 82%)`,
+            color: accent,
+          }}
+        >
+          {formatTagLabel(scene.category)}
+        </span>
+        <span className="shrink-0 font-mono text-[0.5rem] tabular-nums text-white/30">
+          {scene.versionFrom} &rarr; {scene.versionTo}
+        </span>
+        <div className="ml-auto flex items-center gap-1.5">
+          {added > 0 && (
+            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tabular-nums text-[oklch(0.78_0.14_145)] bg-[oklch(0.42_0.12_145/0.25)]">
+              +{added}
+            </span>
+          )}
+          {removed > 0 && (
+            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tabular-nums text-[oklch(0.78_0.12_25)] bg-[oklch(0.42_0.10_25/0.25)]">
+              &minus;{removed}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -145,17 +167,23 @@ function HeroCardHeader({ scene }: { scene: DiffScene }) {
 function DiffCardChrome({
   children,
   glow,
+  accentColor,
 }: {
   children: React.ReactNode;
   glow?: boolean;
+  accentColor?: string;
 }) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border border-white/[0.06] bg-[rgb(18,18,22)] font-mono shadow-2xl shadow-black/50",
-        glow &&
-          "ring-1 ring-accent/10 shadow-[0_8px_60px_-12px_rgba(232,101,10,0.15)]",
+        "overflow-hidden border border-white/[0.07] bg-[rgb(14,14,18)] font-mono shadow-2xl shadow-black/60",
+        glow && "ring-1 ring-white/[0.08]",
       )}
+      style={
+        glow && accentColor
+          ? { boxShadow: `0 8px 60px -12px color-mix(in oklch, ${accentColor}, transparent 70%), 0 1px 3px rgba(0,0,0,0.4)` }
+          : undefined
+      }
     >
       {children}
     </div>
@@ -188,7 +216,7 @@ function FloatingCard({
 
   return (
     <motion.div
-      className={cn("col-start-1 row-start-1 w-full max-w-[360px]", className)}
+      className={cn("col-start-1 row-start-1 w-full max-w-[380px]", className)}
       style={{
         x: pxVal,
         y: pyVal,
@@ -271,9 +299,11 @@ export function HeroDiffField() {
   const leftScene = DIFF_SCENES[(activeIndex + 1) % DIFF_SCENES.length]!;
   const rightScene = DIFF_SCENES[(activeIndex + 2) % DIFF_SCENES.length]!;
 
+  const centerAccent = CATEGORY_ACCENT[activeScene.category] ?? "oklch(0.70 0.12 55)";
+
   return (
     <motion.div
-      className="relative mx-auto grid h-[300px] w-full max-w-[960px] place-items-center sm:h-[340px]"
+      className="relative mx-auto grid h-[340px] w-full max-w-[1000px] place-items-center sm:h-[380px]"
       style={{ perspective: "1600px", transformStyle: "preserve-3d" as const }}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -291,10 +321,10 @@ export function HeroDiffField() {
         mouseY={mouseY}
         className="pointer-events-none hidden lg:block"
       >
-        <DiffCardChrome>
+        <DiffCardChrome accentColor={CATEGORY_ACCENT[leftScene.category]}>
           <HeroCardHeader scene={leftScene} />
           <div className="overflow-hidden">
-            {leftScene.lines.slice(0, 10).map((line, i) => (
+            {leftScene.lines.slice(0, 14).map((line, i) => (
               <HeroDiffLine key={`l-${leftScene.skillTitle}-${i}`} line={line} index={i} />
             ))}
           </div>
@@ -307,7 +337,7 @@ export function HeroDiffField() {
         mouseX={mouseX}
         mouseY={mouseY}
       >
-        <DiffCardChrome glow>
+        <DiffCardChrome glow accentColor={centerAccent}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeScene.skillTitle}
@@ -343,10 +373,10 @@ export function HeroDiffField() {
         mouseY={mouseY}
         className="pointer-events-none hidden lg:block"
       >
-        <DiffCardChrome>
+        <DiffCardChrome accentColor={CATEGORY_ACCENT[rightScene.category]}>
           <HeroCardHeader scene={rightScene} />
           <div className="overflow-hidden">
-            {rightScene.lines.slice(0, 10).map((line, i) => (
+            {rightScene.lines.slice(0, 14).map((line, i) => (
               <HeroDiffLine key={`r-${rightScene.skillTitle}-${i}`} line={line} index={i} />
             ))}
           </div>

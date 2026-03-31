@@ -12,7 +12,9 @@ import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 
 const importSchema = z.object({
   kind: z.enum(["skill", "mcp"]),
-  url: z.string().url()
+  url: z.string().url(),
+  sourceName: z.string().optional(),
+  sourceIconUrl: z.string().url().optional(),
 });
 
 export async function GET() {
@@ -46,7 +48,10 @@ export async function POST(request: Request) {
         const payload = importSchema.parse(await request.json());
 
         if (payload.kind === "skill") {
-          const skill = await importRemoteSkill(payload.url);
+          const skill = await importRemoteSkill(payload.url, {
+            sourceName: payload.sourceName,
+            sourceIconUrl: payload.sourceIconUrl,
+          });
           const record = buildImportedSkillRecord(skill);
 
           revalidatePath("/");

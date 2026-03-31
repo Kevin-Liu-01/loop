@@ -10,15 +10,77 @@ import { AutomationIcon } from "@/components/frontier-icons";
 import { GrainShader } from "@/components/home-landing/grain-shader";
 import { HeroDiffField } from "@/components/home-landing/hero-diff-field";
 import { LoopLogo } from "@/components/loop-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
+import { SkillIcon } from "@/components/ui/skill-icon";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatTagLabel, getTagColorForCategory, getTagColorForTransport } from "@/lib/tag-utils";
-import type { AutomationSummary } from "@/lib/types";
+import type { AutomationSummary, CategorySlug, SkillRecord } from "@/lib/types";
 import type {
   LandingSkillRow,
   LandingMcpRow,
 } from "@/lib/home-landing/landing-data";
+
+type NormalizedSkill = {
+  slug: string;
+  title: string;
+  category: string;
+  versionLabel: string;
+  tone: "fresh" | "stale" | "idle";
+  relativeTime: string;
+  description: string;
+  iconUrl?: string;
+  ownerName: string;
+  href: string;
+};
+
+function computeTone(iso: string): "fresh" | "stale" | "idle" {
+  const hours = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (hours < 6) return "fresh";
+  if (hours < 72) return "stale";
+  return "idle";
+}
+
+function relativeTime(iso: string): string {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
+
+function normalizeSkillRecord(s: SkillRecord): NormalizedSkill {
+  return {
+    slug: s.slug,
+    title: s.title,
+    category: s.category,
+    versionLabel: s.versionLabel,
+    tone: computeTone(s.updatedAt),
+    relativeTime: relativeTime(s.updatedAt),
+    description: s.description || s.excerpt,
+    iconUrl: s.iconUrl ?? undefined,
+    ownerName: s.ownerName ?? s.author?.displayName ?? "Loop",
+    href: s.href,
+  };
+}
+
+function normalizeStaticSkill(s: LandingSkillRow): NormalizedSkill {
+  return {
+    slug: s.slug,
+    title: s.title,
+    category: s.category,
+    versionLabel: s.versionLabel,
+    tone: s.tone,
+    relativeTime: s.updatedAt,
+    description: s.description,
+    iconUrl: s.iconUrl,
+    ownerName: s.ownerName,
+    href: "/sign-up",
+  };
+}
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
@@ -50,13 +112,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 type LandingShellProps = {
-  skills: LandingSkillRow[];
+  skills?: SkillRecord[];
+  staticSkills?: LandingSkillRow[];
   mcps: LandingMcpRow[];
   automations: AutomationSummary[];
 };
 
-export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
+export function LandingShell({ skills, staticSkills, mcps, automations }: LandingShellProps) {
   const [brandHover, setBrandHover] = useState(false);
+
+  const normalizedSkills: NormalizedSkill[] = skills
+    ? skills.map(normalizeSkillRecord)
+    : (staticSkills ?? []).map(normalizeStaticSkill);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -83,21 +150,23 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
               Loop
             </strong>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <Link
-              className="text-sm text-white/40 transition-colors hover:text-white/80 max-sm:hidden"
+              className="inline-flex items-center gap-1.5 border border-white/[0.06] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/50 transition-colors hover:border-white/[0.12] hover:bg-white/[0.08] hover:text-white/80 max-sm:hidden"
               href="#skills"
             >
               Skills
             </Link>
             <Link
-              className="text-sm text-white/40 transition-colors hover:text-white/80 max-sm:hidden"
+              className="inline-flex items-center gap-1.5 border border-white/[0.06] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/50 transition-colors hover:border-white/[0.12] hover:bg-white/[0.08] hover:text-white/80 max-sm:hidden"
               href="#mcps"
             >
-              MCPs
+              Automations
             </Link>
+            <span className="mx-1.5 hidden h-4 w-px bg-white/[0.08] sm:block" />
+            <ThemeToggle className="size-8 border-white/[0.06] bg-white/[0.04] text-white/50 hover:border-white/[0.12] hover:bg-white/[0.08] hover:text-white/80 rounded-none" />
             <Link
-              className="text-sm text-white/40 transition-colors hover:text-white/80"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white/50 transition-colors hover:text-white/80 max-sm:hidden"
               href="/sign-in"
             >
               Sign in
@@ -112,14 +181,6 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
         <div className="relative z-10 mx-auto max-w-[1100px] px-6 pb-6 pt-[min(14vh,120px)] text-center">
           <motion.div className="mx-auto grid max-w-[700px] gap-7" {...fadeUp}>
             <div className="grid gap-5">
-              <div className="flex items-center justify-center gap-2.5">
-                <span className="h-px w-5 bg-accent/30" />
-                <span className="text-[0.62rem] font-medium uppercase tracking-[0.18em] text-white/40">
-                  Operator desk for agent skills
-                </span>
-                <span className="h-px w-5 bg-accent/30" />
-              </div>
-
               <h1 className="font-serif text-[clamp(2.8rem,5.8vw,4.8rem)] font-medium leading-[1.02] tracking-[-0.045em] text-white">
                 Skills that{"\u00A0"}never
                 <br className="max-sm:hidden" />
@@ -172,14 +233,14 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
       <section className="relative z-10" id="skills">
         <div className="mx-auto max-w-[1100px] px-6 pb-16 pt-14">
           <motion.div className="mb-8 grid gap-2" {...fadeUp}>
-            <SectionLabel>Live skills · {skills.length}</SectionLabel>
+            <SectionLabel>Live skills · {normalizedSkills.length}</SectionLabel>
             <h2 className="font-serif text-[clamp(1.4rem,2.6vw,2rem)] font-medium leading-[1.12] tracking-[-0.03em]">
               Every skill, always current
             </h2>
           </motion.div>
 
           <motion.div className="grid gap-0" {...staggerWrap}>
-            {skills.map((skill) => (
+            {normalizedSkills.map((skill) => (
               <motion.article
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-line py-3.5 first:border-t-0 first:pt-0 max-sm:grid-cols-1"
                 key={skill.slug}
@@ -187,11 +248,12 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
               >
                 <div className="min-w-0">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <SkillIcon className="rounded-md" iconUrl={skill.iconUrl} size={24} slug={skill.slug} />
                     <StatusDot tone={skill.tone} />
                     <span className="truncate font-serif text-[0.94rem] font-medium text-ink">
                       {skill.title}
                     </span>
-                    <Badge color={getTagColorForCategory(skill.category as Parameters<typeof getTagColorForCategory>[0])} size="sm">
+                    <Badge color={getTagColorForCategory(skill.category as CategorySlug)} size="sm">
                       {formatTagLabel(skill.category)}
                     </Badge>
                     <Badge color="neutral" size="sm">{skill.versionLabel}</Badge>
@@ -202,12 +264,12 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
                   <div className="mt-1 flex items-center gap-2 text-xs text-ink-faint">
                     <span>{skill.ownerName}</span>
                     <span>·</span>
-                    <span className="tabular-nums">{skill.updatedAt}</span>
+                    <span className="tabular-nums">{skill.relativeTime}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 max-sm:pl-0">
-                  <LinkButton href="/sign-up" size="sm" variant="ghost">
+                  <LinkButton href={skill.href} size="sm" variant="ghost">
                     Open
                   </LinkButton>
                 </div>

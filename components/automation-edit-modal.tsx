@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { AutomationIcon, GlobeIcon } from "@/components/frontier-icons";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldBase, textFieldArea, textFieldSelect } from "@/components/ui/field";
+import { SkillIcon } from "@/components/ui/skill-icon";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,9 @@ import { cn } from "@/lib/cn";
 import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun, countMonthlyRuns } from "@/lib/schedule";
 import type { AutomationSummary, SourceDefinition } from "@/lib/types";
+import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
 import { CADENCE_OPTIONS, cadenceToRRule, rruleToCadence } from "@/lib/automation-constants";
+import type { CategorySlug } from "@/lib/types";
 
 const MODEL_OPTIONS = [
   { value: "", label: "Default (auto)" },
@@ -38,6 +42,8 @@ type AutomationEditModalProps = {
   onClose: () => void;
   skillName?: string;
   skillSlug?: string;
+  skillIconUrl?: string | null;
+  skillCategory?: CategorySlug;
   sources?: SourceDefinition[];
   canManage?: boolean;
   isOperator?: boolean;
@@ -49,6 +55,8 @@ export function AutomationEditModal({
   onClose,
   skillName,
   skillSlug,
+  skillIconUrl,
+  skillCategory,
   sources = [],
   canManage = true,
   isOperator = false,
@@ -129,18 +137,26 @@ export function AutomationEditModal({
         <DialogHeader className="gap-3">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-none border",
               isActive
                 ? "border-accent/25 bg-accent/[0.07] text-accent"
                 : "border-line bg-paper-3 text-ink-faint"
             )}>
-              <AutomationIcon className="h-4 w-4" />
+              {skillSlug || linkedSlug ? (
+                <SkillIcon
+                  iconUrl={skillIconUrl}
+                  size={24}
+                  slug={skillSlug || linkedSlug}
+                />
+              ) : (
+                <AutomationIcon className="h-4 w-4" />
+              )}
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg">
+              <DialogTitle className="text-base">
                 {canManage ? "Edit automation" : "Automation details"}
               </DialogTitle>
-              <DialogDescription className="m-0 text-[0.8125rem] leading-snug text-ink-soft">
+              <DialogDescription className="m-0 flex flex-wrap items-center gap-1.5 text-[0.8125rem] leading-snug text-ink-soft">
                 {linkedSkillLabel ? (
                   <>
                     {linkedSlug ? (
@@ -150,10 +166,15 @@ export function AutomationEditModal({
                     ) : (
                       <span className="font-medium text-ink">{linkedSkillLabel}</span>
                     )}
-                    {" · "}
+                    {skillCategory ? (
+                      <Badge color={getTagColorForCategory(skillCategory)} size="sm">
+                        {formatTagLabel(skillCategory)}
+                      </Badge>
+                    ) : null}
+                    <span className="text-ink-faint">·</span>
                   </>
                 ) : null}
-                {previewScheduleLabel}
+                <span>{previewScheduleLabel}</span>
               </DialogDescription>
             </div>
           </div>

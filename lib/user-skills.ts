@@ -376,10 +376,15 @@ export function createUserSkillDocument(input: CreateUserSkillInput, now = new D
   };
 }
 
-export function updateUserSkillDocument(
+/**
+ * Apply user-authored edits to a skill document WITHOUT incrementing the
+ * version number. Returns a new object with the same version so that callers
+ * (e.g. the fused save+refresh endpoint) can pass it straight to
+ * `runTrackedUserSkillUpdate`, which mints the single next version.
+ */
+export function applyUserEditsToSkill(
   skill: UserSkillDocument,
-  input: UpdateUserSkillInput,
-  now = new Date()
+  input: UpdateUserSkillInput
 ): { skill: UserSkillDocument; changed: boolean } {
   if (input.slug !== skill.slug) {
     throw new Error("The requested skill slug does not match the current document.");
@@ -418,27 +423,52 @@ export function updateUserSkillDocument(
     !sameAutomation(skill.automation, nextAutomation) ||
     priceChanged;
 
+  const skillPrice = parsed.price && parsed.price.amount > 0 ? parsed.price : null;
+
+  const editedSkill: UserSkillDocument = {
+    ...skill,
+    title: parsed.title,
+    description: parsed.description,
+    category: parsed.category,
+    body: parsed.body,
+    ownerName: parsed.ownerName,
+    tags: nextTags,
+    sources: nextSources,
+    automation: nextAutomation,
+    agentDocs: (parsed.agentDocs as AgentDocs | undefined) ?? skill.agentDocs,
+    price: skillPrice
+  };
+
+  return { skill: editedSkill, changed };
+}
+
+export function updateUserSkillDocument(
+  skill: UserSkillDocument,
+  input: UpdateUserSkillInput,
+  now = new Date()
+): { skill: UserSkillDocument; changed: boolean } {
+  const { skill: editedSkill, changed } = applyUserEditsToSkill(skill, input);
+
   if (!changed) {
     return { skill, changed: false };
   }
 
   const updatedAt = now.toISOString();
-  const skillPrice = parsed.price && parsed.price.amount > 0 ? parsed.price : null;
   const nextSkill = createNextUserSkillVersion(
     skill,
     {
-      title: parsed.title,
-      description: parsed.description,
-      category: parsed.category,
-      body: parsed.body,
-      ownerName: parsed.ownerName,
-      tags: nextTags,
-      visibility: skill.visibility,
-      sources: nextSources,
-      automation: nextAutomation,
-      updates: skill.updates,
-      agentDocs: parsed.agentDocs as AgentDocs | undefined,
-      price: skillPrice
+      title: editedSkill.title,
+      description: editedSkill.description,
+      category: editedSkill.category,
+      body: editedSkill.body,
+      ownerName: editedSkill.ownerName,
+      tags: editedSkill.tags,
+      visibility: editedSkill.visibility,
+      sources: editedSkill.sources,
+      automation: editedSkill.automation,
+      updates: editedSkill.updates,
+      agentDocs: editedSkill.agentDocs,
+      price: editedSkill.price
     },
     updatedAt
   );

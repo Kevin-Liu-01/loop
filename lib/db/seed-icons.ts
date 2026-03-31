@@ -94,21 +94,21 @@ const MCP_ICON_MAP: Record<string, { simpleIcon?: string; color?: string; fallba
   "Sentry": { simpleIcon: "sentry" },
 
   "Supabase": { simpleIcon: "supabase" },
-  "Neon": { fallbackUrl: "https://www.google.com/s2/favicons?domain=neon.tech&sz=64" },
+  "Neon": { fallbackUrl: "https://github.com/neondatabase.png?size=64" },
   "Prisma": { simpleIcon: "prisma" },
   "Turso": { simpleIcon: "turso" },
   "Upstash": { simpleIcon: "upstash" },
 
-  "Context7": { fallbackUrl: "https://www.google.com/s2/favicons?domain=context7.com&sz=64" },
+  "Context7": { fallbackUrl: "https://github.com/context7.png?size=64" },
   "Brave Search": { simpleIcon: "brave" },
-  "Exa": { fallbackUrl: "https://www.google.com/s2/favicons?domain=exa.ai&sz=64" },
-  "Firecrawl": { fallbackUrl: "https://www.google.com/s2/favicons?domain=firecrawl.dev&sz=64" },
+  "Exa": { fallbackUrl: "https://github.com/exa-labs.png?size=64" },
+  "Firecrawl": { fallbackUrl: "https://github.com/mendableai.png?size=64" },
 
-  "Playwright": { fallbackUrl: "https://www.google.com/s2/favicons?domain=playwright.dev&sz=64" },
+  "Playwright": { fallbackUrl: "https://github.com/microsoft.png?size=64" },
   "Puppeteer": { simpleIcon: "puppeteer" },
 
   "Notion": { simpleIcon: "notion" },
-  "Slack": { fallbackUrl: "https://www.google.com/s2/favicons?domain=slack.com&sz=64" },
+  "Slack": { fallbackUrl: "https://github.com/slackapi.png?size=64" },
   "Linear": { simpleIcon: "linear" },
   "Todoist": { simpleIcon: "todoist" },
 
@@ -116,17 +116,17 @@ const MCP_ICON_MAP: Record<string, { simpleIcon?: string; color?: string; fallba
 
   "Figma": { simpleIcon: "figma" },
 
-  "Resend": { fallbackUrl: "https://www.google.com/s2/favicons?domain=resend.com&sz=64" },
+  "Resend": { fallbackUrl: "https://github.com/resend.png?size=64" },
 
   "Grafana": { simpleIcon: "grafana" },
 
-  "OpenAI Agents": { fallbackUrl: "https://www.google.com/s2/favicons?domain=openai.com&sz=64" },
+  "OpenAI Agents": { fallbackUrl: "https://github.com/openai.png?size=64" },
 
   "PostgreSQL": { simpleIcon: "postgresql" },
   "SQLite": { simpleIcon: "sqlite" },
 
-  "AWS": { fallbackUrl: "https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=64" },
-  "AWS API": { fallbackUrl: "https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=64" },
+  "AWS": { fallbackUrl: "https://github.com/aws.png?size=64" },
+  "AWS API": { fallbackUrl: "https://github.com/aws.png?size=64" },
   "Terraform": { simpleIcon: "terraform" },
   "Docker": { simpleIcon: "docker" },
   "Kubernetes": { simpleIcon: "kubernetes" },
