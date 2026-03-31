@@ -35,8 +35,8 @@ const FRAGMENT = /* glsl */ `
 
     vec3 base = vec3(0.031, 0.031, 0.039);
 
-    float glow = smoothstep(0.8, 0.0, length((uv - vec2(0.5, 0.2)) * vec2(1.4, 2.0)));
-    vec3 accent = vec3(0.91, 0.396, 0.039) * glow * 0.06;
+    float glow = smoothstep(0.85, 0.0, length((uv - vec2(0.5, 0.28)) * vec2(1.1, 1.4)));
+    vec3 accent = vec3(0.91, 0.396, 0.039) * glow * 0.09;
 
     float drift = sin(uv.x * 3.0 + t * 0.8) * 0.003
                 + cos(uv.y * 2.5 - t * 0.6) * 0.003;

@@ -12,6 +12,7 @@ import {
 } from "@/components/frontier-icons";
 import { SkillIcon, McpIcon } from "@/components/ui/skill-icon";
 import { Separator } from "@/components/ui/shadcn/separator";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { supportsSandboxMcp } from "@/lib/mcp-utils";
 import {
@@ -66,17 +67,19 @@ function PanelToggle({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      className={cn(
-        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
-        active && "bg-paper-3/60 text-ink shadow-sm ring-1 ring-line/40",
-      )}
-      onClick={onClick}
-      type="button"
-      aria-label={label}
-    >
-      {children}
-    </button>
+    <Tip content={label} side="bottom">
+      <button
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
+          active && "bg-paper-3/60 text-ink shadow-sm ring-1 ring-line/40",
+        )}
+        onClick={onClick}
+        type="button"
+        aria-label={label}
+      >
+        {children}
+      </button>
+    </Tip>
   );
 }
 
@@ -94,7 +97,7 @@ function ContextSectionHeader({
       <h3 className="m-0 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-ink-faint">
         {label}
       </h3>
-      <span className="font-mono text-[0.5rem] tabular-nums text-ink-faint/60">
+      <span className="text-[0.5rem] tabular-nums text-ink-faint/60">
         {count > 0 ? (
           <>
             <span className="font-semibold text-accent">{count}</span>
@@ -175,54 +178,60 @@ export function SandboxToolbar({
 
         <Separator orientation="vertical" className="hidden h-3.5 opacity-30 sm:block" />
 
-        <label className="flex items-center gap-1.5">
-          <span className={sandboxToolbarLabel}>Runtime</span>
-          <select
-            className={sandboxToolbarControl}
-            onChange={(e) =>
-              onUpdateConfig("runtime", e.target.value as SandboxRuntime)
-            }
-            value={config.runtime}
-          >
-            <option value="node24">Node.js 24</option>
-            <option value="python3.13">Python 3.13</option>
-          </select>
-        </label>
-
-        <label className="flex items-center gap-1.5">
-          <span className={sandboxToolbarLabel}>Provider</span>
-          <select
-            className={cn(sandboxToolbarControl, "min-w-[7.5rem]")}
-            onChange={(e) => {
-              const preset = presets.find((p) => p.id === e.target.value);
-              onUpdateConfig("providerId", e.target.value);
-              if (preset) {
-                onUpdateConfig("model", preset.defaultModel);
-                onUpdateConfig("apiKeyEnvVar", preset.apiKeyEnvVar ?? "");
+        <Tip content="Sandbox execution environment" side="bottom">
+          <label className="flex items-center gap-1.5">
+            <span className={sandboxToolbarLabel}>Runtime</span>
+            <select
+              className={sandboxToolbarControl}
+              onChange={(e) =>
+                onUpdateConfig("runtime", e.target.value as SandboxRuntime)
               }
-            }}
-            value={config.providerId}
-          >
-            {presets.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
+              value={config.runtime}
+            >
+              <option value="node24">Node.js 24</option>
+              <option value="python3.13">Python 3.13</option>
+            </select>
+          </label>
+        </Tip>
 
-        <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:max-w-[min(100%,16rem)] sm:flex-initial">
-          <span className={sandboxToolbarLabel}>Model</span>
-          <input
-            className={cn(
-              sandboxToolbarControl,
-              "min-w-0 flex-1 font-mono sm:w-48",
-            )}
-            onChange={(e) => onUpdateConfig("model", e.target.value)}
-            placeholder={selectedPreset?.defaultModel}
-            value={config.model}
-          />
-        </label>
+        <Tip content="AI gateway or custom provider" side="bottom">
+          <label className="flex items-center gap-1.5">
+            <span className={sandboxToolbarLabel}>Provider</span>
+            <select
+              className={cn(sandboxToolbarControl, "min-w-[7.5rem]")}
+              onChange={(e) => {
+                const preset = presets.find((p) => p.id === e.target.value);
+                onUpdateConfig("providerId", e.target.value);
+                if (preset) {
+                  onUpdateConfig("model", preset.defaultModel);
+                  onUpdateConfig("apiKeyEnvVar", preset.apiKeyEnvVar ?? "");
+                }
+              }}
+              value={config.providerId}
+            >
+              {presets.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </Tip>
+
+        <Tip content="Gateway model ID — type or pick from suggestions" side="bottom">
+          <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:max-w-[min(100%,16rem)] sm:flex-initial">
+            <span className={sandboxToolbarLabel}>Model</span>
+            <input
+              className={cn(
+                sandboxToolbarControl,
+                "min-w-0 flex-1 sm:w-48",
+              )}
+              onChange={(e) => onUpdateConfig("model", e.target.value)}
+              placeholder={selectedPreset?.defaultModel}
+              value={config.model}
+            />
+          </label>
+        </Tip>
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -237,7 +246,7 @@ export function SandboxToolbar({
             aria-expanded={contextOpen}
           >
             {totalSelected > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/12 px-1 font-mono text-[0.5rem] font-semibold tabular-nums text-accent">
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/12 px-1 text-[0.5rem] font-semibold tabular-nums text-accent">
                 {totalSelected}
               </span>
             )}

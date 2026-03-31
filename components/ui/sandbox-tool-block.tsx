@@ -11,6 +11,7 @@ import {
   TerminalIcon,
   FileCodeIcon,
 } from "@/components/frontier-icons";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 
 type ToolState = "partial-call" | "call" | "result";
@@ -115,18 +116,24 @@ function StatusIndicator({
 }) {
   if (state === "result") {
     const ok = exitCode === undefined || exitCode === 0;
-    return ok ? (
-      <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success/15">
-        <CheckIcon className="h-3 w-3 text-success" />
-      </span>
-    ) : (
-      <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-danger/15">
-        <span className="h-2 w-2 rounded-full bg-danger" />
-      </span>
+    return (
+      <Tip content={ok ? "Completed successfully" : `Failed with exit code ${exitCode}`} side="top">
+        {ok ? (
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success/15">
+            <CheckIcon className="h-3 w-3 text-success" />
+          </span>
+        ) : (
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-danger/15">
+            <span className="h-2 w-2 rounded-full bg-danger" />
+          </span>
+        )}
+      </Tip>
     );
   }
   return (
-    <span className="inline-block h-4 w-4 animate-spin rounded-full border-[1.5px] border-accent/20 border-t-accent" />
+    <Tip content="Executing…" side="top">
+      <span className="inline-block h-4 w-4 animate-spin rounded-full border-[1.5px] border-accent/20 border-t-accent" />
+    </Tip>
   );
 }
 
@@ -144,18 +151,20 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <button
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint/50 opacity-0 transition-all group-hover/block:opacity-100 hover:bg-paper-3/60 hover:text-ink-soft"
-      onClick={handleCopy}
-      type="button"
-      aria-label="Copy output"
-    >
-      {copied ? (
-        <CheckIcon className="h-3 w-3 text-success" />
-      ) : (
-        <CopyIcon className="h-3 w-3" />
-      )}
-    </button>
+    <Tip content={copied ? "Copied!" : "Copy output"} side="left">
+      <button
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-faint/50 opacity-0 transition-all group-hover/block:opacity-100 hover:bg-paper-3/60 hover:text-ink-soft"
+        onClick={handleCopy}
+        type="button"
+        aria-label="Copy output"
+      >
+        {copied ? (
+          <CheckIcon className="h-3 w-3 text-success" />
+        ) : (
+          <CopyIcon className="h-3 w-3" />
+        )}
+      </button>
+    </Tip>
   );
 }
 
@@ -212,26 +221,30 @@ export function SandboxToolBlock({
           {isRunning ? meta.verb : meta.label}
         </span>
         {lang && (
-          <span className="rounded-md bg-paper-3/80 px-1.5 py-0.5 font-mono text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-3/40">
-            {lang}
-          </span>
+          <Tip content={`Language: ${lang}`} side="top">
+            <span className="rounded-md bg-paper-3/80 px-1.5 py-0.5 text-[0.55rem] font-medium text-ink-faint ring-1 ring-line/30 dark:bg-paper-3/40">
+              {lang}
+            </span>
+          </Tip>
         )}
         {summary && (
-          <span className="min-w-0 flex-1 truncate font-mono text-[0.65rem] text-ink-faint/70">
+          <span className="min-w-0 flex-1 truncate text-[0.65rem] text-ink-faint/70">
             {summary}
           </span>
         )}
         {exitCode !== undefined && (
-          <span
-            className={cn(
-              "ml-auto shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[0.55rem] font-semibold tabular-nums",
-              exitCode === 0
-                ? "bg-success/10 text-success"
-                : "bg-danger/10 text-danger",
-            )}
-          >
-            exit {exitCode}
-          </span>
+          <Tip content={exitCode === 0 ? "Process exited cleanly" : "Non-zero exit — check stderr"} side="top">
+            <span
+              className={cn(
+                "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[0.55rem] font-semibold tabular-nums",
+                exitCode === 0
+                  ? "bg-success/10 text-success"
+                  : "bg-danger/10 text-danger",
+              )}
+            >
+              exit {exitCode}
+            </span>
+          </Tip>
         )}
         {open ? (
           <ChevronDownIcon className="h-3 w-3 shrink-0 text-ink-faint/50" />

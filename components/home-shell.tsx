@@ -10,6 +10,7 @@ import {
   ActivityDashboard,
   shouldShowActivityDashboard,
 } from "@/components/activity-dashboard";
+import { ActiveOperationBanner } from "@/components/active-operation-banner";
 import { AutomationEditModal } from "@/components/automation-edit-modal";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { McpIcon, SkillIcon } from "@/components/ui/skill-icon";
@@ -28,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
 import { StatusDot } from "@/components/ui/status-dot";
+import { Tip } from "@/components/ui/tip";
 import { Button } from "@/components/ui/button";
 import { textFieldSearch } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
@@ -248,7 +250,6 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
       {filtered.length > 0 ? (
         filtered.map((skill) => {
           const freshness = computeFreshness(skill, loopRuns);
-          const summary = skill.updates?.[0]?.whatChanged ?? skill.description;
 
           return (
             <article
@@ -260,14 +261,16 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                   <SkillIcon className="mt-0.5 rounded-md" iconUrl={skill.iconUrl} size={28} slug={skill.slug} />
                   <div className="min-w-0 grid flex-1 gap-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <StatusDot tone={freshness.tone} />
+                      <Tip content={freshness.tone === "fresh" ? "Recently updated" : freshness.tone === "stale" ? "Hasn't changed recently" : "Unknown freshness"} side="top">
+                        <span><StatusDot tone={freshness.tone} /></span>
+                      </Tip>
                       <span className="truncate font-serif text-[0.94rem] font-medium text-ink group-hover:text-ink-soft">
                         {skill.title}
                       </span>
                       <Badge color={getTagColorForCategory(skill.category)} size="sm">{formatTagLabel(skill.category)}</Badge>
                       <Badge color="neutral" size="sm">{skill.versionLabel}</Badge>
                     </div>
-                    <p className="m-0 line-clamp-1 text-sm text-ink-soft">{summary}</p>
+                    <p className="m-0 line-clamp-1 text-sm text-ink-soft">{skill.description}</p>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-ink-faint">
                       <SkillAuthorBadge author={skill.author} compact linked={false} ownerName={skill.ownerName} />
                       <span>
@@ -280,25 +283,28 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
 
               <div className="flex items-center gap-1.5 max-sm:pl-4">
                 {skill.automation?.enabled && automationBySkillSlug.has(skill.slug) && (
-                  <Button
-                    onClick={() => setEditTarget(automationBySkillSlug.get(skill.slug)!)}
-                    size="icon-sm"
-                    title="View automation"
-                    variant="ghost"
-                  >
-                    <AutomationIcon className="h-3.5 w-3.5" />
-                  </Button>
+                  <Tip content="View automation settings" side="top">
+                    <Button
+                      onClick={() => setEditTarget(automationBySkillSlug.get(skill.slug)!)}
+                      size="icon-sm"
+                      variant="ghost"
+                    >
+                      <AutomationIcon className="h-3.5 w-3.5" />
+                    </Button>
+                  </Tip>
                 )}
                 <Button onClick={() => router.push(skill.href)} size="sm" variant="ghost">
                   Open
                   <ArrowRightIcon className="h-3.5 w-3.5" />
                 </Button>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon-sm" variant="ghost" type="button">
-                      <MoreHorizontalIcon className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <Tip content="More actions" side="top">
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon-sm" variant="ghost" type="button">
+                        <MoreHorizontalIcon className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </Tip>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => {
                       const siteUrl = getSiteUrlString();
@@ -361,12 +367,14 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                   <McpIcon className="mt-0.5" homepageUrl={mcp.homepageUrl} iconUrl={mcp.iconUrl} name={mcp.name} size={28} />
                   <div className="min-w-0 grid flex-1 gap-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span
-                        className={cn(
-                          "inline-block h-2 w-2 shrink-0 rounded-full",
-                          isRunnable ? "bg-emerald-500" : "bg-ink-faint/40"
-                        )}
-                      />
+                      <Tip content={isRunnable ? "Executable in sandbox" : "Metadata only"} side="top">
+                        <span
+                          className={cn(
+                            "inline-block h-2 w-2 shrink-0 rounded-full",
+                            isRunnable ? "bg-emerald-500" : "bg-ink-faint/40"
+                          )}
+                        />
+                      </Tip>
                       <span className="truncate font-serif text-[0.94rem] font-medium text-ink group-hover:text-ink-soft">
                         {mcp.name}
                       </span>
@@ -393,11 +401,13 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
                   <ArrowRightIcon className="h-3.5 w-3.5" />
                 </Button>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon-sm" variant="ghost" type="button">
-                      <MoreHorizontalIcon className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <Tip content="More actions" side="top">
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon-sm" variant="ghost" type="button">
+                        <MoreHorizontalIcon className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </Tip>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => navigator.clipboard.writeText(mcp.manifestUrl)}>
                       <CopyIcon />
@@ -527,15 +537,17 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
             MCPs
           </button>
         </h1>
-        <Link
-          href="/api/skills/raw/all"
-          target="_blank"
-          rel="noreferrer"
-          className="flex shrink-0 items-center gap-1.5 border border-line bg-paper-3 px-2.5 py-1.5 text-[0.6875rem] font-medium text-ink-soft transition-colors hover:border-accent/30 hover:text-ink dark:bg-paper-2"
-        >
-          <TerminalIcon className="h-3 w-3" />
-          Agent catalog
-        </Link>
+        <Tip content="Raw JSON catalog for AI agents" side="bottom">
+          <Link
+            href="/api/skills/raw/all"
+            target="_blank"
+            rel="noreferrer"
+            className="flex shrink-0 items-center gap-1.5 border border-line bg-paper-3 px-2.5 py-1.5 text-[0.6875rem] font-medium text-ink-soft transition-colors hover:border-accent/30 hover:text-ink dark:bg-paper-2"
+          >
+            <TerminalIcon className="h-3 w-3" />
+            Agent catalog
+          </Link>
+        </Tip>
       </div>
       <p className={pageHeaderSub}>
         {tab === "skills" ? (
@@ -573,6 +585,7 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
               )}
             >
               <header className="min-w-0">{pageTitle}</header>
+              <ActiveOperationBanner />
               {activeFilters}
             </div>
 
@@ -602,6 +615,7 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
             )}
           >
             <header className="min-w-0">{pageTitle}</header>
+            <ActiveOperationBanner />
             <div className="grid min-w-0 gap-4">{activeFilters}</div>
           </div>
         )}

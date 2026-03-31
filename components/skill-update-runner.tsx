@@ -10,10 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { useTrackedLoopUpdate } from "@/hooks/use-tracked-loop-update";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun } from "@/lib/schedule";
-import { applySourceUpdate, streamLoopUpdate } from "@/lib/stream-loop-update";
+import { applySourceUpdate } from "@/lib/stream-loop-update";
 import type {
   AgentReasoningStep,
   AutomationSummary,
@@ -97,25 +99,30 @@ function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
   return (
     <article className="grid gap-1.5 rounded-xl border border-line bg-paper-3 px-4 py-3">
       <div className="flex items-center gap-3">
-        <span
-          className={cn(
-            "flex h-2.5 w-2.5 shrink-0 rounded-full",
-            icon === "done" && "bg-success",
-            icon === "running" && "animate-pulse bg-warning",
-            icon === "error" && "bg-danger",
-            icon === "pending" && "bg-line-strong"
-          )}
-        />
+        <Tip content={source.status} side="left">
+          <span
+            className={cn(
+              "flex h-2.5 w-2.5 shrink-0 rounded-full",
+              icon === "done" && "bg-success",
+              icon === "running" && "animate-pulse bg-warning",
+              icon === "error" && "bg-danger",
+              icon === "pending" && "bg-line-strong"
+            )}
+          />
+        </Tip>
         <strong className="text-sm text-ink">{source.label}</strong>
         <span className="ml-auto text-xs text-ink-faint">{source.status}</span>
       </div>
       {metadata.length > 0 ? (
         <div className="flex flex-wrap gap-1">
-          {metadata.map((entry) => (
-            <Badge color="neutral" key={entry}>
-              {entry}
-            </Badge>
-          ))}
+          {metadata.map((entry, idx) => {
+            const hints = ["Discovery mode", "Trust tier", "Parser type"];
+            return (
+              <Tip content={hints[idx] ?? entry} key={entry} side="top">
+                <span><Badge color="neutral">{entry}</Badge></span>
+              </Tip>
+            );
+          })}
         </div>
       ) : null}
       <p className="m-0 text-sm text-ink-soft">{source.note ?? `${source.itemCount} items found.`}</p>
@@ -232,6 +239,7 @@ export function SkillUpdateRunner({
   const [messages, setMessages] = useState<string[]>([]);
   const [sourceLogs, setSourceLogs] = useState<LoopUpdateSourceLog[]>([]);
   const [reasoningSteps, setReasoningSteps] = useState<AgentReasoningStep[]>([]);
+  const { run: runTrackedUpdate } = useTrackedLoopUpdate();
   const [result, setResult] = useState<LoopUpdateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -295,43 +303,50 @@ export function SkillUpdateRunner({
 
     startTransition(async () => {
       try {
-        await streamLoopUpdate(slug, origin, {
-          onStart(loop) {
-            setMessages((prev) => [
-              ...prev,
-              `Started agent run across ${loop.sources.length} tracked sources.`
-            ]);
-            setSourceLogs(buildPendingSourcesFromTarget(loop));
+        await runTrackedUpdate({
+          slug,
+          origin,
+          label: slug,
+          href: `/skills/${slug}`,
+          trigger: "manual",
+          callbacks: {
+            onStart(loop) {
+              setMessages((prev) => [
+                ...prev,
+                `Started agent run across ${loop.sources.length} tracked sources.`
+              ]);
+              setSourceLogs(buildPendingSourcesFromTarget(loop));
+            },
+            onSource(source) {
+              setSourceLogs((prev) => applySourceUpdate(prev, source));
+              setMessages((prev) => [
+                ...prev,
+                `${source.label}: ${source.note ?? source.status}.`
+              ]);
+            },
+            onMessage(message) {
+              setMessages((prev) => [...prev, message]);
+            },
+            onReasoningStep(step) {
+              setReasoningSteps((prev) => [...prev, step]);
+            },
+            onComplete(completeResult, sources) {
+              setResult(completeResult);
+              setSourceLogs(sources);
+              setMessages((prev) => [
+                ...prev,
+                completeResult.changed
+                  ? `${completeResult.nextVersionLabel} is live with a saved revision.`
+                  : "Source fetch finished. No material diff landed."
+              ]);
+              setError(null);
+              router.refresh();
+            },
+            onError(message) {
+              setError(message);
+              setMessages((prev) => [...prev, message]);
+            },
           },
-          onSource(source) {
-            setSourceLogs((prev) => applySourceUpdate(prev, source));
-            setMessages((prev) => [
-              ...prev,
-              `${source.label}: ${source.note ?? source.status}.`
-            ]);
-          },
-          onMessage(message) {
-            setMessages((prev) => [...prev, message]);
-          },
-          onReasoningStep(step) {
-            setReasoningSteps((prev) => [...prev, step]);
-          },
-          onComplete(completeResult, sources) {
-            setResult(completeResult);
-            setSourceLogs(sources);
-            setMessages((prev) => [
-              ...prev,
-              completeResult.changed
-                ? `${completeResult.nextVersionLabel} is live with a saved revision.`
-                : "Source fetch finished. No material diff landed."
-            ]);
-            setError(null);
-            router.refresh();
-          },
-          onError(message) {
-            setError(message);
-            setMessages((prev) => [...prev, message]);
-          }
         });
       } catch (caughtError) {
         const message =
@@ -340,7 +355,7 @@ export function SkillUpdateRunner({
         setMessages((prev) => [...prev, message]);
       }
     });
-  }, [slug, origin, router, startTransition]);
+  }, [slug, origin, router, startTransition, runTrackedUpdate]);
 
   const canRun = sourceCount > 0 && !isRunning && canManage;
   const buttonLabel = origin === "remote" ? "Sync from source" : "Run automation now";
@@ -366,7 +381,11 @@ export function SkillUpdateRunner({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {automation ? <Badge color={automation.status === "ACTIVE" ? "green" : "neutral"}>{automation.status.toLowerCase()}</Badge> : null}
+              {automation ? (
+        <Tip content={automation.status === "ACTIVE" ? "Automation runs on schedule" : "Automation is paused"} side="bottom">
+          <span><Badge color={automation.status === "ACTIVE" ? "green" : "neutral"}>{automation.status.toLowerCase()}</Badge></span>
+        </Tip>
+      ) : null}
               <Button disabled={!canRun} onClick={handleRun} type="button">
                 {isRunning ? "Running..." : buttonLabel}
               </Button>
@@ -375,29 +394,37 @@ export function SkillUpdateRunner({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className={statBox}>
-            <small className={statLabel}>sources</small>
-            <strong className={statValue}>{sourceCount}</strong>
-          </div>
-          <div className={statBox}>
-            <small className={statLabel}>cadence</small>
-            <strong className={statValue}>{scheduleLabel}</strong>
-          </div>
-          <div className={statBox}>
-            <small className={statLabel}>next run</small>
-            <strong className={statValue}>{nextRunLabel}</strong>
-          </div>
-          <div className={statBox}>
-            <small className={statLabel}>latest</small>
-            <strong
-              className={cn(
-                statValue,
-                visibleStatus === "error" && "text-danger"
-              )}
-            >
-              {latestOutcomeLabel}
-            </strong>
-          </div>
+          <Tip content="Number of tracked URLs the agent scans" side="bottom">
+            <div className={statBox}>
+              <small className={statLabel}>sources</small>
+              <strong className={statValue}>{sourceCount}</strong>
+            </div>
+          </Tip>
+          <Tip content="How often the automation runs" side="bottom">
+            <div className={statBox}>
+              <small className={statLabel}>cadence</small>
+              <strong className={statValue}>{scheduleLabel}</strong>
+            </div>
+          </Tip>
+          <Tip content="When the next scheduled run fires" side="bottom">
+            <div className={statBox}>
+              <small className={statLabel}>next run</small>
+              <strong className={statValue}>{nextRunLabel}</strong>
+            </div>
+          </Tip>
+          <Tip content="Outcome of the most recent run" side="bottom">
+            <div className={statBox}>
+              <small className={statLabel}>latest</small>
+              <strong
+                className={cn(
+                  statValue,
+                  visibleStatus === "error" && "text-danger"
+                )}
+              >
+                {latestOutcomeLabel}
+              </strong>
+            </div>
+          </Tip>
         </div>
       </Panel>
 
@@ -412,9 +439,13 @@ export function SkillUpdateRunner({
             </div>
             <div className="flex items-center gap-2">
               {visibleStatus === "running" ? (
-                <Badge color="blue">streaming</Badge>
+                <Tip content="Results are streaming in real time" side="bottom">
+                  <span><Badge color="blue">streaming</Badge></span>
+                </Tip>
               ) : latestRun ? (
-                <Badge color="neutral">{new Date(latestRun.finishedAt).toLocaleString()}</Badge>
+                <Tip content="When this run completed" side="bottom">
+                  <span><Badge color="neutral">{new Date(latestRun.finishedAt).toLocaleString()}</Badge></span>
+                </Tip>
               ) : null}
               <Button
                 onClick={() => setModalOpen(true)}

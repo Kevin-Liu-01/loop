@@ -545,16 +545,12 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<void> 
     }
   }
 
-  const eligibleSlugs = new Set(sorted.map((skill) => skill.slug));
-  const refreshedSkills = skills.map((skill) =>
-    eligibleSlugs.has(skill.slug) ? (refreshedMap.get(skill.slug) ?? skill) : skill
-  );
+  if (refreshedMap.size > 0) {
+    await saveUserSkillDocuments([...refreshedMap.values()]);
+  }
 
-  if (didChange || loopRuns.length > 0) {
-    await saveUserSkillDocuments(refreshedSkills);
-    for (const run of loopRuns) {
-      await recordLoopRun(run);
-    }
+  for (const run of loopRuns) {
+    await recordLoopRun(run);
   }
 }
 
@@ -680,13 +676,14 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
   );
 
   if (shouldSave) {
-    await saveImportedSkills(nextSkills);
+    const changedSkills = nextSkills.filter((next, i) => next !== importedSkills[i]);
+    if (changedSkills.length > 0) {
+      await saveImportedSkills(changedSkills);
+    }
   }
 
-  if (loopRuns.length > 0) {
-    for (const run of loopRuns) {
-      await recordLoopRun(run);
-    }
+  for (const run of loopRuns) {
+    await recordLoopRun(run);
   }
 }
 

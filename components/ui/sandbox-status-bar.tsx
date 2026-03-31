@@ -3,6 +3,7 @@
 import { useEffect, useReducer } from "react";
 
 import { CpuIcon, StopIcon, TerminalIcon, TimerIcon } from "@/components/frontier-icons";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 
 type SandboxStatusBarProps = {
@@ -82,57 +83,67 @@ export function SandboxStatusBar({
         className,
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "inline-block h-2 w-2 shrink-0 rounded-full",
-          statusDotColor[status],
-        )}
-      />
+      <Tip content={`Sandbox is ${statusLabel[status].toLowerCase()}`} side="top">
+        <span
+          aria-hidden
+          className={cn(
+            "inline-block h-2 w-2 shrink-0 rounded-full",
+            statusDotColor[status],
+          )}
+        />
+      </Tip>
       <span className="font-medium text-ink">{statusLabel[status]}</span>
       <span className="text-ink-faint/60">·</span>
-      <span className="font-mono text-ink-faint">{runtime}</span>
+      <span className="text-ink-faint">{runtime}</span>
 
       {sandboxId && (
         <>
           <span className="text-ink-faint/40">·</span>
-          <span className="max-w-[80px] truncate font-mono text-ink-faint/70">
-            {sandboxId}
-          </span>
+          <Tip content={sandboxId} side="top">
+            <span className="max-w-[80px] truncate text-ink-faint/70">
+              {sandboxId}
+            </span>
+          </Tip>
         </>
       )}
 
       {status === "running" && uptimeSeconds > 0 && (
         <>
           <span className="text-ink-faint/40">·</span>
-          <span className="flex items-center gap-1 font-mono tabular-nums text-ink-faint">
-            <TimerIcon className="h-3 w-3" />
-            {formatDuration(remaining)} left
-          </span>
+          <Tip content="Time before the sandbox auto-stops" side="top">
+            <span className="flex items-center gap-1 tabular-nums text-ink-faint">
+              <TimerIcon className="h-3 w-3" />
+              {formatDuration(remaining)} left
+            </span>
+          </Tip>
         </>
       )}
 
       {status === "running" && processCount > 0 && (
         <>
           <span className="text-ink-faint/40">·</span>
-          <span className="flex items-center gap-1 font-mono tabular-nums text-ink-faint">
-            <CpuIcon className="h-3 w-3" />
-            {processCount} proc{processCount !== 1 ? "s" : ""}
-          </span>
+          <Tip content="Active processes in the sandbox VM" side="top">
+            <span className="flex items-center gap-1 tabular-nums text-ink-faint">
+              <CpuIcon className="h-3 w-3" />
+              {processCount} proc{processCount !== 1 ? "s" : ""}
+            </span>
+          </Tip>
         </>
       )}
 
       <div className="flex-1" />
 
       {status === "running" && onStop && (
-        <button
-          className="flex h-6 items-center gap-1.5 rounded-lg border border-danger/20 bg-danger/[0.04] px-2 text-[0.6rem] font-medium text-danger transition-colors hover:border-danger/30 hover:bg-danger/[0.08] dark:bg-danger/[0.06]"
-          onClick={onStop}
-          type="button"
-        >
-          <StopIcon className="h-3 w-3" />
-          Stop
-        </button>
+        <Tip content="Terminate the sandbox session" side="top">
+          <button
+            className="flex h-6 items-center gap-1.5 rounded-lg border border-danger/20 bg-danger/[0.04] px-2 text-[0.6rem] font-medium text-danger transition-colors hover:border-danger/30 hover:bg-danger/[0.08] dark:bg-danger/[0.06]"
+            onClick={onStop}
+            type="button"
+          >
+            <StopIcon className="h-3 w-3" />
+            Stop
+          </button>
+        </Tip>
       )}
     </div>
   );

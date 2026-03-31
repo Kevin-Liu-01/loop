@@ -55,9 +55,11 @@ export default async function SettingsImportsPage() {
                 </p>
               </div>
             </div>
-            <Badge color="neutral" className="shrink-0">
-              {formatNextRun(nextRunUtc)}
-            </Badge>
+            <span title="Next scheduled import run (UTC)">
+              <Badge color="neutral" className="shrink-0">
+                {formatNextRun(nextRunUtc)}
+              </Badge>
+            </span>
           </PanelHead>
         </Panel>
 
@@ -83,22 +85,26 @@ export default async function SettingsImportsPage() {
               <li className="grid gap-3 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4" key={source.id}>
                 <div className="min-w-0">
                   <p className="m-0 font-medium tracking-tight text-ink">{source.name}</p>
-                  <p className="mt-1 m-0 font-mono text-xs text-ink-muted">
+                  <p className="mt-1 m-0 text-xs text-ink-muted">
                     {source.org}/{source.repo}
                     <span className="text-ink-faint"> · </span>
                     <span className="text-ink-soft">{source.branch}</span>
                   </p>
-                  <p className="mt-2 m-0 font-mono text-[0.6875rem] leading-relaxed text-ink-faint">
+                  <p className="mt-2 m-0 text-[0.6875rem] leading-relaxed text-ink-faint">
                     {source.skillsPath || "(repo root)"}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <Badge color={source.trustTier === "official" ? "orange" : "neutral"}>
-                    {source.trustTier === "official" ? "Official" : "Community"}
-                  </Badge>
-                  <Badge color="neutral" className="max-w-[14rem] truncate font-normal">
-                    {source.id}
-                  </Badge>
+                  <span title={source.trustTier === "official" ? "Maintained by the vendor" : "Community-maintained source"}>
+                    <Badge color={source.trustTier === "official" ? "orange" : "neutral"}>
+                      {source.trustTier === "official" ? "Official" : "Community"}
+                    </Badge>
+                  </span>
+                  <span title={source.id}>
+                    <Badge color="neutral" className="max-w-[14rem] truncate font-normal">
+                      {source.id}
+                    </Badge>
+                  </span>
                 </div>
               </li>
             ))}
@@ -148,7 +154,9 @@ export default async function SettingsImportsPage() {
                 </p>
               </div>
               {!isOperator ? (
-                <Badge color="orange" className="shrink-0">Upgrade to Operator</Badge>
+                <span title="Subscribe to the Operator plan to add custom import sources">
+                  <Badge color="orange" className="shrink-0">Upgrade to Operator</Badge>
+                </span>
               ) : null}
             </div>
           </PanelHead>

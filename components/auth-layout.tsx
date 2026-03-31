@@ -75,11 +75,11 @@ export function AuthSplitLayout({ mode, children }: AuthSplitLayoutProps) {
             <p className="text-pretty text-sm leading-relaxed text-white/72 lg:text-base">{subtitle}</p>
           </div>
 
-          <div className="rounded-2xl border border-white/12 bg-white/[0.07] p-4 backdrop-blur-[2px] sm:p-5">
-            <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.14em] text-white/48">
+          <div className="grid gap-2 sm:gap-2.5">
+            <p className="text-[0.62rem] font-medium uppercase tracking-[0.14em] text-white/48">
               Operator benefits
             </p>
-            <ul className="mt-3 grid gap-2 text-sm text-white/90 sm:gap-2.5 sm:text-[0.9375rem]">
+            <ul className="grid gap-2 text-sm text-white/90 sm:gap-2.5 sm:text-[0.9375rem]">
               {OPERATOR_BENEFITS.map((item) => (
                 <li key={item} className="flex gap-2.5">
                   <span

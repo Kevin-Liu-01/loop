@@ -45,7 +45,7 @@ export function BarList({ items, maxValue, compact, className }: BarListProps) {
                   />
                 )}
               </div>
-              <span className="w-6 shrink-0 text-right font-mono text-xs tabular-nums text-ink">
+              <span className="w-6 shrink-0 text-right text-xs tabular-nums text-ink">
                 {item.value}
               </span>
             </div>
@@ -62,15 +62,15 @@ export function BarList({ items, maxValue, compact, className }: BarListProps) {
         return (
           <div key={item.label} className="grid gap-1">
             <div className="flex items-center justify-between gap-3">
-              <span className="truncate font-mono text-xs text-ink-soft">
+              <span className="truncate text-xs text-ink-soft">
                 {item.label}
               </span>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="font-mono text-xs font-medium tabular-nums text-ink">
+                <span className="text-xs font-medium tabular-nums text-ink">
                   {item.value}
                 </span>
                 {item.secondary && (
-                  <span className="font-mono text-[0.65rem] text-ink-faint">
+                  <span className="text-[0.65rem] text-ink-faint">
                     {item.secondary}
                   </span>
                 )}

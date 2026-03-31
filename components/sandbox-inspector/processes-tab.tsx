@@ -12,7 +12,7 @@ type ProcessesTabProps = {
 function ProcessRow({ proc }: { proc: ProcessInfo }) {
   return (
     <tr className="group border-b border-line/20 text-[0.65rem] transition-colors last:border-b-0 hover:bg-paper-3/30">
-      <td className="py-2 pr-2 font-mono tabular-nums text-ink-faint/70">
+      <td className="py-2 pr-2 tabular-nums text-ink-faint/70">
         {proc.pid}
       </td>
       <td className="max-w-[120px] truncate py-2 pr-2 font-medium text-ink">
@@ -20,7 +20,7 @@ function ProcessRow({ proc }: { proc: ProcessInfo }) {
       </td>
       <td
         className={cn(
-          "py-2 pr-2 text-right font-mono tabular-nums",
+          "py-2 pr-2 text-right tabular-nums",
           proc.cpuPercent > 50 ? "text-danger" : proc.cpuPercent > 20 ? "text-warning" : "text-ink-faint",
         )}
       >
@@ -28,7 +28,7 @@ function ProcessRow({ proc }: { proc: ProcessInfo }) {
       </td>
       <td
         className={cn(
-          "py-2 text-right font-mono tabular-nums",
+          "py-2 text-right tabular-nums",
           proc.memPercent > 50 ? "text-danger" : proc.memPercent > 20 ? "text-warning" : "text-ink-faint",
         )}
       >

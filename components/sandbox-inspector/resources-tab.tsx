@@ -32,7 +32,7 @@ function GaugeBar({
       <div className="flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-ink-faint/60" />
         <span className="text-xs font-medium text-ink">{label}</span>
-        <span className="ml-auto font-mono text-[0.6rem] font-semibold tabular-nums text-ink-soft">
+        <span className="ml-auto text-[0.6rem] font-semibold tabular-nums text-ink-soft">
           {pct.toFixed(0)}%
         </span>
       </div>

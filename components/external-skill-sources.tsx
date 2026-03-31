@@ -8,6 +8,8 @@ import { DownloadIcon } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { useTrackedOperation } from "@/hooks/use-tracked-operation";
+import { Tip } from "@/components/ui/tip";
 import { formatTagLabel } from "@/lib/tag-utils";
 import { cn } from "@/lib/cn";
 
@@ -69,6 +71,7 @@ export function ExternalSkillSources() {
   const [importingSlug, setImportingSlug] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const { start: startTrackedOp } = useTrackedOperation();
 
   useEffect(() => {
     fetch("/api/imports/external")
@@ -94,6 +97,13 @@ export function ExternalSkillSources() {
       setImportingSlug(skill.slug);
       setMessage(null);
 
+      const op = startTrackedOp({
+        kind: "skill-import",
+        label: skill.slug,
+        slug: skill.slug,
+        totalSteps: 2,
+      });
+
       startTransition(async () => {
         const res = await fetch("/api/imports", {
           method: "POST",
@@ -107,10 +117,14 @@ export function ExternalSkillSources() {
         };
 
         if (!res.ok || !payload.skill?.slug) {
-          setMessage(`Failed to import ${skill.slug}: ${payload.error ?? "Unknown error"}`);
+          const errorMsg = `Failed to import ${skill.slug}: ${payload.error ?? "Unknown error"}`;
+          setMessage(errorMsg);
           setImportingSlug(null);
+          op.fail(errorMsg);
           return;
         }
+
+        op.advance({ message: "Imported, now tracking..." });
 
         const trackRes = await fetch("/api/skills/track", {
           method: "POST",
@@ -126,14 +140,17 @@ export function ExternalSkillSources() {
         setImportingSlug(null);
 
         if (trackPayload.href) {
+          op.complete(`Imported ${skill.slug}`);
           router.push(trackPayload.href);
           router.refresh();
         } else {
-          setMessage(`Imported ${skill.slug} but could not create editable copy.`);
+          const msg = `Imported ${skill.slug} but could not create editable copy.`;
+          setMessage(msg);
+          op.fail(msg);
         }
       });
     },
-    [router]
+    [router, startTrackedOp]
   );
 
   if (loading) {
@@ -184,7 +201,9 @@ export function ExternalSkillSources() {
           </span>
           <h2>External Skill Sources</h2>
         </div>
-        <Badge color="green">{data.totalSkills} available</Badge>
+        <Tip content="Total discovered skills across all external sources" side="left">
+          <span><Badge color="green">{data.totalSkills} available</Badge></span>
+        </Tip>
       </PanelHead>
 
       <p className="text-sm text-ink-soft">
@@ -206,20 +225,26 @@ export function ExternalSkillSources() {
                 <div className="flex items-center gap-2">
                   <strong className="text-sm font-semibold text-ink">{result.source.name}</strong>
                   <Badge color="blue" size="sm">{result.count} skills</Badge>
-                  <Badge color={result.source.trustTier === "official" ? "orange" : "neutral"} size="sm">{formatTagLabel(result.source.trustTier)}</Badge>
-                  <Badge color="indigo" size="sm">{formatTagLabel(result.source.discoveryMode)}</Badge>
+                  <Tip content={result.source.trustTier === "official" ? "Maintained by the vendor" : "Community-maintained source"} side="top">
+                    <span><Badge color={result.source.trustTier === "official" ? "orange" : "neutral"} size="sm">{formatTagLabel(result.source.trustTier)}</Badge></span>
+                  </Tip>
+                  <Tip content={result.source.discoveryMode === "canonical" ? "Fixed set of known skill paths" : "Discovered via search heuristics"} side="top">
+                    <span><Badge color="indigo" size="sm">{formatTagLabel(result.source.discoveryMode)}</Badge></span>
+                  </Tip>
                 </div>
                 <p className="m-0 line-clamp-1 text-xs text-ink-faint">{result.source.description}</p>
               </div>
-              <a
-                className="shrink-0 text-ink-faint hover:text-ink-soft"
-                href={result.source.homepage}
-                onClick={(e) => e.stopPropagation()}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <ExternalLinkIcon className="h-4 w-4" />
-              </a>
+              <Tip content="Open repository homepage" side="left">
+                <a
+                  className="shrink-0 text-ink-faint hover:text-ink-soft"
+                  href={result.source.homepage}
+                  onClick={(e) => e.stopPropagation()}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <ExternalLinkIcon className="h-4 w-4" />
+                </a>
+              </Tip>
             </summary>
 
             <div className="border-t border-line px-4 py-3">
@@ -247,15 +272,17 @@ export function ExternalSkillSources() {
                         {skill.sourceId} · {skill.path}
                       </p>
                     </div>
-                    <Button
-                      disabled={isPending && importingSlug === skill.slug}
-                      onClick={() => handleImport(skill)}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <DownloadIcon className="h-3.5 w-3.5" />
-                      {importingSlug === skill.slug ? "Importing..." : "Import"}
-                    </Button>
+                    <Tip content="Import skill and start tracking updates" side="left">
+                      <Button
+                        disabled={isPending && importingSlug === skill.slug}
+                        onClick={() => handleImport(skill)}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        <DownloadIcon className="h-3.5 w-3.5" />
+                        {importingSlug === skill.slug ? "Importing..." : "Import"}
+                      </Button>
+                    </Tip>
                   </div>
                 ))}
               </div>

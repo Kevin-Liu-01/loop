@@ -45,6 +45,27 @@ export function scaleLinear(
   return (value: number) => r0 + (value - d0) * factor;
 }
 
+export function findNearestIndex(
+  clientX: number,
+  containerRect: DOMRect,
+  count: number,
+  viewBoxWidth: number,
+  xScale: (i: number) => number
+): number {
+  const pct = (clientX - containerRect.left) / containerRect.width;
+  const vbX = pct * viewBoxWidth;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < count; i++) {
+    const d = Math.abs(xScale(i) - vbX);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
 export function niceMax(value: number): number {
   if (value <= 0) return 4;
   if (value <= 4) return 4;

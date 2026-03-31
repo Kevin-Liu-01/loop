@@ -217,6 +217,14 @@ html[data-theme="dark"] body::after {
 }
 
 /* ================================================================
+   Clerk social button overrides
+   ================================================================ */
+
+html[data-theme="dark"] .cl-socialButtonsBlockButton__x svg {
+  filter: brightness(0) invert(1);
+}
+
+/* ================================================================
    Typography
    ================================================================ */
 
@@ -467,7 +475,7 @@ svg {
 }
 
 .diff-viewer__stat {
-  @apply inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[0.65rem] font-bold leading-none;
+  @apply inline-flex items-center rounded-md px-1.5 py-0.5 text-[0.65rem] font-bold leading-none tabular-nums;
 }
 
 .diff-viewer__stat--added {
@@ -514,7 +522,7 @@ html[data-theme="dark"] .diff-viewer__stat--removed {
 }
 
 .diff-viewer__hunk-sep-label {
-  @apply shrink-0 font-mono text-[0.65rem] text-ink-faint;
+  @apply shrink-0 text-[0.65rem] text-ink-faint;
 }
 
 /* --- Lines --- */
@@ -744,8 +752,7 @@ html[data-theme="dark"] .diff-viewer__word--removed {
 }
 
 .signal-scene__node span {
-  @apply text-[0.68rem] uppercase tracking-[0.18em];
-  font-family: var(--font-mono);
+  @apply text-[0.68rem] font-medium uppercase tracking-[0.18em];
   color: var(--color-ink-soft);
 }
 
@@ -908,6 +915,49 @@ html[data-theme="dark"] .diff-viewer__word--removed {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@keyframes operationProgressShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes operationIndeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+@keyframes operationIconPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--color-accent, oklch(0.65 0.19 255)) / 0.3; }
+  50% { opacity: 0.8; box-shadow: 0 0 0 6px var(--color-accent, oklch(0.65 0.19 255)) / 0; }
+}
+
+.operation-progress-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(1 0 0 / 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: operationProgressShimmer 1.8s ease-in-out infinite;
+}
+
+.operation-indeterminate-bar {
+  width: 30%;
+  animation: operationIndeterminate 1.4s ease-in-out infinite;
+}
+
+.operation-icon-pulse {
+  animation: operationIconPulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operation-progress-shimmer,
+  .operation-indeterminate-bar,
+  .operation-icon-pulse {
+    animation: none;
+  }
 }
 
 /* ================================================================

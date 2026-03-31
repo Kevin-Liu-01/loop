@@ -8,6 +8,7 @@ import { motion } from "motion/react";
 import { AutomationCalendar } from "@/components/automation-calendar";
 import { AutomationIcon } from "@/components/frontier-icons";
 import { GrainShader } from "@/components/home-landing/grain-shader";
+import { HeroDiffField } from "@/components/home-landing/hero-diff-field";
 import { LoopLogo } from "@/components/loop-logo";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
@@ -41,7 +42,7 @@ const staggerItem = {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2.5 font-mono text-[0.62rem] font-medium uppercase tracking-[0.18em] text-ink-faint">
+    <span className="inline-flex items-center gap-2.5 text-[0.62rem] font-medium uppercase tracking-[0.18em] text-ink-faint">
       <span className="h-px w-5 bg-accent/30" />
       {children}
     </span>
@@ -61,7 +62,7 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
     <div className="min-h-screen bg-paper text-ink">
       {/* ── HERO ── */}
       <section className="relative w-full overflow-hidden">
-        <div className="absolute inset-0 h-[min(60vh,600px)]">
+        <div className="absolute inset-0">
           <GrainShader />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper" />
         </div>
@@ -78,25 +79,25 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
               className="h-7 w-7 text-accent"
               interactionActive={brandHover}
             />
-            <strong className="font-serif text-[1.05rem] font-medium tracking-[-0.03em]">
+            <strong className="font-serif text-[1.05rem] font-medium tracking-[-0.03em] text-white/90">
               Loop
             </strong>
           </Link>
           <div className="flex items-center gap-3">
             <Link
-              className="text-sm text-ink-faint transition-colors hover:text-ink max-sm:hidden"
+              className="text-sm text-white/40 transition-colors hover:text-white/80 max-sm:hidden"
               href="#skills"
             >
               Skills
             </Link>
             <Link
-              className="text-sm text-ink-faint transition-colors hover:text-ink max-sm:hidden"
+              className="text-sm text-white/40 transition-colors hover:text-white/80 max-sm:hidden"
               href="#mcps"
             >
               MCPs
             </Link>
             <Link
-              className="text-sm text-ink-faint transition-colors hover:text-ink"
+              className="text-sm text-white/40 transition-colors hover:text-white/80"
               href="/sign-in"
             >
               Sign in
@@ -107,32 +108,60 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
           </div>
         </nav>
 
-        {/* Hero copy */}
-        <motion.div
-          className="relative z-10 mx-auto grid max-w-[1100px] gap-6 px-6 pb-16 pt-[min(12vh,100px)]"
-          {...fadeUp}
-        >
-          <div className="grid max-w-[52rem] gap-5">
-            <SectionLabel>Operator desk for agent skills</SectionLabel>
-            <h1 className="text-balance font-serif text-[clamp(2.4rem,4.5vw,3.8rem)] font-medium leading-[1.06] tracking-[-0.04em]">
-              Skills that{"\u00A0"}never
-              <br className="max-sm:hidden" />
-              {" "}go{"\u00A0"}stale
-            </h1>
-            <p className="max-w-[38rem] text-balance text-[1.05rem] leading-[1.7] text-ink-soft">
-              Loop continuously monitors, evaluates, and updates your agent
-              playbooks — so every skill evolves on its own.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <LinkButton href="/sign-up" variant="primary">
-              Get started free
-            </LinkButton>
-            <LinkButton href="#skills" variant="ghost">
-              Browse skills
-            </LinkButton>
-          </div>
-        </motion.div>
+        {/* Hero — centered stack */}
+        <div className="relative z-10 mx-auto max-w-[1100px] px-6 pb-6 pt-[min(14vh,120px)] text-center">
+          <motion.div className="mx-auto grid max-w-[700px] gap-7" {...fadeUp}>
+            <div className="grid gap-5">
+              <div className="flex items-center justify-center gap-2.5">
+                <span className="h-px w-5 bg-accent/30" />
+                <span className="text-[0.62rem] font-medium uppercase tracking-[0.18em] text-white/40">
+                  Operator desk for agent skills
+                </span>
+                <span className="h-px w-5 bg-accent/30" />
+              </div>
+
+              <h1 className="font-serif text-[clamp(2.8rem,5.8vw,4.8rem)] font-medium leading-[1.02] tracking-[-0.045em] text-white">
+                Skills that{"\u00A0"}never
+                <br className="max-sm:hidden" />
+                {" "}go{"\u00A0"}stale
+              </h1>
+
+              <p className="mx-auto max-w-[34rem] text-balance text-[1.1rem] leading-[1.7] text-white/50">
+                Loop continuously monitors, evaluates, and updates your agent
+                playbooks — so every skill evolves on its own.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <LinkButton href="/sign-up" variant="primary">
+                Get started free
+              </LinkButton>
+              <LinkButton href="#skills" variant="ghost">
+                Browse skills
+              </LinkButton>
+            </div>
+          </motion.div>
+
+          {/* Proof strip */}
+          <motion.div
+            className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[0.72rem] font-medium tabular-nums text-white/25"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+          >
+            <span>142+ skills tracked</span>
+            <span className="hidden h-3 w-px bg-white/10 sm:block" />
+            <span>2,400+ updates shipped</span>
+            <span className="hidden h-3 w-px bg-white/10 sm:block" />
+            <span>23 MCP providers</span>
+          </motion.div>
+        </div>
+
+        {/* 3D diff card field */}
+        <div className="relative z-10 px-6 pb-16">
+          <HeroDiffField />
+        </div>
 
         <div className="relative z-10 mx-auto max-w-[1100px] px-6">
           <div className="h-px w-full bg-line" />
@@ -305,10 +334,10 @@ export function LandingShell({ skills, mcps, automations }: LandingShellProps) {
       </div>
       <footer className="relative z-10 px-6 py-6">
         <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-4">
-          <p className="m-0 font-mono text-[0.62rem] tabular-nums text-ink-faint">
+          <p className="m-0 text-[0.62rem] tabular-nums text-ink-faint">
             © {new Date().getFullYear()} Loop · Operator desk for agent skills
           </p>
-          <nav className="flex items-center gap-6 font-mono text-[0.62rem]">
+          <nav className="flex items-center gap-6 text-[0.62rem]">
             <Link className="text-ink-faint transition-colors hover:text-ink" href="/sign-up">Get started</Link>
             <Link className="text-ink-faint transition-colors hover:text-ink" href="#skills">Skills</Link>
             <Link className="text-ink-faint transition-colors hover:text-ink" href="#mcps">MCPs</Link>

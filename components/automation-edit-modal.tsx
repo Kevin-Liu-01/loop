@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/shadcn/dialog";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun, countMonthlyRuns } from "@/lib/schedule";
@@ -162,9 +163,15 @@ export function AutomationEditModal({
           <div className="min-h-0 flex-1 overflow-y-auto">
             {/* Stats ribbon */}
             <div className="grid grid-cols-3 divide-x divide-line border-b border-line bg-paper-2/40 dark:bg-paper-2/20">
-              <StatCell label="Next run" value={nextRunLabel} muted={!isActive} />
-              <StatCell label="This month" value={`${monthlyRuns} runs`} />
-              <StatCell label="Status" value={isActive ? "Active" : "Paused"} accent={isActive} />
+              <Tip content="When the next scheduled run fires" side="bottom">
+                <div><StatCell label="Next run" value={nextRunLabel} muted={!isActive} /></div>
+              </Tip>
+              <Tip content="Estimated runs this calendar month" side="bottom">
+                <div><StatCell label="This month" value={`${monthlyRuns} runs`} /></div>
+              </Tip>
+              <Tip content={isActive ? "Automation is running on schedule" : "Automation is paused — no runs will fire"} side="bottom">
+                <div><StatCell label="Status" value={isActive ? "Active" : "Paused"} accent={isActive} /></div>
+              </Tip>
             </div>
 
             <div className="grid gap-6 px-6 py-5">
@@ -214,10 +221,12 @@ export function AutomationEditModal({
                 </FieldGroup>
 
                 <FieldGroup>
-                  <span className={fieldLabel}>
-                    AI Model
-                    {!isOperator && <span className="ml-1 normal-case tracking-normal text-ink-faint/60">(Operator)</span>}
-                  </span>
+                  <Tip content="Override the default model for this automation. Requires Operator subscription." side="top">
+                    <span className={fieldLabel}>
+                      AI Model
+                      {!isOperator && <span className="ml-1 normal-case tracking-normal text-ink-faint/60">(Operator)</span>}
+                    </span>
+                  </Tip>
                   <select
                     disabled={!canManage || !isOperator}
                     className={cn(textFieldBase, textFieldSelect, "min-h-11 py-3 text-sm", !isOperator && "opacity-40")}
@@ -266,9 +275,11 @@ export function AutomationEditModal({
                         <span className="min-w-0 truncate text-sm text-ink-soft group-hover:text-ink">
                           {src.label}
                         </span>
-                        <span className="ml-auto shrink-0 text-[0.625rem] font-medium text-ink-faint/60">
-                          {src.kind}
-                        </span>
+                        <Tip content={`Source type: ${src.kind}`} side="left">
+                          <span className="ml-auto shrink-0 text-[0.625rem] font-medium text-ink-faint/60">
+                            {src.kind}
+                          </span>
+                        </Tip>
                       </a>
                     ))}
                   </div>
@@ -282,7 +293,7 @@ export function AutomationEditModal({
                   <div className="grid gap-1">
                     {automation.cwd.map((dir) => (
                       <div
-                        className="truncate rounded-lg border border-line/60 bg-paper-2/40 px-3 py-2 font-mono text-xs text-ink-soft dark:bg-paper-2/20"
+                        className="truncate rounded-lg border border-line/60 bg-paper-2/40 px-3 py-2 text-xs text-ink-soft dark:bg-paper-2/20"
                         key={dir}
                       >
                         {dir}
@@ -298,15 +309,17 @@ export function AutomationEditModal({
 
           {canManage ? (
             <DialogFooter className="justify-between sm:justify-between">
-              <Button
-                disabled={isDeleting || isPending}
-                onClick={handleDelete}
-                type="button"
-                variant="danger"
-                size="sm"
-              >
-                {isDeleting ? "Disabling…" : "Disable"}
-              </Button>
+              <Tip content="Permanently disable this automation for this skill" side="top">
+                <Button
+                  disabled={isDeleting || isPending}
+                  onClick={handleDelete}
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                >
+                  {isDeleting ? "Disabling…" : "Disable"}
+                </Button>
+              </Tip>
 
               <div className="flex items-center gap-2">
                 <Button onClick={onClose} type="button" variant="ghost" size="sm">

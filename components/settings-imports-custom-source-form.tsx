@@ -63,7 +63,7 @@ export function SettingsImportsCustomSourceForm({ isOperator }: SettingsImportsC
             name="skillsPath"
             placeholder="skills or packages/skills"
             disabled={!isOperator}
-            className={cn(textFieldBase, "min-h-11 py-3 font-mono text-sm")}
+            className={cn(textFieldBase, "min-h-11 py-3 text-sm")}
           />
         </FieldGroup>
       </form>

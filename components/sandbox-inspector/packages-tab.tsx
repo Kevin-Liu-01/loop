@@ -37,7 +37,7 @@ export function PackagesTab({ packages, isLoading }: PackagesTabProps) {
             className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-[0.7rem] transition-colors hover:bg-paper-3/30"
           >
             <span className="min-w-0 truncate font-medium text-ink">{pkg.name}</span>
-            <span className="shrink-0 font-mono text-[0.6rem] tabular-nums text-ink-faint/60">
+            <span className="shrink-0 text-[0.6rem] tabular-nums text-ink-faint/60">
               {pkg.version}
             </span>
           </div>

@@ -64,7 +64,7 @@ function FileRow({
         {entry.name}
       </span>
       {!entry.isDir && (
-        <span className="shrink-0 font-mono text-[0.55rem] tabular-nums text-ink-faint/50">
+        <span className="shrink-0 text-[0.55rem] tabular-nums text-ink-faint/50">
           {formatSize(entry.size)}
         </span>
       )}
@@ -105,7 +105,7 @@ export function FilesTab({ files, currentPath, isLoading, onBrowse }: FilesTabPr
           </button>
         )}
         <FolderOpenIcon className="h-3 w-3 shrink-0 text-accent/50" />
-        <span className="min-w-0 truncate font-mono text-[0.65rem] text-ink-faint">
+        <span className="min-w-0 truncate text-[0.65rem] text-ink-faint">
           {currentPath}
         </span>
       </div>

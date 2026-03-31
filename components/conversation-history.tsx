@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ClockIcon, MessageIcon } from "@/components/frontier-icons";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { formatRelativeDate } from "@/lib/format";
 import type { ConversationChannel } from "@/lib/types";
@@ -43,14 +44,16 @@ export function ConversationHistory({ channel, onSelect, className }: Conversati
 
   return (
     <div className={cn("relative", className)}>
-      <button
-        className="flex items-center gap-1.5 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
-        onClick={() => setIsOpen((prev) => !prev)}
-        type="button"
-      >
-        <ClockIcon className="h-3.5 w-3.5" />
-        {isOpen ? "Hide history" : "History"}
-      </button>
+      <Tip content={isOpen ? "Close conversation list" : "Browse saved conversations"} side="bottom">
+        <button
+          className="flex items-center gap-1.5 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+          onClick={() => setIsOpen((prev) => !prev)}
+          type="button"
+        >
+          <ClockIcon className="h-3.5 w-3.5" />
+          {isOpen ? "Hide history" : "History"}
+        </button>
+      </Tip>
 
       {isOpen ? (
         <ScrollArea className="mt-3 max-h-[280px]">

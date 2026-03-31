@@ -89,7 +89,7 @@ async function runUserLoopUpdate(
     }
   });
 
-  await saveUserSkillDocuments(skills.map((entry) => (entry.slug === slug ? cycle.nextSkill : entry)));
+  await saveUserSkillDocuments([cycle.nextSkill]);
   await recordLoopRun(cycle.loopRun);
   await logUsageEvent({
     kind: "skill_refresh",
@@ -242,7 +242,7 @@ async function runImportedLoopUpdate(
       )
     : buildImportedNoopRefresh(skill, refreshed.lastSyncedAt);
 
-  await saveImportedSkills(importedSkills.map((entry) => (entry.slug === slug ? nextSkill : entry)));
+  await saveImportedSkills([nextSkill]);
 
   const afterRecord = buildImportedSkillRecord(nextSkill);
   const result: LoopUpdateResult = {

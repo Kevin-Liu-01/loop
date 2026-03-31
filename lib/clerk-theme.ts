@@ -14,7 +14,7 @@ export const clerkAppearance = {
     fontFamilyButtons: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
   },
   elements: {
-    card: "shadow-none border border-[var(--color-line)] bg-[var(--color-paper)] rounded-xl",
+    card: "shadow-none border-none bg-transparent rounded-xl p-0",
     headerTitle: "font-serif tracking-[-0.02em]",
     headerSubtitle: "text-[var(--color-ink-soft)]",
     socialButtonsBlockButton:

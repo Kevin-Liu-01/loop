@@ -12,6 +12,7 @@ import { FieldGroup, FieldLabel, textFieldArea, textFieldBase, textFieldSelect }
 
 import { Panel } from "@/components/ui/panel";
 import { messageToTextVerbose } from "@/lib/chat";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { McpIcon } from "@/components/ui/skill-icon";
 import type { AgentProviderPreset, ImportedMcpDocument, SkillRecord } from "@/lib/types";
@@ -237,10 +238,12 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
       <Panel className="p-7">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Agent lab</span>
+            <span className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft">Agent lab</span>
             <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Run any agent, pick any model.</h2>
           </div>
-          <small className="text-sm text-ink-soft">{selectedPreset?.label ?? "Custom runtime"}</small>
+          <Tip content={selectedPreset?.id === "gateway" ? "Using AI Gateway for multi-provider routing" : "Direct provider connection"} side="left">
+            <small className="text-sm text-ink-soft">{selectedPreset?.label ?? "Custom runtime"}</small>
+          </Tip>
         </div>
 
         <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
@@ -339,12 +342,14 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
 
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Attachments</span>
+            <span className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft">Attachments</span>
             <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Skills and MCPs</h2>
           </div>
-          <small className="text-sm text-ink-soft">
-            {config.selectedSkillSlugs.length} skills · {config.selectedMcpIds.length} MCPs
-          </small>
+          <Tip content="Skills and MCPs attached to the agent context" side="left">
+            <small className="text-sm text-ink-soft">
+              {config.selectedSkillSlugs.length} skills · {config.selectedMcpIds.length} MCPs
+            </small>
+          </Tip>
         </div>
 
         <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
@@ -383,7 +388,10 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                       <span className="grid min-w-0 gap-1">
                         {mcp.name}
                         <small className="text-xs text-ink-soft">
-                          {mcp.transport} · {["stdio", "http"].includes(mcp.transport) ? "runtime ready" : "metadata only"}
+                          {mcp.transport} ·{" "}
+                          <Tip content={["stdio", "http"].includes(mcp.transport) ? "This MCP can be called at runtime in the sandbox" : "Schema-only — tools are described but not executable"} side="right">
+                            <span>{["stdio", "http"].includes(mcp.transport) ? "runtime ready" : "metadata only"}</span>
+                          </Tip>
                         </small>
                       </span>
                     </span>
@@ -400,9 +408,11 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={resetConfig} type="button" variant="ghost">
-            Reset lab
-          </Button>
+          <Tip content="Reset all lab settings to defaults" side="top">
+            <Button onClick={resetConfig} type="button" variant="ghost">
+              Reset lab
+            </Button>
+          </Tip>
           {selectedPreset?.docsUrl ? (
             <ButtonLink href={selectedPreset.docsUrl} rel="noreferrer" target="_blank" variant="ghost">
               Provider docs
@@ -414,7 +424,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
       <Panel className="p-7">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Remote import</span>
+            <span className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft">Remote import</span>
             <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Pull skills and MCPs from the web.</h2>
           </div>
           <small className="text-sm text-ink-soft">{isImportPending ? "Importing" : "GitHub raw, markdown, JSON, YAML"}</small>
@@ -518,7 +528,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
       <Panel className="p-7">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">Run</span>
+            <span className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft">Run</span>
             <h2 className="m-0 text-lg font-semibold tracking-tight text-ink">Live transcript</h2>
           </div>
           <div className="flex items-center gap-4">
@@ -535,7 +545,9 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                 } catch { /* silent */ }
               }}
             />
-            <small className="text-sm text-ink-soft">{status === "submitted" ? "Thinking" : selectedPreset?.label ?? "Ready"}</small>
+            <Tip content={status === "submitted" ? "Agent is processing your request" : "Agent is ready — type a message and hit Run"} side="bottom">
+              <small className="text-sm text-ink-soft">{status === "submitted" ? "Thinking" : selectedPreset?.label ?? "Ready"}</small>
+            </Tip>
           </div>
         </div>
 

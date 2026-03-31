@@ -6,6 +6,7 @@ import { CheckIcon, LinkIcon, WalletIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/ui/status-dot";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 
 type ConnectPanelProps = {
@@ -75,14 +76,18 @@ export function ConnectPanel({ hasSubscription, connectAccountId }: ConnectPanel
               <p className="m-0 text-xs text-ink-faint">Payments will be deposited directly</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-soft">
-            <StatusDot tone="fresh" pulse />
-            active
-          </span>
+          <Tip content="Stripe payouts are enabled and active" side="left">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-soft">
+              <StatusDot tone="fresh" pulse />
+              active
+            </span>
+          </Tip>
         </div>
         <div className="divide-y divide-line/60 px-5 sm:px-6">
           <DetailRow label="Account">
-            <span className="font-mono text-xs tabular-nums">{connectAccountId}</span>
+            <Tip content={connectAccountId} side="left">
+              <span className="text-xs tabular-nums">{connectAccountId}</span>
+            </Tip>
           </DetailRow>
           <DetailRow label="Type">
             <Badge color="green">Express</Badge>

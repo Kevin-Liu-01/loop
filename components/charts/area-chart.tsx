@@ -1,5 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { smoothPath, scaleLinear, niceMax, type Point } from "./chart-utils";
+import {
+  smoothPath,
+  scaleLinear,
+  niceMax,
+  findNearestIndex,
+  type Point,
+} from "./chart-utils";
+import { ChartTooltipContent, type TooltipRow } from "./chart-tooltip";
 
 export type AreaChartDatum = {
   label: string;
@@ -28,9 +38,13 @@ export function AreaChart({
   secondaryColor = "var(--color-ink-faint)",
   className,
 }: AreaChartProps) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   if (data.length === 0) return null;
 
-  const allZero = data.every((d) => d.value === 0 && (d.secondary ?? 0) === 0);
+  const allZero = data.every(
+    (d) => d.value === 0 && (d.secondary ?? 0) === 0
+  );
   if (allZero) {
     return (
       <div
@@ -78,10 +92,49 @@ export function AreaChart({
   const labelStep = Math.max(1, Math.ceil(data.length / 8));
   const gradId = `${id}-grad`;
 
+  const hovered = hoveredIdx !== null ? data[hoveredIdx] : null;
+  const hoveredXVb = hoveredIdx !== null ? xScale(hoveredIdx) : 0;
+  const tooltipXPct = hoveredIdx !== null ? (hoveredXVb / VB_W) * 100 : 0;
+
+  const tooltipTransform =
+    tooltipXPct < 18
+      ? "translateX(0)"
+      : tooltipXPct > 82
+        ? "translateX(-100%)"
+        : "translateX(-50%)";
+
+  const tooltipRows: TooltipRow[] = hovered
+    ? [
+        { label: "total", value: hovered.value, color },
+        ...(hasSecondary
+          ? [
+              {
+                label: "api",
+                value: hovered.secondary ?? 0,
+                color: secondaryColor,
+                dashed: true,
+              },
+            ]
+          : []),
+      ]
+    : [];
+
   return (
     <div
-      className={cn("w-full", className)}
+      className={cn("relative w-full select-none", className)}
       style={{ aspectRatio: `${VB_W} / ${VB_H}`, maxHeight: height }}
+      onPointerMove={(e) =>
+        setHoveredIdx(
+          findNearestIndex(
+            e.clientX,
+            e.currentTarget.getBoundingClientRect(),
+            data.length,
+            VB_W,
+            xScale
+          )
+        )
+      }
+      onPointerLeave={() => setHoveredIdx(null)}
     >
       <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%">
         <defs>
@@ -127,28 +180,51 @@ export function AreaChart({
         />
 
         {primaryPoints.map((p, i) =>
-          data[i].value > 0 ? (
-            <circle key={i} cx={p.x} cy={p.y} r={2.5} fill={color} />
+          data[i].value > 0 && i !== hoveredIdx ? (
+            <circle
+              key={i}
+              cx={p.x}
+              cy={p.y}
+              r={2.5}
+              fill={color}
+              opacity={hoveredIdx !== null ? 0.35 : 1}
+            />
           ) : null
         )}
 
-        {data.map((d, i) => {
-          const bandW = chartW / Math.max(1, data.length);
-          const cx = xScale(i);
-          const tip = `${d.label} · Total ${d.value} · API ${d.secondary ?? 0}`;
-          return (
-            <g key={`hit-${i}`} style={{ pointerEvents: "all" }}>
-              <title>{tip}</title>
-              <rect
-                x={cx - bandW / 2}
-                y={PAD.top}
-                width={bandW}
-                height={chartH}
-                fill="transparent"
+        {hoveredIdx !== null && (
+          <>
+            <line
+              x1={hoveredXVb}
+              y1={PAD.top}
+              x2={hoveredXVb}
+              y2={PAD.top + chartH}
+              stroke="var(--color-ink-faint)"
+              strokeWidth={0.5}
+              strokeDasharray="3 2"
+              opacity={0.5}
+            />
+            <circle
+              cx={hoveredXVb}
+              cy={primaryPoints[hoveredIdx].y}
+              r={4}
+              fill={color}
+              stroke="var(--color-paper)"
+              strokeWidth={2}
+            />
+            {hasSecondary && (data[hoveredIdx].secondary ?? 0) > 0 && (
+              <circle
+                cx={hoveredXVb}
+                cy={yScale(data[hoveredIdx].secondary ?? 0)}
+                r={3}
+                fill={secondaryColor}
+                stroke="var(--color-paper)"
+                strokeWidth={1.5}
+                opacity={0.7}
               />
-            </g>
-          );
-        })}
+            )}
+          </>
+        )}
 
         {yTicks.map((tick) => (
           <text
@@ -158,7 +234,7 @@ export function AreaChart({
             textAnchor="end"
             fontSize={10}
             fill="var(--color-ink-faint)"
-            fontFamily="var(--font-mono)"
+            fontFamily="var(--font-sans)"
           >
             {tick}
           </text>
@@ -173,13 +249,22 @@ export function AreaChart({
               textAnchor="middle"
               fontSize={9}
               fill="var(--color-ink-faint)"
-              fontFamily="var(--font-mono)"
+              fontFamily="var(--font-sans)"
             >
               {d.label}
             </text>
           ) : null
         )}
       </svg>
+
+      {hoveredIdx !== null && hovered && (
+        <div
+          className="pointer-events-none absolute top-0 z-10"
+          style={{ left: `${tooltipXPct}%`, transform: tooltipTransform }}
+        >
+          <ChartTooltipContent label={hovered.label} rows={tooltipRows} />
+        </div>
+      )}
     </div>
   );
 }

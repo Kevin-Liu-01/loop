@@ -9,6 +9,7 @@ import { ConversationHistory } from "@/components/conversation-history";
 import { Button } from "@/components/ui/button";
 import { textFieldArea, textFieldBase } from "@/components/ui/field";
 import { messageToText } from "@/lib/chat";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 
 const DRAFT_KEY = "loop.chat.draft";
@@ -94,7 +95,7 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
     <div className="grid gap-5 rounded-2xl border border-line bg-paper-3/92 p-7">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="flex items-center gap-1.5 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft">
+          <span className="flex items-center gap-1.5 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-ink-soft">
             <BotIcon className="h-3.5 w-3.5" />
             In-house copilot
           </span>
@@ -114,7 +115,9 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
               } catch { /* silent */ }
             }}
           />
-          <small className="text-ink-soft">{enabled ? "AI SDK online" : "Add OPENAI_API_KEY to enable answers"}</small>
+          <Tip content={enabled ? "Copilot is connected and ready" : "Set the OPENAI_API_KEY environment variable to enable"} side="bottom">
+            <small className="text-ink-soft">{enabled ? "AI SDK online" : "Add OPENAI_API_KEY to enable answers"}</small>
+          </Tip>
         </div>
       </div>
 
@@ -153,24 +156,28 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
           value={input}
         />
         <div className="flex flex-wrap gap-3">
-          <Button
-            onClick={() => {
-              conversationIdRef.current = null;
-              prevMessageCountRef.current = 0;
-              timestampsRef.current.clear();
-              window.localStorage.removeItem(CONVERSATION_KEY);
-              window.location.reload();
-            }}
-            type="button"
-            variant="ghost"
-          >
-            <PlusIcon className="h-3.5 w-3.5" />
-            New chat
-          </Button>
-          <Button onClick={() => setInput(starterPrompt)} type="button" variant="ghost">
-            <ResetIcon className="h-3.5 w-3.5" />
-            Reset prompt
-          </Button>
+          <Tip content="Clear the thread and start fresh" side="top">
+            <Button
+              onClick={() => {
+                conversationIdRef.current = null;
+                prevMessageCountRef.current = 0;
+                timestampsRef.current.clear();
+                window.localStorage.removeItem(CONVERSATION_KEY);
+                window.location.reload();
+              }}
+              type="button"
+              variant="ghost"
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              New chat
+            </Button>
+          </Tip>
+          <Tip content="Restore the default starter prompt" side="top">
+            <Button onClick={() => setInput(starterPrompt)} type="button" variant="ghost">
+              <ResetIcon className="h-3.5 w-3.5" />
+              Reset prompt
+            </Button>
+          </Tip>
           <Button disabled={!enabled || status === "submitted"} type="submit">
             {status === "submitted" ? (
               <>

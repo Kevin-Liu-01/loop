@@ -14,6 +14,7 @@ import { useUsageComparisonMode } from "@/components/usage-comparison-context";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { Panel } from "@/components/ui/panel";
 import { StatusDot } from "@/components/ui/status-dot";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import type { RecentImportItem } from "@/lib/db/recent-imports";
 import { inlineSectionLabel } from "@/lib/ui-layout";
@@ -197,17 +198,21 @@ function ActivitySidebarView({
             ) : null}
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[0.62rem] text-ink-faint">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-0.5 w-3 rounded-full bg-accent" />
-              total
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                className="inline-block h-0.5 w-3 rounded-full"
-                style={{ background: "var(--color-ink-faint)", opacity: 0.55 }}
-              />
-              api
-            </span>
+            <Tip content="All events: views, interactions, and API calls" side="top">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-0.5 w-3 rounded-full bg-accent" />
+                total
+              </span>
+            </Tip>
+            <Tip content="API calls only (skill endpoints)" side="top">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-0.5 w-3 rounded-full"
+                  style={{ background: "var(--color-ink-faint)", opacity: 0.55 }}
+                />
+                api
+              </span>
+            </Tip>
           </div>
         </div>
         {hasEvents ? (
@@ -300,9 +305,11 @@ function ActivitySidebarView({
                     className="flex min-w-0 items-baseline justify-between gap-2 text-[0.7rem] leading-snug"
                     key={r.route}
                   >
-                    <span className="min-w-0 truncate font-mono text-ink-soft" title={r.route}>
-                      {truncateRouteLabel(r.route)}
-                    </span>
+                    <Tip content={r.route} side="left">
+                      <span className="min-w-0 truncate text-ink-soft">
+                        {truncateRouteLabel(r.route)}
+                      </span>
+                    </Tip>
                     <span className="shrink-0 tabular-nums text-ink">
                       {r.count}
                       {r.errorCount > 0 ? (
@@ -464,17 +471,21 @@ export function ActivityDashboard({
               </h3>
             </div>
             <div className="flex items-center gap-3 text-[0.65rem] text-ink-faint">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-0.5 w-3 rounded-full bg-accent" />
-                total
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span
-                  className="inline-block h-0.5 w-3 rounded-full"
-                  style={{ background: "var(--color-ink-faint)", opacity: 0.5 }}
-                />
-                api
-              </span>
+              <Tip content="All events: views, interactions, and API calls" side="top">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-0.5 w-3 rounded-full bg-accent" />
+                  total
+                </span>
+              </Tip>
+              <Tip content="API calls only (skill endpoints)" side="top">
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-0.5 w-3 rounded-full"
+                    style={{ background: "var(--color-ink-faint)", opacity: 0.5 }}
+                  />
+                  api
+                </span>
+              </Tip>
             </div>
           </div>
           {hasEvents ? (
@@ -492,13 +503,15 @@ export function ActivityDashboard({
                   Automations
                 </h3>
               </div>
-              <span className="flex items-center gap-1.5 text-xs text-ink-faint">
-                <StatusDot
-                  tone={activeAutomations.length > 0 ? "fresh" : "idle"}
-                  pulse={activeAutomations.length > 0}
-                />
-                {activeAutomations.length} active
-              </span>
+              <Tip content={activeAutomations.length > 0 ? `${activeAutomations.length} automation${activeAutomations.length !== 1 ? "s" : ""} running on schedule` : "No automations currently enabled"} side="left">
+                <span className="flex items-center gap-1.5 text-xs text-ink-faint">
+                  <StatusDot
+                    tone={activeAutomations.length > 0 ? "fresh" : "idle"}
+                    pulse={activeAutomations.length > 0}
+                  />
+                  {activeAutomations.length} active
+                </span>
+              </Tip>
             </div>
             <AutomationCalendar automations={automations} onEditAutomation={setEditTarget} />
           </article>

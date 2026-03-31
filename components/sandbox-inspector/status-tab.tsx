@@ -38,7 +38,7 @@ function StatusRow({
       <span
         className={cn(
           "text-right text-xs text-ink",
-          mono && "font-mono tabular-nums",
+          mono && "tabular-nums",
         )}
       >
         {value}
@@ -100,7 +100,7 @@ export function StatusTab({
                 Time remaining
               </span>
             </div>
-            <span className="font-mono text-xs tabular-nums text-ink">
+            <span className="text-xs tabular-nums text-ink">
               {formatDuration(remaining)}
             </span>
           </div>

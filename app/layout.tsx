@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "next-themes";
 
+import { ActiveOperationsProvider } from "@/components/active-operations-provider";
 import { CommandPalette } from "@/components/command-palette";
 import { NewSkillModal } from "@/components/new-skill-modal";
 import { SeoJsonLd } from "@/components/seo-json-ld";
@@ -112,9 +113,11 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <TooltipProvider delayDuration={300}>
-              <CommandPalette items={paletteItems} />
-              <NewSkillModal categories={snapshotCategories} />
-              {children}
+              <ActiveOperationsProvider>
+                <CommandPalette items={paletteItems} />
+                <NewSkillModal categories={snapshotCategories} />
+                {children}
+              </ActiveOperationsProvider>
             </TooltipProvider>
           </ThemeProvider>
           <Analytics />

@@ -15,8 +15,17 @@ import { ProcessesTab } from "@/components/sandbox-inspector/processes-tab";
 import { FilesTab } from "@/components/sandbox-inspector/files-tab";
 import { ResourcesTab } from "@/components/sandbox-inspector/resources-tab";
 import { PackagesTab } from "@/components/sandbox-inspector/packages-tab";
+import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import type { SandboxInspectResponse } from "@/lib/sandbox-inspect-types";
+
+const TAB_DESCRIPTIONS: Record<string, string> = {
+  status: "Sandbox lifecycle and uptime",
+  processes: "Running processes in the VM",
+  files: "Browse the sandbox filesystem",
+  resources: "Memory and disk usage",
+  packages: "Installed packages and versions",
+};
 
 type InspectorTab = "status" | "processes" | "files" | "resources" | "packages";
 
@@ -81,18 +90,20 @@ export function SandboxInspector({
               VM Inspector
             </span>
           </div>
-          <button
-            className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-lg text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
-            )}
-            onClick={onRefresh}
-            type="button"
-            aria-label="Refresh inspector"
-          >
-            <RefreshIcon
-              className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
-            />
-          </button>
+          <Tip content="Refresh inspector data" side="left">
+            <button
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-lg text-ink-faint transition-all duration-200 hover:bg-paper-3/80 hover:text-ink",
+              )}
+              onClick={onRefresh}
+              type="button"
+              aria-label="Refresh inspector"
+            >
+              <RefreshIcon
+                className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
+              />
+            </button>
+          </Tip>
         </div>
       </div>
 
@@ -102,20 +113,21 @@ export function SandboxInspector({
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
-            <button
-              key={tab.id}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-[0.6rem] font-medium transition-all duration-150",
-                active
-                  ? "border-accent text-accent"
-                  : "border-transparent text-ink-faint/70 hover:text-ink-soft",
-              )}
-              onClick={() => setActiveTab(tab.id)}
-              type="button"
-            >
-              <Icon className="h-3 w-3" />
-              <span>{tab.label}</span>
-            </button>
+            <Tip content={TAB_DESCRIPTIONS[tab.id] ?? tab.label} side="bottom" key={tab.id}>
+              <button
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2.5 text-[0.6rem] font-medium transition-all duration-150",
+                  active
+                    ? "border-accent text-accent"
+                    : "border-transparent text-ink-faint/70 hover:text-ink-soft",
+                )}
+                onClick={() => setActiveTab(tab.id)}
+                type="button"
+              >
+                <Icon className="h-3 w-3" />
+                <span>{tab.label}</span>
+              </button>
+            </Tip>
           );
         })}
       </div>
