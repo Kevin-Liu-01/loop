@@ -38,8 +38,13 @@ export async function POST(request: Request) {
           });
         }
 
+        const skillSources = skill.sources ?? [];
+        const hasOwnSources = skillSources.length > 0;
         const category = base.categories.find((entry) => entry.slug === skill.category);
-        const tracked = await addTrackedSkillFromRecord(skill, [...(skill.sources ?? []), ...(category?.sources ?? [])]);
+        const sourcesToTrack = hasOwnSources
+          ? skillSources
+          : (category?.sources ?? []);
+        const tracked = await addTrackedSkillFromRecord(skill, sourcesToTrack);
         const record = buildUserSkillRecord(tracked);
 
         revalidatePath("/");
