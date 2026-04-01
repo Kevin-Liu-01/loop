@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { buildSearchIndex, searchIndex } from "@/lib/search";
-import type { LoopSnapshot } from "@/lib/types";
+import type { LoopSnapshot, SearchHit } from "@/lib/types";
 
 test("searchIndex ranks matching skills and categories from the persisted corpus", () => {
   const snapshot = {
@@ -74,7 +74,7 @@ test("searchIndex ranks matching skills and categories from the persisted corpus
 
   assert.equal(hits[0]?.kind, "skill");
   assert.equal(hits[0]?.title, "Frontend Frontier");
-  assert.ok(hits.some((hit) => hit.kind === "category"));
+  assert.ok(hits.some((hit: SearchHit) => hit.kind === "category"));
 });
 
 test("searchIndex can return only skills for blank queries", () => {
@@ -176,6 +176,6 @@ test("searchIndex can return only skills for blank queries", () => {
   const index = buildSearchIndex(snapshot);
   const hits = searchIndex(index, "", { kind: "skill", limit: 50 });
 
-  assert.deepEqual(hits.map((hit) => hit.kind), ["skill"]);
+  assert.deepEqual(hits.map((hit: SearchHit) => hit.kind), ["skill"]);
   assert.equal(hits[0]?.title, "Frontend Frontier");
 });

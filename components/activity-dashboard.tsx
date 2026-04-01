@@ -355,7 +355,7 @@ function linkedSkillProps(
   if (!slug || !skillMap) return {};
   const skill = skillMap.get(slug);
   if (!skill) return {};
-  return { skillSlug: skill.slug, skillIconUrl: skill.iconUrl, skillName: skill.name };
+  return { skillSlug: skill.slug, skillIconUrl: skill.iconUrl, skillName: skill.title };
 }
 
 function hasRollingUsage(overview: UsageOverview): boolean {

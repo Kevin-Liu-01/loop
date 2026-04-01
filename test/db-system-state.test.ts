@@ -31,7 +31,7 @@ test("LoopRunRecord type satisfies required shape for DB mapping", () => {
     signalCount: 5,
     messages: ["Started scanning.", "Completed."],
     sources: [],
-    diffLines: [{ type: "add", content: "+ New line" }]
+    diffLines: [{ type: "added", value: "+ New line" }]
   };
 
   assert.equal(record.id, "test-loop-run-001");

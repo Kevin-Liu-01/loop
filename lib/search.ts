@@ -84,3 +84,4 @@ export async function search(
 }
 
 export { searchSkills } from "@/lib/db/search";
+export { buildSearchIndex, searchIndex } from "@/lib/search-index";

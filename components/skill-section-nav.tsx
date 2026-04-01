@@ -20,7 +20,7 @@ export function SkillSectionNav({ sections }: SkillSectionNavProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleSet = useRef(new Set<string>());
   const programmaticScrollRef = useRef(false);
-  const scrollTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     const navH = navRef.current?.getBoundingClientRect().height ?? 0;

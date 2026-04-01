@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "next typegen && tsc --noEmit",
     "content:build": "node --import tsx ./lib/refresh.ts --write-local",
