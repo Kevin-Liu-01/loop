@@ -132,7 +132,7 @@ function HeroCardHeader({ scene }: { scene: DiffScene }) {
 
   return (
     <div className="border-b border-white/[0.06] bg-white/[0.02]">
-      <div className="flex items-center gap-2 px-3.5 py-2.5">
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt=""
@@ -143,17 +143,19 @@ function HeroCardHeader({ scene }: { scene: DiffScene }) {
           {scene.skillTitle}
         </span>
         <span
-          className="shrink-0 rounded-[3px] px-1.5 py-[3px] text-[0.5rem] font-bold uppercase tracking-wider"
+          className="shrink-0 rounded-full px-2 py-[2px] text-[0.55rem] font-semibold uppercase tracking-wide leading-none"
           style={{
-            background: `color-mix(in oklch, ${accent}, transparent 82%)`,
+            background: `color-mix(in oklch, ${accent}, transparent 85%)`,
             color: accent,
-            border: `1px solid color-mix(in oklch, ${accent}, transparent 70%)`,
+            boxShadow: `inset 0 0 0 1px color-mix(in oklch, ${accent}, transparent 72%)`,
           }}
         >
           {formatTagLabel(scene.category)}
         </span>
-        <span className="shrink-0 font-mono text-[0.5rem] tabular-nums text-white/25">
-          {scene.versionFrom} → {scene.versionTo}
+        <span className="flex shrink-0 items-center gap-1 font-mono text-[0.6rem] tabular-nums leading-none">
+          <span className="text-white/30">{scene.versionFrom}</span>
+          <span className="text-white/15">→</span>
+          <span className="text-white/60">{scene.versionTo}</span>
         </span>
         <div className="ml-auto flex items-center gap-1">
           {added > 0 && (
@@ -204,12 +206,6 @@ function DiffCardChrome({
           : { boxShadow: "0 8px 40px -10px rgba(0,0,0,0.6)" }),
       }}
     >
-      {accentColor && (
-        <div
-          className="absolute inset-x-0 top-0 h-[2px]"
-          style={{ background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`, opacity: glow ? 0.7 : 0.35 }}
-        />
-      )}
       {children}
     </div>
   );
