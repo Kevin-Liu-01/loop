@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldArea, textFieldBase, textFieldCode } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { CADENCE_SIMPLE_OPTIONS } from "@/lib/automation-constants";
+import { CADENCE_ALL_OPTIONS } from "@/lib/automation-constants";
 import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, CategoryDefinition } from "@/lib/types";
 
@@ -379,7 +379,7 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
             <Select
               onChange={(v) => update("cadence", v as FormState["cadence"])}
-              options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              options={CADENCE_ALL_OPTIONS}
               value={state.cadence}
             />
           </FieldGroup>

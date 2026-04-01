@@ -20,7 +20,7 @@ import { FieldGroup, textFieldArea, textFieldBase, textFieldCode } from "@/compo
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { CATEGORY_REGISTRY } from "@/lib/registry";
-import { CADENCE_SIMPLE_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS } from "@/lib/automation-constants";
+import { CADENCE_ALL_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS } from "@/lib/automation-constants";
 import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, LoopUpdateStreamEvent, SkillRecord } from "@/lib/types";
 
@@ -521,7 +521,7 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
                 <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
                 <Select
                   onChange={(v) => update("cadence", v as AuthorStudioState["cadence"])}
-                  options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  options={CADENCE_ALL_OPTIONS}
                   value={state.cadence}
                 />
               </FieldGroup>

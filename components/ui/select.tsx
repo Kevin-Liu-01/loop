@@ -15,6 +15,8 @@ import { cn } from "@/lib/cn";
 export type SelectOption = {
   value: string;
   label: string;
+  disabled?: boolean;
+  badge?: string;
 };
 
 type SelectProps = {
@@ -64,8 +66,20 @@ export function Select({
       >
         <DropdownMenuRadioGroup onValueChange={onChange} value={value}>
           {options.map((option) => (
-            <DropdownMenuRadioItem key={option.value} value={option.value}>
-              {option.label}
+            <DropdownMenuRadioItem
+              disabled={option.disabled}
+              key={option.value}
+              value={option.value}
+              className={cn(option.disabled && "opacity-50")}
+            >
+              <span className="flex w-full items-center justify-between gap-2">
+                <span>{option.label}</span>
+                {option.badge && (
+                  <span className="shrink-0 rounded-full bg-paper-3 px-2 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-ink-faint">
+                    {option.badge}
+                  </span>
+                )}
+              </span>
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

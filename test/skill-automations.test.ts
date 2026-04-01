@@ -20,7 +20,7 @@ test("buildSkillAutomationSummaries maps tracked skill automation to editable su
 
   assert.equal(summaries.length, 1);
   assert.equal(summaries[0]?.id, "frontend-frontier");
-  assert.equal(summaries[0]?.schedule, "Daily · 9:05 AM");
+  assert.equal(summaries[0]?.schedule, "Daily · 9:00 AM");
   assert.equal(summaries[0]?.cadence, "daily");
   assert.equal(summaries[0]?.status, "ACTIVE");
 });
@@ -61,7 +61,7 @@ test("buildSkillAutomationSummaries includes preferredDay for weekly", () => {
     automations: [],
   });
 
-  assert.equal(summaries[0]?.schedule, "Friday · 2:05 PM");
+  assert.equal(summaries[0]?.schedule, "Friday · 2:00 PM");
   assert.equal(summaries[0]?.cadence, "weekly");
   assert.equal(summaries[0]?.preferredDay, 5);
 });

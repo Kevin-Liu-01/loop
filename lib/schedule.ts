@@ -15,7 +15,7 @@ const DAY_LABELS = [
 function formatTime12h(hour: number): string {
   const h12 = hour % 12 === 0 ? 12 : hour % 12;
   const ampm = hour < 12 ? "AM" : "PM";
-  return `${h12}:05 ${ampm}`;
+  return `${h12}:00 ${ampm}`;
 }
 
 function resolveDay(preferredDay?: number): number {
@@ -53,7 +53,7 @@ export function getNextRunDate(
 
   const now = new Date();
   const candidate = new Date(now);
-  candidate.setUTCHours(preferredHour, 5, 0, 0);
+  candidate.setUTCHours(preferredHour, 0, 0, 0);
 
   if (cadence === "daily") {
     if (candidate <= now) {

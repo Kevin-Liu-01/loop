@@ -23,7 +23,7 @@ import { cn } from "@/lib/cn";
 import { formatNextRun, formatScheduleLabel, countMonthlyRuns } from "@/lib/schedule";
 import type { AutomationSummary, SourceDefinition, UserSkillCadence } from "@/lib/types";
 import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
-import { CADENCE_SIMPLE_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
+import { CADENCE_ALL_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import type { CategorySlug } from "@/lib/types";
 
 const MODEL_OPTIONS = [
@@ -225,7 +225,7 @@ export function AutomationEditModal({
                     className="min-h-11 py-3 text-sm"
                     disabled={!canManage}
                     onChange={(v) => setCadence(v as UserSkillCadence)}
-                    options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                    options={CADENCE_ALL_OPTIONS}
                     value={cadence}
                   />
                 </FieldGroup>

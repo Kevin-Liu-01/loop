@@ -24,7 +24,7 @@ import {
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
-import { CADENCE_SIMPLE_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
+import { CADENCE_ALL_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import { formatNextRun, countMonthlyRuns } from "@/lib/schedule";
 import type { AutomationSummary, SkillRecord, UserSkillCadence } from "@/lib/types";
 
@@ -401,7 +401,7 @@ function CreateAutomationModal({ open, onClose, skills }: CreateAutomationModalP
               <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Schedule</span>
               <Select
                 onChange={(v) => setCadence(v as UserSkillCadence)}
-                options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                options={CADENCE_ALL_OPTIONS}
                 value={cadence}
               />
             </FieldGroup>

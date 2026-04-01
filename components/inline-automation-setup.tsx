@@ -10,7 +10,7 @@ import { FieldGroup, textFieldBase, textFieldArea } from "@/components/ui/field"
 import { Select } from "@/components/ui/select";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { cn } from "@/lib/cn";
-import { CADENCE_SIMPLE_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
+import { CADENCE_ALL_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import type { UserSkillCadence } from "@/lib/types";
 
 type InlineAutomationSetupProps = {
@@ -85,7 +85,7 @@ export function InlineAutomationSetup({
             </span>
             <Select
               onChange={(v) => setCadence(v as UserSkillCadence)}
-              options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              options={CADENCE_ALL_OPTIONS}
               value={cadence}
             />
           </FieldGroup>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
+import { DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
 import { formatScheduleLabel } from "@/lib/schedule";
 import {
   createSkill as dbCreateSkill,
@@ -297,9 +297,6 @@ function cloneVersion(version: UserSkillVersion): UserSkillVersion {
 // Public pure logic
 // ---------------------------------------------------------------------------
 
-/** UTC day index for weekly cadence runs (Monday = 1). */
-const WEEKLY_RUN_DAY_UTC = 1;
-
 export function isUserSkillAutomationDue(skill: UserSkillDocument, now = new Date()): boolean {
   if (!skill.automation.enabled || skill.automation.status !== "active" || skill.sources.length === 0) {
     return false;
@@ -313,8 +310,9 @@ export function isUserSkillAutomationDue(skill: UserSkillDocument, now = new Dat
     return false;
   }
 
-  if (skill.automation.cadence === "weekly" && now.getUTCDay() !== WEEKLY_RUN_DAY_UTC) {
-    return false;
+  if (skill.automation.cadence === "weekly") {
+    const preferredDay = skill.automation.preferredDay ?? DEFAULT_PREFERRED_DAY;
+    if (now.getUTCDay() !== preferredDay) return false;
   }
 
   const lastRunAt = skill.automation.lastRunAt ? new Date(skill.automation.lastRunAt) : null;

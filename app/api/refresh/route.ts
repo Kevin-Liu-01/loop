@@ -2,7 +2,6 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
-import { isValidCronSlotHour } from "@/lib/automation-constants";
 import { getSkillCatalogue } from "@/lib/content";
 import { refreshLoopSnapshot } from "@/lib/refresh";
 import { withApiUsage } from "@/lib/usage-server";
@@ -29,25 +28,18 @@ function parseRefreshScope(url: string): {
   refreshCategorySignals: boolean;
   refreshUserSkills: boolean;
   refreshImportedSkills: boolean;
-  slotHour: number | null;
 } {
   try {
     const { searchParams } = new URL(url);
     const scope = searchParams.get("scope");
 
-    const slotRaw = searchParams.get("slot");
-    const explicitSlot = slotRaw !== null ? parseInt(slotRaw, 10) : null;
-    const slotHour = explicitSlot !== null && isValidCronSlotHour(explicitSlot)
-      ? explicitSlot
-      : new Date().getUTCHours();
-
     if (scope === "skills-only") {
-      return { refreshCategorySignals: false, refreshUserSkills: true, refreshImportedSkills: true, slotHour };
+      return { refreshCategorySignals: false, refreshUserSkills: true, refreshImportedSkills: true };
     }
 
-    return { refreshCategorySignals: false, refreshUserSkills: true, refreshImportedSkills: true, slotHour };
+    return { refreshCategorySignals: false, refreshUserSkills: true, refreshImportedSkills: true };
   } catch { /* fall through to defaults */ }
-  return { refreshCategorySignals: true, refreshUserSkills: true, refreshImportedSkills: true, slotHour: new Date().getUTCHours() };
+  return { refreshCategorySignals: true, refreshUserSkills: true, refreshImportedSkills: true };
 }
 
 async function handleRefresh(request: Request) {

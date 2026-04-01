@@ -8,23 +8,23 @@ import { formatScheduleLabel, countMonthlyRuns, isScheduledOnDate, formatNextRun
 // ---------------------------------------------------------------------------
 
 test("formatScheduleLabel returns human-readable labels", () => {
-  assert.equal(formatScheduleLabel("daily", 9), "Daily · 9:05 AM");
-  assert.equal(formatScheduleLabel("daily", 0), "Daily · 12:05 AM");
-  assert.equal(formatScheduleLabel("daily", 14), "Daily · 2:05 PM");
-  assert.equal(formatScheduleLabel("weekly", 9), "Monday · 9:05 AM");
+  assert.equal(formatScheduleLabel("daily", 9), "Daily · 9:00 AM");
+  assert.equal(formatScheduleLabel("daily", 0), "Daily · 12:00 AM");
+  assert.equal(formatScheduleLabel("daily", 14), "Daily · 2:00 PM");
+  assert.equal(formatScheduleLabel("weekly", 9), "Monday · 9:00 AM");
   assert.equal(formatScheduleLabel("manual", 12), "Manual");
 });
 
 test("formatScheduleLabel respects preferredDay for weekly", () => {
-  assert.equal(formatScheduleLabel("weekly", 9, 1), "Monday · 9:05 AM");
-  assert.equal(formatScheduleLabel("weekly", 9, 3), "Wednesday · 9:05 AM");
-  assert.equal(formatScheduleLabel("weekly", 14, 5), "Friday · 2:05 PM");
-  assert.equal(formatScheduleLabel("weekly", 9, 0), "Sunday · 9:05 AM");
-  assert.equal(formatScheduleLabel("weekly", 9, 6), "Saturday · 9:05 AM");
+  assert.equal(formatScheduleLabel("weekly", 9, 1), "Monday · 9:00 AM");
+  assert.equal(formatScheduleLabel("weekly", 9, 3), "Wednesday · 9:00 AM");
+  assert.equal(formatScheduleLabel("weekly", 14, 5), "Friday · 2:00 PM");
+  assert.equal(formatScheduleLabel("weekly", 9, 0), "Sunday · 9:00 AM");
+  assert.equal(formatScheduleLabel("weekly", 9, 6), "Saturday · 9:00 AM");
 });
 
 test("formatScheduleLabel ignores preferredDay for daily cadence", () => {
-  assert.equal(formatScheduleLabel("daily", 9, 3), "Daily · 9:05 AM");
+  assert.equal(formatScheduleLabel("daily", 9, 3), "Daily · 9:00 AM");
 });
 
 // ---------------------------------------------------------------------------

@@ -1,36 +1,23 @@
--- Backfill automation preferred_hour across 24 hourly slots and reset
--- consecutive failures so old stuck automations can run again.
+-- Backfill automation slots for daily-only cron.
 --
--- Skills with automation enabled but no preferredHour are distributed
--- round-robin across hours 0-23 using their row_number for even spread.
--- All skills with consecutiveFailures > 0 are reset to 0.
+-- The Vercel Hobby plan fires one daily cron at 09:00 UTC, so the old
+-- round-robin hourly slots no longer apply. This migration:
+--   1. Sets all preferredHour to 9 (the daily cron hour).
+--   2. Sets preferredDay to 1 (Monday) for weekly automations that lack one.
+--   3. Resets consecutiveFailures so stuck automations can retry.
 
--- 1. Round-robin assign preferredHour to enabled automations that lack one.
-with numbered as (
-  select
-    id,
-    row_number() over (order by created_at, slug) - 1 as rn
-  from skills
-  where automation is not null
-    and (automation->>'enabled')::boolean = true
-    and (
-      automation->>'preferredHour' is null
-      or automation->'preferredHour' is null
-    )
-)
-update skills s
-set automation = s.automation || jsonb_build_object(
-  'preferredHour', (n.rn % 24)::int
-)
-from numbered n
-where s.id = n.id;
-
--- 2. Give disabled/paused automations a default slot (12) if they have none,
---    so they're ready when re-enabled.
+-- 1. Set all automations to preferredHour = 9 (daily cron time).
 update skills
-set automation = automation || jsonb_build_object('preferredHour', 12)
+set automation = automation || jsonb_build_object('preferredHour', 9)
 where automation is not null
-  and automation->>'preferredHour' is null;
+  and (automation->>'preferredHour' is null or (automation->>'preferredHour')::int != 9);
+
+-- 2. Give weekly automations a default preferredDay (Monday = 1) if missing.
+update skills
+set automation = automation || jsonb_build_object('preferredDay', 1)
+where automation is not null
+  and automation->>'cadence' = 'weekly'
+  and automation->>'preferredDay' is null;
 
 -- 3. Reset consecutiveFailures to 0 for all skills that have any.
 update skills
