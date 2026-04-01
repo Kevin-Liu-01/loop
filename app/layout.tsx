@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ClerkProvider } from "@clerk/nextjs";
+import { ui } from "@clerk/ui";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "next-themes";
@@ -102,7 +103,7 @@ export default async function RootLayout({
   }
 
   return (
-    <ClerkProvider appearance={clerkAppearance}>
+    <ClerkProvider appearance={clerkAppearance} ui={ui}>
       <html lang="en" suppressHydrationWarning>
         <body suppressHydrationWarning>
           <SeoJsonLd data={buildOrganizationJsonLd()} />

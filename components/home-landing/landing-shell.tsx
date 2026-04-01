@@ -449,6 +449,7 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
             <Link className="text-ink-faint transition-colors hover:text-ink" href="/sign-up">Get started</Link>
             <Link className="text-ink-faint transition-colors hover:text-ink" href="#skills">Skills</Link>
             <Link className="text-ink-faint transition-colors hover:text-ink" href="#mcps">MCPs</Link>
+            <Link className="text-ink-faint transition-colors hover:text-ink" href="/faq">FAQ</Link>
             <Link className="text-ink-faint transition-colors hover:text-ink" href="/sign-in">Sign in</Link>
           </nav>
         </div>

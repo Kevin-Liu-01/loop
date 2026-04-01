@@ -987,6 +987,104 @@ html[data-theme="dark"] .dither-overlay::after {
   mix-blend-mode: soft-light;
 }
 
+/* ── Hero diff‑card tokens ─────────────────────────────────────── */
+
+:root {
+  --hdc-bg-from: #ffffff;
+  --hdc-bg-to: #f8f8fa;
+  --hdc-border: rgba(0, 0, 0, 0.10);
+  --hdc-border-glow: rgba(0, 0, 0, 0.14);
+  --hdc-ring: rgba(0, 0, 0, 0.06);
+  --hdc-text: rgba(0, 0, 0, 0.85);
+  --hdc-text-2: rgba(0, 0, 0, 0.55);
+  --hdc-text-3: rgba(0, 0, 0, 0.30);
+  --hdc-text-faint: rgba(0, 0, 0, 0.38);
+  --hdc-divider: rgba(0, 0, 0, 0.08);
+  --hdc-tint: rgba(0, 0, 0, 0.02);
+  --hdc-fade-to: #f8f8fa;
+  --hdc-icon-filter: saturate(0) brightness(0.35);
+
+  --hdc-add-bg: oklch(0.96 0.04 145 / 0.55);
+  --hdc-add-bar: oklch(0.55 0.18 145);
+  --hdc-add-sign: oklch(0.45 0.16 145);
+  --hdc-add-text: oklch(0.32 0.10 145);
+  --hdc-rem-bg: oklch(0.96 0.04 25 / 0.50);
+  --hdc-rem-bar: oklch(0.55 0.16 25);
+  --hdc-rem-sign: oklch(0.50 0.14 25);
+  --hdc-rem-text: oklch(0.38 0.10 25);
+  --hdc-rem-strike: oklch(0.38 0.10 25 / 0.3);
+
+  --hdc-badge-add-text: oklch(0.38 0.14 145);
+  --hdc-badge-add-bg: oklch(0.88 0.08 145 / 0.35);
+  --hdc-badge-add-border: oklch(0.70 0.12 145 / 0.25);
+  --hdc-badge-rem-text: oklch(0.42 0.12 25);
+  --hdc-badge-rem-bg: oklch(0.90 0.06 25 / 0.35);
+  --hdc-badge-rem-border: oklch(0.70 0.10 25 / 0.25);
+
+  --hdc-ln: rgba(0, 0, 0, 0.16);
+  --hdc-ln-border: rgba(0, 0, 0, 0.06);
+  --hdc-ctx-bg-odd: rgba(0, 0, 0, 0.015);
+  --hdc-ctx-text: rgba(0, 0, 0, 0.42);
+  --hdc-heading-text: rgba(0, 0, 0, 0.52);
+
+  --hdc-ver-bg: rgba(0, 0, 0, 0.04);
+  --hdc-ver-border: rgba(0, 0, 0, 0.09);
+  --hdc-ver-old: rgba(0, 0, 0, 0.32);
+  --hdc-ver-arrow: rgba(0, 0, 0, 0.18);
+  --hdc-ver-new: rgba(0, 0, 0, 0.62);
+
+  --hdc-dot-inactive: rgba(0, 0, 0, 0.18);
+  --hdc-dot-hover: rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] {
+  --hdc-bg-from: rgb(18, 18, 23);
+  --hdc-bg-to: rgb(12, 12, 16);
+  --hdc-border: rgba(255, 255, 255, 0.06);
+  --hdc-border-glow: rgba(255, 255, 255, 0.10);
+  --hdc-ring: rgba(255, 255, 255, 0.06);
+  --hdc-text: rgba(255, 255, 255, 0.90);
+  --hdc-text-2: rgba(255, 255, 255, 0.60);
+  --hdc-text-3: rgba(255, 255, 255, 0.30);
+  --hdc-text-faint: rgba(255, 255, 255, 0.15);
+  --hdc-divider: rgba(255, 255, 255, 0.06);
+  --hdc-tint: rgba(255, 255, 255, 0.02);
+  --hdc-fade-to: rgb(12, 12, 16);
+  --hdc-icon-filter: brightness(0) invert(1);
+
+  --hdc-add-bg: oklch(0.26 0.06 145 / 0.30);
+  --hdc-add-bar: oklch(0.60 0.16 145);
+  --hdc-add-sign: oklch(0.72 0.16 145);
+  --hdc-add-text: oklch(0.88 0.06 145);
+  --hdc-rem-bg: oklch(0.26 0.06 25 / 0.25);
+  --hdc-rem-bar: oklch(0.60 0.14 25);
+  --hdc-rem-sign: oklch(0.72 0.14 25);
+  --hdc-rem-text: oklch(0.78 0.06 25);
+  --hdc-rem-strike: oklch(0.78 0.06 25 / 0.3);
+
+  --hdc-badge-add-text: oklch(0.78 0.14 145);
+  --hdc-badge-add-bg: oklch(0.42 0.12 145 / 0.2);
+  --hdc-badge-add-border: oklch(0.42 0.12 145 / 0.2);
+  --hdc-badge-rem-text: oklch(0.78 0.12 25);
+  --hdc-badge-rem-bg: oklch(0.42 0.10 25 / 0.2);
+  --hdc-badge-rem-border: oklch(0.42 0.10 25 / 0.2);
+
+  --hdc-ln: rgba(255, 255, 255, 0.16);
+  --hdc-ln-border: rgba(255, 255, 255, 0.05);
+  --hdc-ctx-bg-odd: rgba(255, 255, 255, 0.02);
+  --hdc-ctx-text: rgba(255, 255, 255, 0.32);
+  --hdc-heading-text: rgba(255, 255, 255, 0.50);
+
+  --hdc-ver-bg: rgba(255, 255, 255, 0.05);
+  --hdc-ver-border: rgba(255, 255, 255, 0.08);
+  --hdc-ver-old: rgba(255, 255, 255, 0.35);
+  --hdc-ver-arrow: rgba(255, 255, 255, 0.18);
+  --hdc-ver-new: rgba(255, 255, 255, 0.70);
+
+  --hdc-dot-inactive: rgba(255, 255, 255, 0.15);
+  --hdc-dot-hover: rgba(255, 255, 255, 0.30);
+}
+
 /* ── Hero section fade overlay ─────────────────────────────────── */
 
 .hero-fade {
