@@ -69,6 +69,7 @@ export function buildDefaultOpenGraphImages(): NonNullable<Metadata["openGraph"]
   return [
     {
       url: DEFAULT_OG_IMAGE_PATH,
+      type: "image/png",
       width: OG_WIDTH,
       height: OG_HEIGHT,
       alt: `${SITE_NAME} — operator desk for self-updating agent skills`,
@@ -117,7 +118,7 @@ export function buildSkillMetadata(skill: SkillRecord): Metadata {
     description,
     category: skill.category,
   });
-  const ogImages = [{ url: ogImageUrl, width: OG_WIDTH, height: OG_HEIGHT, alt: skill.title }];
+  const ogImages = [{ url: ogImageUrl, type: "image/png", width: OG_WIDTH, height: OG_HEIGHT, alt: skill.title }];
 
   return {
     title,
@@ -152,7 +153,7 @@ export function buildMcpMetadata(mcp: ImportedMcpDocument): Metadata {
     description,
     category: "MCP",
   });
-  const ogImages = [{ url: ogImageUrl, width: OG_WIDTH, height: OG_HEIGHT, alt: mcp.name }];
+  const ogImages = [{ url: ogImageUrl, type: "image/png", width: OG_WIDTH, height: OG_HEIGHT, alt: mcp.name }];
 
   return {
     title,

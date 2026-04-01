@@ -122,7 +122,7 @@ function OgCard({ title, description, category }: OgCardProps) {
         }}
       >
         <span style={{ fontSize: 16, color: "rgba(255, 255, 255, 0.3)" }}>
-          loop.kevindliu.com
+          loooooop.vercel.app
         </span>
         <div
           style={{
