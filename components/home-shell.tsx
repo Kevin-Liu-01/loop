@@ -607,6 +607,7 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
         return (
           <AutomationEditModal
             automation={editTarget}
+            initialPreferredHour={editTarget.preferredHour}
             onClose={() => setEditTarget(null)}
             open
             skillCategory={linkedSkill?.category}

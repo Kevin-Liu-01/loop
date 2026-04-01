@@ -6,7 +6,8 @@ import matter from "gray-matter";
 import YAML from "yaml";
 
 import { parseAgentDocs } from "@/lib/agent-docs";
-import { skillCadenceToRRule } from "@/lib/automation-constants";
+import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
+import { formatScheduleLabel } from "@/lib/schedule";
 import {
   listSkills as dbListSkills,
   getSkillBySlug as dbGetSkillBySlug,
@@ -272,18 +273,20 @@ function deriveAutomationsFromSkills(
     const auto = skill.automation;
     if (!auto) return skill;
 
-    const schedule = skillCadenceToRRule(auto.cadence);
-
     const summary: AutomationSummary = {
       id: skill.slug,
       name: `${skill.title} refresh`,
       prompt: auto.prompt || `Refresh ${skill.title} from tracked sources.`,
-      schedule,
+      schedule: formatScheduleLabel(auto.cadence, auto.preferredHour ?? DEFAULT_PREFERRED_HOUR, auto.preferredDay),
+      cadence: auto.cadence,
       status: auto.enabled ? "ACTIVE" : "PAUSED",
       path: "",
       cwd: [],
       matchedSkillSlugs: [skill.slug],
-      matchedCategorySlugs: [skill.category]
+      matchedCategorySlugs: [skill.category],
+      preferredModel: auto.preferredModel,
+      preferredHour: auto.preferredHour,
+      preferredDay: auto.preferredDay,
     };
 
     allAutomations.push(summary);

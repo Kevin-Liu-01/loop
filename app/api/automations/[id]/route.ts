@@ -2,12 +2,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { authErrorResponse, requireActiveSubscription } from "@/lib/auth";
-import {
-  automationCadenceSchema,
-  cadenceValueToSkillCadence,
-  skillCadenceToRRule,
-  type CadenceValue
-} from "@/lib/automation-constants";
+import { isValidCronSlotHour, isValidDayOfWeek } from "@/lib/automation-constants";
 import { getSkillBySlug, updateSkill } from "@/lib/db/skills";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { canSessionEditSkill } from "@/lib/skill-authoring";
@@ -16,10 +11,12 @@ import type { SkillAutomationState, UserSkillAutomationStatus } from "@/lib/type
 
 const patchSchema = z.object({
   name: z.string().trim().min(3).max(80).optional(),
-  cadence: automationCadenceSchema.optional(),
+  cadence: z.enum(["daily", "weekly", "manual"]).optional(),
   status: z.enum(["ACTIVE", "PAUSED"]).optional(),
   prompt: z.string().trim().max(2000).optional(),
   preferredModel: z.string().trim().max(120).optional(),
+  preferredHour: z.number().int().min(0).max(23).optional(),
+  preferredDay: z.number().int().min(0).max(6).optional(),
 });
 
 function mapStatusToSkillStatus(status: string): UserSkillAutomationStatus {
@@ -54,7 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         const updated: SkillAutomationState = { ...current };
 
         if (patch.cadence) {
-          updated.cadence = cadenceValueToSkillCadence(patch.cadence as CadenceValue);
+          updated.cadence = patch.cadence;
         }
         if (patch.status) {
           updated.status = mapStatusToSkillStatus(patch.status);
@@ -65,6 +62,12 @@ export async function PATCH(request: Request, context: RouteContext) {
         }
         if (patch.preferredModel !== undefined) {
           updated.preferredModel = patch.preferredModel || undefined;
+        }
+        if (patch.preferredHour !== undefined && isValidCronSlotHour(patch.preferredHour)) {
+          updated.preferredHour = patch.preferredHour;
+        }
+        if (patch.preferredDay !== undefined && isValidDayOfWeek(patch.preferredDay)) {
+          updated.preferredDay = patch.preferredDay;
         }
 
         await updateSkill(skillSlug, { automation: updated });

@@ -13,7 +13,6 @@ import { Panel, PanelHead } from "@/components/ui/panel";
 import { useTrackedLoopUpdate } from "@/hooks/use-tracked-loop-update";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun } from "@/lib/schedule";
 import { applySourceUpdate } from "@/lib/stream-loop-update";
 import type {
@@ -271,14 +270,14 @@ export function SkillUpdateRunner({
         ? "success"
         : latestRun?.status ?? "success";
   const scheduleLabel = automation
-    ? formatAutomationSchedule(automation.schedule)
+    ? automation.schedule
     : origin === "remote"
       ? "Import sync"
       : "Manual";
   const nextRunLabel = automation
     ? automation.status === "PAUSED"
       ? "Paused"
-      : formatNextRun(automation.schedule)
+      : formatNextRun(automation.cadence, automation.preferredHour ?? 12, automation.preferredDay)
     : origin === "remote"
       ? "On source change"
       : "On demand";

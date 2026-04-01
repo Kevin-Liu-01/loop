@@ -1,3 +1,4 @@
+import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
 import { computeSourceLogoUrl } from "@/lib/skill-icons";
 import type { SkillAutomationState, SourceDefinition } from "@/lib/types";
 
@@ -460,7 +461,8 @@ function config(
       enabled: true,
       cadence,
       status: "active",
-      prompt
+      prompt,
+      preferredHour: DEFAULT_PREFERRED_HOUR,
     }
   };
 }

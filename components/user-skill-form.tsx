@@ -17,8 +17,10 @@ import {
 } from "@/components/frontier-icons";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
-import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
+import { FieldGroup, textFieldArea, textFieldBase, textFieldCode } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
+import { CADENCE_SIMPLE_OPTIONS } from "@/lib/automation-constants";
 import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, CategoryDefinition } from "@/lib/types";
 
@@ -39,6 +41,11 @@ type FormState = {
   visibility: "public" | "private";
   agentDocs: AgentDocs;
 };
+
+const VISIBILITY_OPTIONS = [
+  { value: "private", label: "Private \u2014 only you can see it" },
+  { value: "public", label: "Public \u2014 visible in catalog" },
+];
 
 const STORAGE_KEY = "loop.user-skill-draft";
 
@@ -339,17 +346,11 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
         <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Category</span>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
-              onChange={(event) => update("category", event.target.value)}
+            <Select
+              onChange={(v) => update("category", v)}
+              options={categories.map((c) => ({ value: c.slug, label: c.title }))}
               value={state.category}
-            >
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>
-                  {category.title}
-                </option>
-              ))}
-            </select>
+            />
           </FieldGroup>
 
           <FieldGroup>
@@ -376,27 +377,20 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
         <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
-              onChange={(event) => update("cadence", event.target.value as FormState["cadence"])}
+            <Select
+              onChange={(v) => update("cadence", v as FormState["cadence"])}
+              options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
               value={state.cadence}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="manual">Manual</option>
-            </select>
+            />
           </FieldGroup>
 
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Visibility</span>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
-              onChange={(event) => update("visibility", event.target.value as FormState["visibility"])}
+            <Select
+              onChange={(v) => update("visibility", v as FormState["visibility"])}
+              options={VISIBILITY_OPTIONS}
               value={state.visibility}
-            >
-              <option value="private">Private — only you can see it</option>
-              <option value="public">Public — visible in catalog</option>
-            </select>
+            />
           </FieldGroup>
         </div>
 

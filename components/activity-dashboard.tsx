@@ -427,6 +427,7 @@ export function ActivityDashboard({
         {editTarget && (
           <AutomationEditModal
             automation={editTarget}
+            initialPreferredHour={editTarget.preferredHour}
             onClose={() => setEditTarget(null)}
             open
             {...linkedSkillProps(editTarget, skillMap)}
@@ -538,6 +539,7 @@ export function ActivityDashboard({
       {editTarget && (
         <AutomationEditModal
           automation={editTarget}
+          initialPreferredHour={editTarget.preferredHour}
           onClose={() => setEditTarget(null)}
           open
           {...linkedSkillProps(editTarget, skillMap)}

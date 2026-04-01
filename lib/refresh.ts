@@ -4,6 +4,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 
 import { getGatewayEditorModel, getGatewayEditorModelId, getGatewayModelForSkill } from "@/lib/agents";
+import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
 import {
   getSkillCatalogue,
   findSkillFiles,
@@ -62,6 +63,7 @@ type RefreshOptions = {
   refreshImportedSkills?: boolean;
   focusSkillSlugs?: string[];
   focusImportedSkillSlugs?: string[];
+  slotHour?: number | null;
 };
 
 type SkillRevisionDraft = {
@@ -468,7 +470,8 @@ function sortByMostOverdue(skills: UserSkillDocument[]): UserSkillDocument[] {
 
 async function refreshTrackedUserSkills(options: RefreshOptions): Promise<number> {
   const editorModel = getGatewayEditorModel();
-  console.info(`[refresh] Starting user skill refresh fan-out — model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}`);
+  const slotHour = options.slotHour ?? null;
+  console.info(`[refresh] Starting user skill refresh fan-out — model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}, slot: ${slotHour ?? "all"}`);
 
   const skills = await listUserSkillDocuments();
   const focusSet = options.focusSkillSlugs ? new Set(options.focusSkillSlugs) : null;
@@ -478,6 +481,12 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<number
     const canRefresh = skill.automation.enabled && skill.automation.status === "active" && skill.sources.length > 0;
     if (focusSet && !focusSet.has(skill.slug)) return false;
     if ((focusSet && !canRefresh) || (!focusSet && !isUserSkillAutomationDue(skill, now))) return false;
+
+    if (slotHour !== null) {
+      const skillHour = skill.automation.preferredHour ?? DEFAULT_PREFERRED_HOUR;
+      if (skillHour !== slotHour) return false;
+    }
+
     return true;
   });
 

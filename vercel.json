@@ -1,14 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    {
-      "path": "/api/refresh",
-      "schedule": "5 12 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-import",
-      "schedule": "0 9 * * 1"
-    }
+    { "path": "/api/refresh", "schedule": "5 * * * *" },
+    { "path": "/api/cron/weekly-import", "schedule": "0 9 * * 1" }
   ],
   "functions": {
     "app/api/refresh/skill/route.ts": {

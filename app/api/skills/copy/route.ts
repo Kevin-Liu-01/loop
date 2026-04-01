@@ -8,6 +8,7 @@ import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { buildSkillVersionHref, buildVersionLabel } from "@/lib/format";
 import { canCreateSkill } from "@/lib/skill-limits";
 import { slugify, stableHash } from "@/lib/markdown";
+import { buildPausedAutomationFromSource } from "@/lib/skill-fork-helpers";
 import { logUsageEvent, withApiUsage } from "@/lib/usage-server";
 
 const bodySchema = z.object({
@@ -62,13 +63,14 @@ export async function POST(request: Request) {
           ownerName: sessionAuthor?.displayName ?? undefined,
           authorId: sessionAuthor?.id,
           sources: source.sources ?? [],
-          automation: undefined,
+          automation: buildPausedAutomationFromSource(source),
           updates: [],
           agentDocs: source.agentDocs,
           references: source.references,
           agents: source.agents,
           version: 1,
           creatorClerkUserId: session.userId,
+          iconUrl: source.iconUrl,
           forkedFromSlug: sourceSlug,
         });
 

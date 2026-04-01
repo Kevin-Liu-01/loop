@@ -124,104 +124,112 @@ export const LANDING_AUTOMATIONS: AutomationSummary[] = [
     name: "Frontend Frontier refresh",
     prompt:
       "Scrape tracked sources for new art-direction references, motion-library API changes, design-system tooling releases, and frontier CSS/JS features.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/frontend-frontier",
     cwd: [],
     matchedSkillSlugs: ["frontend-frontier"],
     matchedCategorySlugs: ["frontend"],
+    preferredHour: 9,
   },
   {
     id: "auto-agent-orchestration",
     name: "Agent Orchestration scan",
     prompt:
       "Scan OpenAI, Anthropic, and Google blogs for multi-agent protocol changes, handoff-API updates, and orchestration pattern guidance.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/agent-orchestration",
     cwd: [],
     matchedSkillSlugs: ["agent-orchestration"],
     matchedCategorySlugs: ["a2a"],
+    preferredHour: 9,
   },
   {
     id: "auto-seo-geo",
     name: "SEO + GEO audit",
     prompt:
       "Scan Google Search Central for algorithm updates, indexing policy changes, and rich-result requirements. Track schema.org releases.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/seo-geo",
     cwd: [],
     matchedSkillSlugs: ["seo-geo"],
     matchedCategorySlugs: ["seo-geo"],
+    preferredHour: 9,
   },
   {
     id: "auto-security",
     name: "Security advisory sweep",
     prompt:
       "Scan GitHub Security Advisories for critical npm CVEs. Check Snyk blog for dependency vulnerability trends. Monitor PortSwigger for new web-attack techniques.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/security-best-practices",
     cwd: [],
     matchedSkillSlugs: ["security-best-practices"],
     matchedCategorySlugs: ["security"],
+    preferredHour: 9,
   },
   {
     id: "auto-nextjs",
     name: "Next.js Patterns refresh",
     prompt:
       "Check Next.js releases for App Router changes, new cache directives, proxy.ts updates, and Turbopack defaults.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/nextjs-patterns",
     cwd: [],
     matchedSkillSlugs: ["nextjs-patterns"],
     matchedCategorySlugs: ["frontend"],
+    preferredHour: 9,
   },
   {
     id: "auto-prompt-engineering",
     name: "Prompt Engineering update",
     prompt:
       "Scan OpenAI and Anthropic changelogs for model behavior changes that affect prompting. Update chain-of-thought templates and few-shot examples.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/prompt-engineering",
     cwd: [],
     matchedSkillSlugs: ["prompt-engineering"],
     matchedCategorySlugs: ["a2a"],
+    preferredHour: 9,
   },
   {
     id: "auto-database",
     name: "Database Patterns refresh",
     prompt:
       "Check Supabase blog for new Postgres extensions, RLS pattern updates, and connection-pooling changes. Scan Neon blog for serverless Postgres features.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/database-patterns",
     cwd: [],
     matchedSkillSlugs: ["database-patterns"],
     matchedCategorySlugs: ["infra"],
+    preferredHour: 9,
   },
   {
     id: "auto-gh-actions",
     name: "GitHub Actions CI refresh",
     prompt:
       "Check GitHub Blog and Changelog for Actions runner updates, new built-in actions, caching-API changes, and OIDC token improvements.",
-    schedule:
-      "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
+    schedule: "Daily · 9:05 AM",
+    cadence: "daily",
     status: "ACTIVE",
     path: "/automations/gh-actions-ci",
     cwd: [],
     matchedSkillSlugs: ["gh-actions-ci"],
     matchedCategorySlugs: ["ops"],
+    preferredHour: 9,
   },
 ];
 

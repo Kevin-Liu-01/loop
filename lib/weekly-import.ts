@@ -1,5 +1,6 @@
 import matter from "gray-matter";
 
+import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
 import {
   EXTERNAL_SKILL_SOURCES,
   getContentsUrl,
@@ -277,6 +278,7 @@ async function discoverAndImportFromSource(
         cadence: "weekly",
         status: "active",
         prompt: `Refresh ${title} from upstream source.`,
+        preferredHour: DEFAULT_PREFERRED_HOUR,
       };
 
       await createSkill({

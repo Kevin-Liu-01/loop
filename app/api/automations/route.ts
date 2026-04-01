@@ -2,12 +2,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { authErrorResponse, requireActiveSubscription } from "@/lib/auth";
-import {
-  automationCadenceSchema,
-  cadenceValueToSkillCadence,
-  skillCadenceToRRule,
-  type CadenceValue
-} from "@/lib/automation-constants";
+import { DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, isValidCronSlotHour, isValidDayOfWeek } from "@/lib/automation-constants";
 import { getSkillCatalogue, getSkillRecordBySlug } from "@/lib/content";
 import { findSkillAuthorForSession } from "@/lib/db/skill-authors";
 import { updateSkill } from "@/lib/db/skills";
@@ -18,9 +13,11 @@ import type { SkillAutomationState } from "@/lib/types";
 const createSchema = z.object({
   name: z.string().trim().min(3).max(80),
   skillSlug: z.string().trim().min(1).max(120),
-  cadence: automationCadenceSchema,
+  cadence: z.enum(["daily", "weekly", "manual"]),
   note: z.string().trim().max(240).optional().default(""),
-  status: z.enum(["ACTIVE", "PAUSED"]).default("ACTIVE")
+  status: z.enum(["ACTIVE", "PAUSED"]).default("ACTIVE"),
+  preferredHour: z.number().int().min(0).max(23).optional(),
+  preferredDay: z.number().int().min(0).max(6).optional(),
 });
 
 function buildPrompt(skillSlug: string, skillTitle: string, note: string): string {
@@ -64,14 +61,21 @@ export async function POST(request: Request) {
         }
 
         const prompt = buildPrompt(skill.slug, skill.title, payload.note);
-        const cadence = cadenceValueToSkillCadence(payload.cadence as CadenceValue);
-        const rrule = skillCadenceToRRule(cadence);
+
+        const preferredHour = payload.preferredHour !== undefined && isValidCronSlotHour(payload.preferredHour)
+          ? payload.preferredHour
+          : DEFAULT_PREFERRED_HOUR;
+        const preferredDay = payload.preferredDay !== undefined && isValidDayOfWeek(payload.preferredDay)
+          ? payload.preferredDay
+          : DEFAULT_PREFERRED_DAY;
 
         const automation: SkillAutomationState = {
           enabled: payload.status !== "PAUSED",
-          cadence,
+          cadence: payload.cadence,
           status: payload.status === "PAUSED" ? "paused" : "active",
-          prompt
+          prompt,
+          preferredHour,
+          preferredDay,
         };
 
         await updateSkill(skill.slug, {
@@ -98,7 +102,6 @@ export async function POST(request: Request) {
           ok: true,
           id: skill.slug,
           prompt,
-          rrule
         });
       } catch (error) {
         const authResp = authErrorResponse(error);

@@ -13,13 +13,13 @@ import {
   SparkIcon,
   TimelineIcon,
 } from "@/components/frontier-icons";
+import { InlineAutomationSetup } from "@/components/inline-automation-setup";
 import { TrackSkillButton } from "@/components/track-skill-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
 import { countMonthlyRuns, formatNextRun } from "@/lib/schedule";
 import type { AutomationSummary, SkillOrigin, SourceDefinition } from "@/lib/types";
 
@@ -99,13 +99,10 @@ export function SkillAutomationPanel({
   const isActive = automation?.status === "ACTIVE";
   const now = useMemo(() => new Date(), []);
   const monthlyRuns = automation
-    ? countMonthlyRuns(automation.schedule, now.getFullYear(), now.getMonth())
+    ? countMonthlyRuns(automation.cadence, now.getFullYear(), now.getMonth(), automation.preferredDay)
     : 0;
-  const nextRun = automation?.schedule ? formatNextRun(automation.schedule) : "On demand";
-  const scheduleLabel =
-    automation?.schedule && automation.schedule.trim()
-      ? formatAutomationSchedule(automation.schedule)
-      : "Manual only";
+  const nextRun = automation ? formatNextRun(automation.cadence, automation.preferredHour ?? 12, automation.preferredDay) : "On demand";
+  const scheduleLabel = automation?.schedule?.trim() || "Manual only";
 
   if (!isTracked) {
     return (
@@ -170,91 +167,104 @@ export function SkillAutomationPanel({
         <h2 className="m-0 font-serif text-xl font-medium tracking-[-0.02em] text-ink">
           Automation
         </h2>
-        <Panel className="overflow-hidden">
-          <div className="dither-gradient-orange -mx-6 -mt-6 mb-1 px-6 pb-5 pt-6">
-            <PanelHead className="items-start">
-              <div className="grid gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge color={isActive ? "green" : "neutral"}>{isActive ? "Active" : "Paused"}</Badge>
-                  <Badge color="neutral">{scheduleLabel}</Badge>
-                  <Badge color="blue">{sourceCount} sources</Badge>
+
+        {!automation && canManage ? (
+          <InlineAutomationSetup
+            skillTitle={skillTitle}
+            slug={slug}
+            sourceCount={sourceCount}
+          />
+        ) : null}
+
+        {automation ? (
+          <Panel className="overflow-hidden">
+            <div className="dither-gradient-orange -mx-6 -mt-6 mb-1 px-6 pb-5 pt-6">
+              <PanelHead className="items-start">
+                <div className="grid gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge color={isActive ? "green" : "neutral"}>{isActive ? "Active" : "Paused"}</Badge>
+                    <Badge color="neutral">{scheduleLabel}</Badge>
+                    <Badge color="blue">{sourceCount} sources</Badge>
+                  </div>
+                  <h3 className="m-0 text-xl font-semibold tracking-tight text-ink">
+                    Refresh control plane
+                  </h3>
+                  <p className="m-0 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
+                    {canManage
+                      ? "Automation should live with the skill. Edit the cadence here, inspect the latest refresh trace below, and jump out to settings only when you want the global desk."
+                      : "Automation is attached to the skill, but only the owner can change cadence or trigger runs. You can still inspect the current setup and refresh trace."}
+                  </p>
                 </div>
-                <h3 className="m-0 text-xl font-semibold tracking-tight text-ink">
-                  Refresh control plane
-                </h3>
-                <p className="m-0 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
-                  {canManage
-                    ? "Automation should live with the skill. Edit the cadence here, inspect the latest refresh trace below, and jump out to settings only when you want the global desk."
-                    : "Automation is attached to the skill, but only the owner can change cadence or trigger runs. You can still inspect the current setup and refresh trace."}
-                </p>
-              </div>
 
-              <div className="flex flex-wrap gap-2">
-                {automation && canManage ? (
-                  <Button onClick={() => setEditOpen(true)} size="sm" type="button">
-                    <SettingsIcon className="h-3.5 w-3.5" />
-                    Edit automation
+                <div className="flex flex-wrap gap-2">
+                  {canManage ? (
+                    <Button onClick={() => setEditOpen(true)} size="sm" type="button">
+                      <SettingsIcon className="h-3.5 w-3.5" />
+                      Edit automation
+                    </Button>
+                  ) : null}
+                  <Button
+                    onClick={() =>
+                      document
+                        .getElementById("run-log")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }
+                    size="sm"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <TimelineIcon className="h-3.5 w-3.5" />
+                    Open refresh trace
                   </Button>
-                ) : null}
-                <Button
-                  onClick={() =>
-                    document
-                      .getElementById("run-log")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  <TimelineIcon className="h-3.5 w-3.5" />
-                  Open refresh trace
-                </Button>
-                <LinkButton href="/settings/automations" size="sm" variant="soft">
-                  <AutomationIcon className="h-3.5 w-3.5" />
-                  {canManage ? "Automation desk" : "View automation desk"}
-                </LinkButton>
-              </div>
-            </PanelHead>
-          </div>
+                  <LinkButton href="/settings/automations" size="sm" variant="soft">
+                    <AutomationIcon className="h-3.5 w-3.5" />
+                    {canManage ? "Automation desk" : "View automation desk"}
+                  </LinkButton>
+                </div>
+              </PanelHead>
+            </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              icon={<ClockIcon className="h-3 w-3" />}
-              label="Next run"
-              value={nextRun}
-              accent={isActive}
-            />
-            <MetricCard
-              icon={<RefreshIcon className="h-3 w-3" />}
-              label="Schedule"
-              value={scheduleLabel}
-            />
-            <MetricCard
-              icon={<SparkIcon className="h-3 w-3" />}
-              label="Runs this month"
-              value={`${monthlyRuns}`}
-            />
-            <MetricCard
-              icon={<SearchIcon className="h-3 w-3" />}
-              label="Sources watched"
-              value={`${sourceCount}`}
-            />
-          </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                icon={<ClockIcon className="h-3 w-3" />}
+                label="Next run"
+                value={nextRun}
+                accent={isActive}
+              />
+              <MetricCard
+                icon={<RefreshIcon className="h-3 w-3" />}
+                label="Schedule"
+                value={scheduleLabel}
+              />
+              <MetricCard
+                icon={<SparkIcon className="h-3 w-3" />}
+                label="Runs this month"
+                value={`${monthlyRuns}`}
+              />
+              <MetricCard
+                icon={<SearchIcon className="h-3 w-3" />}
+                label="Sources watched"
+                value={`${sourceCount}`}
+              />
+            </div>
 
-          {automation?.schedule?.trim() && (
-            <AutomationCalendar
-              automations={[automation]}
-              variant="sidebar"
-            />
-          )}
+            {automation.cadence !== "manual" && (
+              <AutomationCalendar
+                automations={[automation]}
+                variant="sidebar"
+              />
+            )}
 
-          <PromptPreview prompt={automation?.prompt} />
-        </Panel>
+            <PromptPreview prompt={automation.prompt} />
+          </Panel>
+        ) : null}
       </section>
 
       {automation ? (
         <AutomationEditModal
           automation={automation}
+          canManage={canManage}
+          initialPreferredHour={automation.preferredHour}
           onClose={() => setEditOpen(false)}
           open={editOpen}
           skillName={skillTitle}

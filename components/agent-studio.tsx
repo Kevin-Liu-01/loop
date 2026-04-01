@@ -8,7 +8,8 @@ import { useChat } from "@ai-sdk/react";
 import { ChatMessageBubble } from "@/components/chat-message-bubble";
 import { ConversationHistory } from "@/components/conversation-history";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { FieldGroup, FieldLabel, textFieldArea, textFieldBase, textFieldSelect } from "@/components/ui/field";
+import { FieldGroup, FieldLabel, textFieldArea, textFieldBase } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
@@ -44,6 +45,11 @@ type ModelPayload = {
     provider: string;
   }>;
 };
+
+const IMPORT_KIND_OPTIONS = [
+  { value: "skill", label: "Skill" },
+  { value: "mcp", label: "MCP manifest" },
+];
 
 const CONFIG_KEY = "loop.agent-studio.config";
 const INPUT_KEY = "loop.agent-studio.input";
@@ -260,25 +266,19 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
 
           <FieldGroup>
             <FieldLabel>Provider</FieldLabel>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
-              onChange={(event) => {
-                const preset = presets.find((entry) => entry.id === event.target.value);
-                update("providerId", event.target.value);
+            <Select
+              onChange={(v) => {
+                const preset = presets.find((entry) => entry.id === v);
+                update("providerId", v);
                 if (preset) {
                   update("model", preset.defaultModel);
                   update("compatibleBaseUrl", preset.baseURL ?? "");
                   update("apiKeyEnvVar", preset.apiKeyEnvVar ?? "");
                 }
               }}
+              options={presets.map((p) => ({ value: p.id, label: p.label }))}
               value={config.providerId}
-            >
-              {presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
+            />
           </FieldGroup>
         </div>
 
@@ -440,14 +440,11 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
         <div className="grid max-lg:grid-cols-1 grid-cols-2 gap-4">
           <FieldGroup>
             <FieldLabel>Import type</FieldLabel>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
-              onChange={(event) => setImportKind(event.target.value as "skill" | "mcp")}
+            <Select
+              onChange={(v) => setImportKind(v as "skill" | "mcp")}
+              options={IMPORT_KIND_OPTIONS}
               value={importKind}
-            >
-              <option value="skill">Skill</option>
-              <option value="mcp">MCP manifest</option>
-            </select>
+            />
           </FieldGroup>
 
           <FieldGroup>

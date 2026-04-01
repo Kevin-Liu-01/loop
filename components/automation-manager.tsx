@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { SkillIcon } from "@/components/ui/skill-icon";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
-import { FieldGroup, textFieldBase, textFieldArea, textFieldSelect } from "@/components/ui/field";
+import { FieldGroup, textFieldBase, textFieldArea } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,10 +24,9 @@ import {
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
-import { CADENCE_OPTIONS } from "@/lib/automation-constants";
-import { formatAutomationSchedule } from "@/lib/format";
+import { CADENCE_SIMPLE_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import { formatNextRun, countMonthlyRuns } from "@/lib/schedule";
-import type { AutomationSummary, SkillRecord } from "@/lib/types";
+import type { AutomationSummary, SkillRecord, UserSkillCadence } from "@/lib/types";
 
 type AutomationManagerProps = {
   automations: AutomationSummary[];
@@ -165,6 +165,7 @@ export function AutomationManager({ automations, skills, manageableSkillSlugs }:
           <AutomationEditModal
             automation={selectedAutomation.automation}
             canManage={selectedAutomation.canManage}
+            initialPreferredHour={selectedAutomation.automation.preferredHour}
             onClose={() => setSelectedAutomation(null)}
             open
             skillCategory={linkedSkill?.category}
@@ -193,7 +194,7 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
 
   const isActive = automation.status === "ACTIVE";
   const now = new Date();
-  const monthRuns = countMonthlyRuns(automation.schedule, now.getFullYear(), now.getMonth());
+  const monthRuns = countMonthlyRuns(automation.cadence, now.getFullYear(), now.getMonth(), automation.preferredDay);
 
   return (
     <article
@@ -232,9 +233,9 @@ function AutomationCard({ automation, canManage, skillMap, onEdit }: AutomationC
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
-            {formatAutomationSchedule(automation.schedule)}
+            {automation.schedule}
           </span>
-          <span className="tabular-nums">Next: {formatNextRun(automation.schedule)}</span>
+          <span className="tabular-nums">Next: {formatNextRun(automation.cadence, automation.preferredHour ?? 12, automation.preferredDay)}</span>
           <span className="tabular-nums">{monthRuns} runs/mo</span>
         </div>
 
@@ -288,7 +289,7 @@ function CreateAutomationModal({ open, onClose, skills }: CreateAutomationModalP
   const [selectedSkillSlug, setSelectedSkillSlug] = useState(skills[0]?.slug ?? "");
   const [name, setName] = useState(skills[0] ? `${skills[0].title} refresh` : "");
   const [note, setNote] = useState("");
-  const [cadence, setCadence] = useState<(typeof CADENCE_OPTIONS)[number]["value"]>("daily-9");
+  const [cadence, setCadence] = useState<UserSkillCadence>("daily");
   const [status, setStatus] = useState<"ACTIVE" | "PAUSED">("ACTIVE");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -355,18 +356,12 @@ function CreateAutomationModal({ open, onClose, skills }: CreateAutomationModalP
           ) : null}
           <FieldGroup>
             <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Skill</span>
-            <select
-              className={cn(textFieldBase, textFieldSelect)}
+            <Select
               disabled={skills.length === 0}
-              onChange={(e) => handleSkillChange(e.target.value)}
+              onChange={handleSkillChange}
+              options={skills.map((skill) => ({ value: skill.slug, label: skill.title }))}
               value={selectedSkillSlug}
-            >
-              {skills.map((skill) => (
-                <option key={skill.slug} value={skill.slug}>
-                  {skill.title}
-                </option>
-              ))}
-            </select>
+            />
             {(() => {
               const selected = skillMap.get(selectedSkillSlug);
               if (!selected) return null;
@@ -404,29 +399,20 @@ function CreateAutomationModal({ open, onClose, skills }: CreateAutomationModalP
           <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
             <FieldGroup>
               <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Schedule</span>
-              <select
-                className={cn(textFieldBase, textFieldSelect)}
-                onChange={(e) => setCadence(e.target.value as (typeof CADENCE_OPTIONS)[number]["value"])}
+              <Select
+                onChange={(v) => setCadence(v as UserSkillCadence)}
+                options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                 value={cadence}
-              >
-                {CADENCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              />
             </FieldGroup>
 
             <FieldGroup>
               <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">Status</span>
-              <select
-                className={cn(textFieldBase, textFieldSelect)}
-                onChange={(e) => setStatus(e.target.value as "ACTIVE" | "PAUSED")}
+              <Select
+                onChange={(v) => setStatus(v as "ACTIVE" | "PAUSED")}
+                options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                 value={status}
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="PAUSED">Paused</option>
-              </select>
+              />
             </FieldGroup>
           </div>
 

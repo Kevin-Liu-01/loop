@@ -7,7 +7,8 @@ import Link from "next/link";
 import { AutomationIcon, GlobeIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FieldGroup, textFieldBase, textFieldArea, textFieldSelect } from "@/components/ui/field";
+import { FieldGroup, textFieldBase, textFieldArea } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 import { SkillIcon } from "@/components/ui/skill-icon";
 import {
   Dialog,
@@ -19,11 +20,10 @@ import {
 } from "@/components/ui/shadcn/dialog";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
-import { formatNextRun, countMonthlyRuns } from "@/lib/schedule";
-import type { AutomationSummary, SourceDefinition } from "@/lib/types";
+import { formatNextRun, formatScheduleLabel, countMonthlyRuns } from "@/lib/schedule";
+import type { AutomationSummary, SourceDefinition, UserSkillCadence } from "@/lib/types";
 import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
-import { CADENCE_OPTIONS, cadenceToRRule, rruleToCadence } from "@/lib/automation-constants";
+import { CADENCE_SIMPLE_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import type { CategorySlug } from "@/lib/types";
 
 const MODEL_OPTIONS = [
@@ -47,6 +47,7 @@ type AutomationEditModalProps = {
   sources?: SourceDefinition[];
   canManage?: boolean;
   isOperator?: boolean;
+  initialPreferredHour?: number;
 };
 
 export function AutomationEditModal({
@@ -60,29 +61,33 @@ export function AutomationEditModal({
   sources = [],
   canManage = true,
   isOperator = false,
+  initialPreferredHour,
 }: AutomationEditModalProps) {
   const router = useRouter();
   const [name, setName] = useState(automation.name);
-  const [cadence, setCadence] = useState(rruleToCadence(automation.schedule));
+  const [cadence, setCadence] = useState<UserSkillCadence>(automation.cadence ?? "daily");
   const [status, setStatus] = useState<"ACTIVE" | "PAUSED">(automation.status as "ACTIVE" | "PAUSED");
   const [prompt, setPrompt] = useState(automation.prompt);
   const [preferredModel, setPreferredModel] = useState(automation.preferredModel ?? "");
+  const [preferredHour, setPreferredHour] = useState(initialPreferredHour ?? DEFAULT_PREFERRED_HOUR);
+  const [preferredDay, setPreferredDay] = useState(automation.preferredDay ?? DEFAULT_PREFERRED_DAY);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
 
   const linkedSkillLabel = skillName ?? automation.matchedSkillSlugs[0] ?? "";
   const linkedSlug = skillSlug ?? automation.matchedSkillSlugs[0] ?? "";
-  const previewSchedule = cadenceToRRule(cadence);
 
   useEffect(() => {
     setName(automation.name);
-    setCadence(rruleToCadence(automation.schedule));
+    setCadence(automation.cadence ?? "daily");
     setStatus(automation.status as "ACTIVE" | "PAUSED");
     setPrompt(automation.prompt);
     setPreferredModel(automation.preferredModel ?? "");
+    setPreferredHour(initialPreferredHour ?? DEFAULT_PREFERRED_HOUR);
+    setPreferredDay(automation.preferredDay ?? DEFAULT_PREFERRED_DAY);
     setError(null);
-  }, [automation]);
+  }, [automation, initialPreferredHour]);
 
   function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,7 +97,7 @@ export function AutomationEditModal({
       const response = await fetch(`/api/automations/${automation.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, cadence, status, prompt, preferredModel: preferredModel || undefined })
+        body: JSON.stringify({ name, cadence, status, prompt, preferredModel: preferredModel || undefined, preferredHour, preferredDay })
       });
 
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -126,9 +131,9 @@ export function AutomationEditModal({
   }
 
   const now = new Date();
-  const monthlyRuns = countMonthlyRuns(previewSchedule, now.getFullYear(), now.getMonth());
-  const nextRunLabel = status === "PAUSED" ? "Paused" : formatNextRun(previewSchedule);
-  const previewScheduleLabel = formatAutomationSchedule(previewSchedule);
+  const monthlyRuns = countMonthlyRuns(cadence, now.getFullYear(), now.getMonth(), preferredDay);
+  const nextRunLabel = status === "PAUSED" ? "Paused" : formatNextRun(cadence, preferredHour, preferredDay);
+  const previewScheduleLabel = formatScheduleLabel(cadence, preferredHour, preferredDay);
   const isActive = status === "ACTIVE";
 
   return (
@@ -197,33 +202,58 @@ export function AutomationEditModal({
             </div>
 
             <div className="grid gap-6 px-6 py-5">
-              {/* Two-col: Name + Schedule */}
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+              {/* Name */}
+              <FieldGroup>
+                <span className={fieldLabel}>Name</span>
+                <input
+                  className={cn(textFieldBase, "min-h-11 py-3 text-sm")}
+                  disabled={!canManage}
+                  maxLength={80}
+                  onChange={(e) => setName(e.target.value)}
+                  value={name}
+                />
+              </FieldGroup>
+
+              {/* Schedule + Preferred Time + Day (when weekly) */}
+              <div className={cn(
+                "grid gap-4 max-sm:grid-cols-1",
+                cadence === "weekly" ? "grid-cols-3" : "grid-cols-2",
+              )}>
                 <FieldGroup>
-                  <span className={fieldLabel}>Name</span>
-                  <input
-                    className={cn(textFieldBase, "min-h-11 py-3 text-sm")}
+                  <span className={fieldLabel}>Schedule</span>
+                  <Select
+                    className="min-h-11 py-3 text-sm"
                     disabled={!canManage}
-                    maxLength={80}
-                    onChange={(e) => setName(e.target.value)}
-                    value={name}
+                    onChange={(v) => setCadence(v as UserSkillCadence)}
+                    options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                    value={cadence}
                   />
                 </FieldGroup>
 
+                {cadence === "weekly" && (
+                  <FieldGroup>
+                    <span className={fieldLabel}>Day</span>
+                    <Select
+                      className="min-h-11 py-3 text-sm"
+                      disabled={!canManage}
+                      onChange={(v) => setPreferredDay(Number(v))}
+                      options={DAY_OF_WEEK_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                      value={String(preferredDay)}
+                    />
+                  </FieldGroup>
+                )}
+
                 <FieldGroup>
-                  <span className={fieldLabel}>Schedule</span>
-                  <select
+                  <Tip content="The UTC time slot when this automation runs" side="top">
+                    <span className={fieldLabel}>Preferred time</span>
+                  </Tip>
+                  <Select
+                    className="min-h-11 py-3 text-sm"
                     disabled={!canManage}
-                    className={cn(textFieldBase, textFieldSelect, "min-h-11 py-3 text-sm")}
-                    onChange={(e) => setCadence(e.target.value as typeof cadence)}
-                    value={cadence}
-                  >
-                    {CADENCE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setPreferredHour(Number(v))}
+                    options={PREFERRED_HOUR_SELECT_OPTIONS}
+                    value={String(preferredHour)}
+                  />
                 </FieldGroup>
               </div>
 
@@ -231,15 +261,13 @@ export function AutomationEditModal({
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <FieldGroup>
                   <span className={fieldLabel}>Status</span>
-                  <select
+                  <Select
+                    className="min-h-11 py-3 text-sm"
                     disabled={!canManage}
-                    className={cn(textFieldBase, textFieldSelect, "min-h-11 py-3 text-sm")}
-                    onChange={(e) => setStatus(e.target.value as "ACTIVE" | "PAUSED")}
+                    onChange={(v) => setStatus(v as "ACTIVE" | "PAUSED")}
+                    options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                     value={status}
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="PAUSED">Paused</option>
-                  </select>
+                  />
                 </FieldGroup>
 
                 <FieldGroup>
@@ -249,16 +277,13 @@ export function AutomationEditModal({
                       {!isOperator && <span className="ml-1 normal-case tracking-normal text-ink-faint/60">(Operator)</span>}
                     </span>
                   </Tip>
-                  <select
+                  <Select
+                    className={cn("min-h-11 py-3 text-sm", !isOperator && "opacity-40")}
                     disabled={!canManage || !isOperator}
-                    className={cn(textFieldBase, textFieldSelect, "min-h-11 py-3 text-sm", !isOperator && "opacity-40")}
-                    onChange={(e) => setPreferredModel(e.target.value)}
+                    onChange={setPreferredModel}
+                    options={MODEL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                     value={preferredModel}
-                  >
-                    {MODEL_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  />
                 </FieldGroup>
               </div>
 

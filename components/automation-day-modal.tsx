@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun } from "@/lib/schedule";
 import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
 import type { AutomationSummary, SkillRecord } from "@/lib/types";
@@ -98,8 +97,8 @@ export function AutomationDayModal({ open, onClose, date, entries, onEditAutomat
                   ? skillMap?.get(automation.matchedSkillSlugs[0])
                   : undefined;
                 const isActive = automation.status === "ACTIVE";
-                const schedule = formatAutomationSchedule(automation.schedule);
-                const nextRun = formatNextRun(automation.schedule);
+                const schedule = automation.schedule;
+                const nextRun = formatNextRun(automation.cadence, automation.preferredHour ?? 12, automation.preferredDay);
 
                 const inner = (
                   <div className="flex items-start gap-3.5">

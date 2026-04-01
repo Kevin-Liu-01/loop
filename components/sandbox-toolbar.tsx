@@ -13,6 +13,7 @@ import {
 import { SkillIcon, McpIcon } from "@/components/ui/skill-icon";
 import { Separator } from "@/components/ui/shadcn/separator";
 import { Tip } from "@/components/ui/tip";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { supportsSandboxMcp } from "@/lib/mcp-utils";
 import {
@@ -28,6 +29,11 @@ import type {
 } from "@/lib/types";
 
 type SandboxRuntime = "node24" | "python3.13";
+
+const RUNTIME_OPTIONS = [
+  { value: "node24", label: "Node.js 24" },
+  { value: "python3.13", label: "Python 3.13" },
+];
 
 export type SandboxToolbarConfig = {
   runtime: SandboxRuntime;
@@ -179,43 +185,34 @@ export function SandboxToolbar({
         <Separator orientation="vertical" className="hidden h-3.5 opacity-30 sm:block" />
 
         <Tip content="Sandbox execution environment" side="bottom">
-          <label className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             <span className={sandboxToolbarLabel}>Runtime</span>
-            <select
-              className={sandboxToolbarControl}
-              onChange={(e) =>
-                onUpdateConfig("runtime", e.target.value as SandboxRuntime)
-              }
+            <Select
+              className={cn(sandboxToolbarControl, "min-h-0 w-auto rounded-lg py-1")}
+              onChange={(v) => onUpdateConfig("runtime", v as SandboxRuntime)}
+              options={RUNTIME_OPTIONS}
               value={config.runtime}
-            >
-              <option value="node24">Node.js 24</option>
-              <option value="python3.13">Python 3.13</option>
-            </select>
-          </label>
+            />
+          </div>
         </Tip>
 
         <Tip content="AI gateway or custom provider" side="bottom">
-          <label className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             <span className={sandboxToolbarLabel}>Provider</span>
-            <select
-              className={cn(sandboxToolbarControl, "min-w-[7.5rem]")}
-              onChange={(e) => {
-                const preset = presets.find((p) => p.id === e.target.value);
-                onUpdateConfig("providerId", e.target.value);
+            <Select
+              className={cn(sandboxToolbarControl, "min-h-0 min-w-[7.5rem] w-auto rounded-lg py-1")}
+              onChange={(v) => {
+                const preset = presets.find((p) => p.id === v);
+                onUpdateConfig("providerId", v);
                 if (preset) {
                   onUpdateConfig("model", preset.defaultModel);
                   onUpdateConfig("apiKeyEnvVar", preset.apiKeyEnvVar ?? "");
                 }
               }}
+              options={presets.map((p) => ({ value: p.id, label: p.label }))}
               value={config.providerId}
-            >
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            />
+          </div>
         </Tip>
 
         <Tip content="Gateway model ID — type or pick from suggestions" side="bottom">

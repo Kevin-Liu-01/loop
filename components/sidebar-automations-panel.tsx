@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Panel, PanelHead } from "@/components/ui/panel";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
 import { formatNextRun } from "@/lib/schedule";
 import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
 import type { AutomationSummary, SkillRecord } from "@/lib/types";
@@ -102,12 +101,12 @@ export function SidebarAutomationsPanel({ automations, skills = [] }: SidebarAut
                     <div className="flex-1 border border-line bg-paper-2/70 px-2 py-1.5 dark:bg-paper-2/40">
                       <span className="block text-[0.6rem] uppercase tracking-[0.08em] text-ink-faint">schedule</span>
                       <span className="block text-xs font-medium text-ink-soft">
-                        {formatAutomationSchedule(auto.schedule)}
+                        {auto.schedule}
                       </span>
                     </div>
                     <div className="flex-1 border border-line bg-paper-2/70 px-2 py-1.5 dark:bg-paper-2/40">
                       <span className="block text-[0.6rem] uppercase tracking-[0.08em] text-ink-faint">next</span>
-                      <span className="block text-xs font-medium tabular-nums text-ink-soft">{formatNextRun(auto.schedule)}</span>
+                      <span className="block text-xs font-medium tabular-nums text-ink-soft">{formatNextRun(auto.cadence, auto.preferredHour ?? 12, auto.preferredDay)}</span>
                     </div>
                   </div>
                 </div>
@@ -120,6 +119,7 @@ export function SidebarAutomationsPanel({ automations, skills = [] }: SidebarAut
       {editTarget && (
         <AutomationEditModal
           automation={editTarget}
+          initialPreferredHour={editTarget.preferredHour}
           onClose={() => setEditTarget(null)}
           open
           skillCategory={editSkill?.category}

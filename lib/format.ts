@@ -56,7 +56,7 @@ export function formatRelativeDate(value: string): string {
   return formatDate(value);
 }
 
-export { formatAutomationSchedule } from "@/lib/schedule";
+export { formatScheduleLabel } from "@/lib/schedule";
 
 export function byUpdatedAtDesc<T extends { updatedAt?: string; publishedAt?: string }>(items: T[]): T[] {
   return [...items].sort((left, right) => {

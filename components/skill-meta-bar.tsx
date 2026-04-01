@@ -17,9 +17,12 @@ export function SkillMetaBar({
   skill: SkillRecord;
   freshness: { label: string };
 }) {
-  const schedule = skill.automations?.[0]?.schedule;
+  const automation = skill.automations?.[0];
+  const cadence = skill.automation?.cadence ?? automation?.cadence;
+  const preferredHour = skill.automation?.preferredHour ?? automation?.preferredHour ?? 12;
+  const preferredDay = skill.automation?.preferredDay ?? automation?.preferredDay;
   const nextRun =
-    skill.automation?.enabled && schedule ? formatNextRun(schedule) : null;
+    skill.automation?.enabled && cadence ? formatNextRun(cadence, preferredHour, preferredDay) : null;
   const srcCount = skill.sources?.length ?? 0;
 
   const details = [originLabel(skill), freshness.label];

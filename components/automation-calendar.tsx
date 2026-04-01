@@ -10,8 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { SkillIcon } from "@/components/ui/skill-icon";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/cn";
-import { formatAutomationSchedule } from "@/lib/format";
-import { formatNextRun, getRunDatesForMonth, isRRuleScheduledOnDate } from "@/lib/schedule";
+import { formatNextRun, getRunDatesForMonth, isScheduledOnDate } from "@/lib/schedule";
 import { formatTagLabel, getTagColorForCategory } from "@/lib/tag-utils";
 import type { AutomationSummary, SkillRecord } from "@/lib/types";
 
@@ -97,9 +96,9 @@ function AutomationLegend({
         const colorSet = AUTOMATION_COLORS[index % AUTOMATION_COLORS.length];
         const year = month.getFullYear();
         const m = month.getMonth();
-        const count = getRunDatesForMonth(automation.schedule, year, m).length;
-        const nextRun = formatNextRun(automation.schedule);
-        const schedule = formatAutomationSchedule(automation.schedule);
+        const count = getRunDatesForMonth(automation.cadence, year, m, automation.preferredDay).length;
+        const nextRun = formatNextRun(automation.cadence, automation.preferredHour ?? 12, automation.preferredDay);
+        const schedule = automation.schedule;
         const isActive = automation.status === "ACTIVE";
         const linkedSkill = automation.matchedSkillSlugs[0]
           ? skillMap?.get(automation.matchedSkillSlugs[0])
@@ -203,7 +202,7 @@ export function AutomationCalendar({
 
     activeAutomations.forEach((automation, index) => {
       const color = AUTOMATION_COLORS[index % AUTOMATION_COLORS.length];
-      const dates = getRunDatesForMonth(automation.schedule, year, m);
+      const dates = getRunDatesForMonth(automation.cadence, year, m, automation.preferredDay);
 
       dates.forEach((date) => {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -228,7 +227,7 @@ export function AutomationCalendar({
         automation,
         color: AUTOMATION_COLORS[index % AUTOMATION_COLORS.length],
       }))
-      .filter(({ automation }) => isRRuleScheduledOnDate(automation.schedule, modalDate));
+      .filter(({ automation }) => isScheduledOnDate(automation.cadence, modalDate, automation.preferredDay));
   }, [modalDate, automations]);
 
   const navBtn = cn(

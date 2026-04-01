@@ -165,12 +165,15 @@ export type AutomationSummary = {
   name: string;
   prompt: string;
   schedule: string;
+  cadence: UserSkillCadence;
   status: string;
   path: string;
   cwd: string[];
   matchedSkillSlugs: string[];
   matchedCategorySlugs: CategorySlug[];
   preferredModel?: string;
+  preferredHour?: number;
+  preferredDay?: number;
 };
 
 export type SkillPrice = {
@@ -236,6 +239,9 @@ export type SkillAutomationState = {
   lastRunAt?: string;
   consecutiveFailures?: number;
   preferredModel?: string;
+  preferredHour?: number;
+  /** 0 = Sunday, 1 = Monday, … 6 = Saturday. Only used when cadence is "weekly". */
+  preferredDay?: number;
 };
 
 export type SkillUpdateEntry = {

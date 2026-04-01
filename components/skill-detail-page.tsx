@@ -12,6 +12,7 @@ import { ExpandableContent } from "@/components/expandable-content";
 import { PlayIcon } from "@/components/frontier-icons";
 import { ShareButton } from "@/components/share-button";
 import { SkillAgentDocsPanel } from "@/components/skill-agent-docs-panel";
+import { SkillInstallPanel } from "@/components/skill-install-panel";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { SkillAuthorStudio } from "@/components/skill-author-studio";
 import { SkillActivitySection } from "@/components/skill-activity-section";
@@ -106,6 +107,7 @@ export function SkillDetailPage({
 
   const sectionTabs: SectionTab[] = [
     ...(canEdit ? [{ id: "author-studio", label: "Studio" }] : []),
+    { id: "install", label: "Install" },
     { id: "content", label: "Content" },
     { id: "agent-docs", label: "Agent docs" },
     { id: "activity", label: "Activity" },
@@ -255,6 +257,16 @@ export function SkillDetailPage({
                   <SkillAuthorStudio skill={skill} />
                 </section>
               ) : null}
+
+              <SkillInstallPanel
+                agentDocs={skill.agentDocs}
+                agentPrompt={primaryAgentPrompt}
+                body={skill.body}
+                downloadFilename={downloadFilename}
+                rawUrl={rawUrl}
+                skillHref={skill.href}
+                slug={skill.slug}
+              />
 
               {/* Skill body */}
               <section aria-label="Skill content" id="content">

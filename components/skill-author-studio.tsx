@@ -16,9 +16,11 @@ import {
 } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FieldGroup, textFieldArea, textFieldBase, textFieldCode, textFieldSelect } from "@/components/ui/field";
+import { FieldGroup, textFieldArea, textFieldBase, textFieldCode } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { CATEGORY_REGISTRY } from "@/lib/registry";
+import { CADENCE_SIMPLE_OPTIONS, DAY_OF_WEEK_OPTIONS, DEFAULT_PREFERRED_DAY, DEFAULT_PREFERRED_HOUR, PREFERRED_HOUR_SELECT_OPTIONS } from "@/lib/automation-constants";
 import { AUTOMATION_PROMPT_MAX_LENGTH } from "@/lib/user-skills";
 import type { AgentDocs, LoopUpdateStreamEvent, SkillRecord } from "@/lib/types";
 
@@ -99,6 +101,8 @@ type AuthorStudioState = {
   tags: string;
   sourceUrls: string;
   cadence: "daily" | "weekly" | "manual";
+  preferredHour: number;
+  preferredDay: number;
   automationPrompt: string;
   body: string;
   ownerName: string;
@@ -115,6 +119,8 @@ function buildInitialState(skill: SkillRecord): AuthorStudioState {
       .join(", "),
     sourceUrls: (skill.sources ?? []).map((source) => source.url).join("\n"),
     cadence: skill.automation?.enabled ? skill.automation.cadence : "manual",
+    preferredHour: skill.automation?.preferredHour ?? DEFAULT_PREFERRED_HOUR,
+    preferredDay: skill.automation?.preferredDay ?? DEFAULT_PREFERRED_DAY,
     automationPrompt: skill.automation?.prompt ?? "",
     body: skill.body,
     ownerName: skill.ownerName ?? "",
@@ -153,7 +159,9 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
     skill.sources,
     skill.automation?.cadence,
     skill.automation?.enabled,
-    skill.automation?.prompt
+    skill.automation?.prompt,
+    skill.automation?.preferredHour,
+    skill.automation?.preferredDay,
   ]);
 
   const sourceCount = useMemo(
@@ -237,6 +245,8 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
       autoUpdate: state.cadence !== "manual",
       automationCadence: state.cadence,
       automationPrompt: state.automationPrompt,
+      preferredHour: state.preferredHour,
+      preferredDay: state.preferredDay,
       agentDocs: Object.keys(state.agentDocs).length > 0 ? state.agentDocs : undefined
     };
   }
@@ -441,17 +451,11 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
 
             <FieldGroup>
               <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Category</span>
-              <select
-                className={cn(textFieldBase, textFieldSelect)}
-                onChange={(event) => update("category", event.target.value as SkillRecord["category"])}
+              <Select
+                onChange={(v) => update("category", v as SkillRecord["category"])}
+                options={CATEGORY_REGISTRY.map((c) => ({ value: c.slug, label: c.title }))}
                 value={state.category}
-              >
-                {CATEGORY_REGISTRY.map((category) => (
-                  <option key={category.slug} value={category.slug}>
-                    {category.title}
-                  </option>
-                ))}
-              </select>
+              />
             </FieldGroup>
           </div>
 
@@ -509,20 +513,41 @@ export function SkillAuthorStudio({ skill }: SkillAuthorStudioProps) {
               />
             </FieldGroup>
 
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className={cn(
+              "grid gap-4",
+              state.cadence === "weekly" ? "xl:grid-cols-3" : "xl:grid-cols-2",
+            )}>
               <FieldGroup>
                 <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh cadence</span>
-                <select
-                  className={cn(textFieldBase, textFieldSelect)}
-                  onChange={(event) => update("cadence", event.target.value as AuthorStudioState["cadence"])}
+                <Select
+                  onChange={(v) => update("cadence", v as AuthorStudioState["cadence"])}
+                  options={CADENCE_SIMPLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                   value={state.cadence}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="manual">Manual</option>
-                </select>
+                />
               </FieldGroup>
 
+              {state.cadence === "weekly" && (
+                <FieldGroup>
+                  <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Day of week</span>
+                  <Select
+                    onChange={(v) => update("preferredDay", Number(v))}
+                    options={DAY_OF_WEEK_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                    value={String(state.preferredDay)}
+                  />
+                </FieldGroup>
+              )}
+
+              <FieldGroup>
+                <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Preferred time (UTC)</span>
+                <Select
+                  onChange={(v) => update("preferredHour", Number(v))}
+                  options={PREFERRED_HOUR_SELECT_OPTIONS}
+                  value={String(state.preferredHour)}
+                />
+              </FieldGroup>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
               <FieldGroup>
                 <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-ink-soft">Refresh prompt</span>
                 <textarea

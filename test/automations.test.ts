@@ -1,108 +1,95 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  cadenceToRRule,
-  cadenceValueToSkillCadence,
-  rruleToCadence,
-  skillCadenceToCadenceValue,
-  skillCadenceToRRule
-} from "@/lib/automation-constants";
-import { formatAutomationSchedule } from "@/lib/format";
-import { isRRuleScheduledOnDate } from "@/lib/schedule";
+import { formatScheduleLabel, countMonthlyRuns, isScheduledOnDate, formatNextRun, getNextRunDate } from "@/lib/schedule";
 
 // ---------------------------------------------------------------------------
-// Cadence mapping roundtrips
+// Schedule label
 // ---------------------------------------------------------------------------
 
-test("cadenceToRRule returns a valid RRULE for each cadence value", () => {
-  assert.match(cadenceToRRule("daily-9"), /FREQ=WEEKLY.*BYHOUR=9/);
-  assert.match(cadenceToRRule("weekly-mon"), /BYDAY=MO/);
+test("formatScheduleLabel returns human-readable labels", () => {
+  assert.equal(formatScheduleLabel("daily", 9), "Daily · 9:05 AM");
+  assert.equal(formatScheduleLabel("daily", 0), "Daily · 12:05 AM");
+  assert.equal(formatScheduleLabel("daily", 14), "Daily · 2:05 PM");
+  assert.equal(formatScheduleLabel("weekly", 9), "Monday · 9:05 AM");
+  assert.equal(formatScheduleLabel("manual", 12), "Manual");
 });
 
-test("legacy cadence values map to the daily RRULE", () => {
-  assert.match(cadenceToRRule("weekdays-9"), /FREQ=WEEKLY.*BYHOUR=9/);
-  assert.match(cadenceToRRule("hourly-6"), /FREQ=WEEKLY.*BYHOUR=9/);
+test("formatScheduleLabel respects preferredDay for weekly", () => {
+  assert.equal(formatScheduleLabel("weekly", 9, 1), "Monday · 9:05 AM");
+  assert.equal(formatScheduleLabel("weekly", 9, 3), "Wednesday · 9:05 AM");
+  assert.equal(formatScheduleLabel("weekly", 14, 5), "Friday · 2:05 PM");
+  assert.equal(formatScheduleLabel("weekly", 9, 0), "Sunday · 9:05 AM");
+  assert.equal(formatScheduleLabel("weekly", 9, 6), "Saturday · 9:05 AM");
 });
 
-test("rruleToCadence inverts cadenceToRRule for active values", () => {
-  assert.equal(rruleToCadence(cadenceToRRule("daily-9")), "daily-9");
-  assert.equal(rruleToCadence(cadenceToRRule("weekly-mon")), "weekly-mon");
-});
-
-test("rruleToCadence normalizes legacy RRULE patterns to daily-9", () => {
-  assert.equal(rruleToCadence("FREQ=HOURLY;INTERVAL=6"), "daily-9");
-  assert.equal(rruleToCadence("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0"), "daily-9");
-});
-
-test("rruleToCadence defaults to daily-9 for unknown RRULE", () => {
-  assert.equal(rruleToCadence("FREQ=MONTHLY;BYMONTHDAY=1"), "daily-9");
+test("formatScheduleLabel ignores preferredDay for daily cadence", () => {
+  assert.equal(formatScheduleLabel("daily", 9, 3), "Daily · 9:05 AM");
 });
 
 // ---------------------------------------------------------------------------
-// Skill cadence ↔ CadenceValue conversions
+// Calendar helpers
 // ---------------------------------------------------------------------------
 
-test("skillCadenceToRRule maps UserSkillCadence to RRULE strings", () => {
-  assert.match(skillCadenceToRRule("daily"), /FREQ=WEEKLY.*BYDAY=SU,MO/);
-  assert.match(skillCadenceToRRule("weekly"), /BYDAY=MO.*BYHOUR=9/);
-  assert.equal(skillCadenceToRRule("manual"), "");
+test("countMonthlyRuns returns correct counts per cadence", () => {
+  assert.equal(countMonthlyRuns("daily", 2026, 2), 31);
+  assert.equal(countMonthlyRuns("weekly", 2026, 2), 5);
+  assert.equal(countMonthlyRuns("manual", 2026, 2), 0);
 });
 
-test("skillCadenceToCadenceValue maps UserSkillCadence to CadenceValue", () => {
-  assert.equal(skillCadenceToCadenceValue("daily"), "daily-9");
-  assert.equal(skillCadenceToCadenceValue("weekly"), "weekly-mon");
-  assert.equal(skillCadenceToCadenceValue("manual"), "daily-9");
+test("countMonthlyRuns respects preferredDay for weekly", () => {
+  // March 2026: Tuesdays are 3, 10, 17, 24, 31 = 5
+  assert.equal(countMonthlyRuns("weekly", 2026, 2, 2), 5);
+  // March 2026: Fridays are 6, 13, 20, 27 = 4
+  assert.equal(countMonthlyRuns("weekly", 2026, 2, 5), 4);
 });
 
-test("cadenceValueToSkillCadence maps CadenceValue to UserSkillCadence", () => {
-  assert.equal(cadenceValueToSkillCadence("daily-9"), "daily");
-  assert.equal(cadenceValueToSkillCadence("weekly-mon"), "weekly");
-});
-
-test("cadenceValueToSkillCadence maps legacy values to daily", () => {
-  assert.equal(cadenceValueToSkillCadence("weekdays-9"), "daily");
-  assert.equal(cadenceValueToSkillCadence("hourly-6"), "daily");
-});
-
-// ---------------------------------------------------------------------------
-// Schedule formatting
-// ---------------------------------------------------------------------------
-
-test("formatAutomationSchedule turns known rules into human labels", () => {
-  assert.equal(formatAutomationSchedule("FREQ=HOURLY;INTERVAL=6"), "Every 6 hours");
-  assert.equal(formatAutomationSchedule("FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0"), "Monday · 9:00 AM");
-  assert.equal(
-    formatAutomationSchedule("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYHOUR=9;BYMINUTE=0"),
-    "Daily · 9:00 AM"
-  );
-  assert.equal(
-    formatAutomationSchedule("FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0"),
-    "Daily · 9:00 AM"
-  );
-  assert.equal(
-    formatAutomationSchedule("RRULE:FREQ=WEEKLY;BYHOUR=9;BYMINUTE=0;BYDAY=SU,MO,TU,WE,TH,FR,SA"),
-    "Daily · 9:00 AM"
-  );
-  assert.equal(
-    formatAutomationSchedule("FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=8;BYMINUTE=30"),
-    "Weekends · 8:30 AM"
-  );
-  assert.equal(
-    formatAutomationSchedule("FREQ=WEEKLY;BYDAY=MO,WE,FR;BYHOUR=14;BYMINUTE=0"),
-    "Mon, Wed, Fri · 2:00 PM"
-  );
-});
-
-// ---------------------------------------------------------------------------
-// Calendar scheduling
-// ---------------------------------------------------------------------------
-
-test("isRRuleScheduledOnDate matches projected runs for a calendar day", () => {
+test("isScheduledOnDate matches correctly", () => {
   const monday = new Date(2026, 2, 9);
-  assert.equal(isRRuleScheduledOnDate("FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0", monday), true);
   const tuesday = new Date(2026, 2, 10);
-  assert.equal(isRRuleScheduledOnDate("FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0", tuesday), false);
+
+  assert.equal(isScheduledOnDate("daily", monday), true);
+  assert.equal(isScheduledOnDate("daily", tuesday), true);
+  assert.equal(isScheduledOnDate("weekly", monday), true);
+  assert.equal(isScheduledOnDate("weekly", tuesday), false);
+  assert.equal(isScheduledOnDate("manual", monday), false);
+});
+
+test("isScheduledOnDate respects preferredDay", () => {
+  const tuesday = new Date(2026, 2, 10);
+  const wednesday = new Date(2026, 2, 11);
+
+  assert.equal(isScheduledOnDate("weekly", tuesday, 2), true);
+  assert.equal(isScheduledOnDate("weekly", wednesday, 2), false);
+  assert.equal(isScheduledOnDate("weekly", wednesday, 3), true);
+});
+
+// ---------------------------------------------------------------------------
+// Next run
+// ---------------------------------------------------------------------------
+
+test("formatNextRun returns dash for manual cadence", () => {
+  assert.equal(formatNextRun("manual", 12), "—");
+});
+
+test("formatNextRun returns a non-empty string for active cadences", () => {
+  const daily = formatNextRun("daily", 9);
+  assert.notEqual(daily, "—");
+  assert.ok(daily.length > 0);
+
+  const weekly = formatNextRun("weekly", 9);
+  assert.notEqual(weekly, "—");
+  assert.ok(weekly.length > 0);
+});
+
+test("getNextRunDate for weekly lands on the correct day", () => {
+  const fridayRun = getNextRunDate("weekly", 9, 5);
+  assert.ok(fridayRun);
+  assert.equal(fridayRun.getUTCDay(), 5);
+
+  const sundayRun = getNextRunDate("weekly", 9, 0);
+  assert.ok(sundayRun);
+  assert.equal(sundayRun.getUTCDay(), 0);
 });
 
 // ---------------------------------------------------------------------------

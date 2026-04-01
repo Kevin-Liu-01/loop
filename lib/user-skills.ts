@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DEFAULT_PREFERRED_HOUR } from "@/lib/automation-constants";
+import { formatScheduleLabel } from "@/lib/schedule";
 import {
   createSkill as dbCreateSkill,
   getSkillBySlug as dbGetSkillBySlug,
@@ -69,6 +71,8 @@ export const createUserSkillInputSchema = z.object({
   autoUpdate: z.boolean().default(true),
   automationCadence: z.enum(["daily", "weekly", "manual"]).default("daily"),
   automationPrompt: z.string().trim().max(AUTOMATION_PROMPT_MAX_LENGTH).optional(),
+  preferredHour: z.number().int().min(0).max(23).optional(),
+  preferredDay: z.number().int().min(0).max(6).optional(),
   agentDocs: z.record(z.string()).optional(),
   price: z.object({ amount: z.number(), currency: z.string() }).nullable().optional(),
   visibility: z.enum(["public", "private"]).optional().default("private"),
@@ -347,7 +351,9 @@ export function createUserSkillDocument(input: CreateUserSkillInput, now = new D
         enabled: automationEnabled,
         cadence: automationEnabled ? parsed.automationCadence : "manual",
         status: automationEnabled ? "active" : "paused",
-        prompt: buildAutomationPrompt(parsed, slugBase)
+        prompt: buildAutomationPrompt(parsed, slugBase),
+        preferredHour: parsed.preferredHour ?? DEFAULT_PREFERRED_HOUR,
+        preferredDay: parsed.preferredDay,
       },
       updates: [],
       agentDocs: parsed.agentDocs as AgentDocs | undefined
@@ -404,7 +410,9 @@ export function applyUserEditsToSkill(
     cadence: automationEnabled ? parsed.automationCadence : "manual",
     status: automationEnabled ? "active" : "paused",
     prompt: buildAutomationPrompt(parsed, skill.slug),
-    lastRunAt: skill.automation.lastRunAt
+    lastRunAt: skill.automation.lastRunAt,
+    preferredHour: parsed.preferredHour ?? skill.automation.preferredHour ?? DEFAULT_PREFERRED_HOUR,
+    preferredDay: parsed.preferredDay ?? skill.automation.preferredDay,
   };
   const nextTags = buildEditableTags(skill.tags, parsed.category, parsed.tags);
 
@@ -507,16 +515,22 @@ export function createNextUserSkillVersion(
 export function buildUserSkillAutomation(skill: UserSkillDocument): AutomationSummary | null {
   if (!skill.automation.enabled) return null;
 
+  const hour = skill.automation.preferredHour ?? DEFAULT_PREFERRED_HOUR;
+  const day = skill.automation.preferredDay;
   return {
     id: `user:${skill.slug}`,
     name: `${skill.title} refresh`,
     prompt: skill.automation.prompt,
-    schedule: formatCadence(skill.automation.cadence),
+    schedule: formatScheduleLabel(skill.automation.cadence, hour, day),
+    cadence: skill.automation.cadence,
     status: skill.automation.status.toUpperCase(),
     path: `loop://skills/${skill.slug}/automation`,
     cwd: [],
     matchedSkillSlugs: [skill.slug],
-    matchedCategorySlugs: [skill.category]
+    matchedCategorySlugs: [skill.category],
+    preferredModel: skill.automation.preferredModel,
+    preferredHour: hour,
+    preferredDay: day,
   };
 }
 
@@ -681,7 +695,8 @@ export async function addTrackedSkillFromRecord(
     enabled: automationEnabled,
     cadence: automationEnabled ? "daily" : "manual",
     status: automationEnabled ? "active" : "paused",
-    prompt: `Refresh $${skill.slug} from the tracked sources. Capture only concrete changes, fold them into the skill, and stay terse.`
+    prompt: `Refresh $${skill.slug} from the tracked sources. Capture only concrete changes, fold them into the skill, and stay terse.`,
+    preferredHour: DEFAULT_PREFERRED_HOUR,
   };
 
   if (existing) {

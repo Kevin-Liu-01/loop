@@ -16,7 +16,6 @@ import {
   buildDefaultOpenGraphImages,
   buildDefaultTwitterImageUrls,
   buildSiteUrl,
-  SEO_DEFAULT_DESCRIPTION,
   SEO_DEFAULT_TITLE,
   SITE_NAME,
 } from "@/lib/seo";
@@ -30,11 +29,11 @@ const LANDING_DESCRIPTION =
   "Loop monitors, evaluates, and updates your agent playbooks. Every skill stays optimal, every parameter stays current.";
 
 export const metadata: Metadata = {
-  title: SEO_DEFAULT_TITLE,
+  title: { absolute: SEO_DEFAULT_TITLE },
   description: LANDING_DESCRIPTION,
   openGraph: {
     title: SEO_DEFAULT_TITLE,
-    description: SEO_DEFAULT_DESCRIPTION,
+    description: LANDING_DESCRIPTION,
     url: buildSiteUrl("/").toString(),
     siteName: SITE_NAME,
     type: "website",
@@ -44,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: SEO_DEFAULT_TITLE,
-    description: SEO_DEFAULT_DESCRIPTION,
+    description: LANDING_DESCRIPTION,
     images: buildDefaultTwitterImageUrls(),
   },
 };

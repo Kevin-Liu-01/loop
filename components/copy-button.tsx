@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import type { ButtonSize, ButtonVariant } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/shadcn/tooltip";
 import { postUsageEvent } from "@/components/usage-beacon";
+import { cn } from "@/lib/cn";
 import type { CategorySlug, UsageEventKind } from "@/lib/types";
 
 type CopyButtonProps = {
   value: string;
   label?: string;
   iconOnly?: boolean;
+  /** Full-width CTA style — prominent dark button spanning the container. */
+  block?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
@@ -37,6 +40,7 @@ export function CopyButton({
   value,
   label = "Copy",
   iconOnly,
+  block,
   variant,
   size,
   className,
@@ -72,6 +76,21 @@ export function CopyButton({
         </TooltipTrigger>
         <TooltipContent>{copied ? "Copied!" : label}</TooltipContent>
       </Tooltip>
+    );
+  }
+
+  if (block) {
+    return (
+      <Button
+        className={cn("w-full justify-center text-sm font-semibold", className)}
+        onClick={handleCopy}
+        size={size ?? "default"}
+        type="button"
+        variant={variant ?? "primary"}
+      >
+        {copied ? <CheckIcon className={ic} /> : <ClipboardIcon className={ic} />}
+        <span>{copied ? "Copied!" : label}</span>
+      </Button>
     );
   }
 

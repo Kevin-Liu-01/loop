@@ -1,64 +1,80 @@
-import { z } from "zod";
 import type { UserSkillCadence } from "@/lib/types";
 
-export const CADENCE_OPTIONS = [
-  { value: "daily-9", label: "Daily" },
-  { value: "weekly-mon", label: "Weekly (Monday)" }
+export const STATUS_OPTIONS = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "PAUSED", label: "Paused" },
 ] as const;
 
-export type CadenceValue = "daily-9" | "weekdays-9" | "hourly-6" | "weekly-mon";
+export const CADENCE_SIMPLE_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "manual", label: "Manual" },
+] as const;
 
-export const automationCadenceSchema = z.enum(["hourly-6", "daily-9", "weekdays-9", "weekly-mon"]);
+// ---------------------------------------------------------------------------
+// Cron time slots — 24 hourly slots across the day (UTC)
+// ---------------------------------------------------------------------------
 
-const RRULE_TO_CADENCE: Record<string, CadenceValue> = {
-  "FREQ=HOURLY;INTERVAL=6": "daily-9",
-  "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0": "daily-9",
-  "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0": "daily-9",
-  "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0": "weekly-mon"
+export type CronSlot = {
+  hour: number;
+  label: string;
+  description: string;
 };
 
-const CADENCE_TO_RRULE: Record<CadenceValue, string> = {
-  "hourly-6": "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
-  "daily-9": "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
-  "weekdays-9": "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
-  "weekly-mon": "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0"
-};
+export const CRON_SLOTS: CronSlot[] = [
+  { hour: 0,  label: "12:05 AM UTC", description: "Asia-Pacific morning" },
+  { hour: 1,  label: "1:05 AM UTC",  description: "East Asia midday" },
+  { hour: 2,  label: "2:05 AM UTC",  description: "East Asia afternoon" },
+  { hour: 3,  label: "3:05 AM UTC",  description: "India morning" },
+  { hour: 4,  label: "4:05 AM UTC",  description: "India midday" },
+  { hour: 5,  label: "5:05 AM UTC",  description: "Europe early morning" },
+  { hour: 6,  label: "6:05 AM UTC",  description: "Europe morning" },
+  { hour: 7,  label: "7:05 AM UTC",  description: "UK morning" },
+  { hour: 8,  label: "8:05 AM UTC",  description: "Europe work hours" },
+  { hour: 9,  label: "9:05 AM UTC",  description: "Europe midday" },
+  { hour: 10, label: "10:05 AM UTC", description: "US East early morning" },
+  { hour: 11, label: "11:05 AM UTC", description: "US East morning" },
+  { hour: 12, label: "12:05 PM UTC", description: "US East midday" },
+  { hour: 13, label: "1:05 PM UTC",  description: "US East afternoon" },
+  { hour: 14, label: "2:05 PM UTC",  description: "US West morning" },
+  { hour: 15, label: "3:05 PM UTC",  description: "US West midday" },
+  { hour: 16, label: "4:05 PM UTC",  description: "US West afternoon" },
+  { hour: 17, label: "5:05 PM UTC",  description: "US West end of day" },
+  { hour: 18, label: "6:05 PM UTC",  description: "US evening" },
+  { hour: 19, label: "7:05 PM UTC",  description: "US late evening" },
+  { hour: 20, label: "8:05 PM UTC",  description: "Americas night" },
+  { hour: 21, label: "9:05 PM UTC",  description: "Pacific evening" },
+  { hour: 22, label: "10:05 PM UTC", description: "Asia-Pacific early" },
+  { hour: 23, label: "11:05 PM UTC", description: "Asia-Pacific pre-dawn" },
+];
 
-const SKILL_CADENCE_TO_RRULE: Record<UserSkillCadence, string> = {
-  daily: "FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA;BYHOUR=9;BYMINUTE=0",
-  weekly: "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0",
-  manual: ""
-};
+export const DEFAULT_PREFERRED_HOUR = 12;
 
-const SKILL_CADENCE_TO_CADENCE_VALUE: Record<UserSkillCadence, CadenceValue> = {
-  daily: "daily-9",
-  weekly: "weekly-mon",
-  manual: "daily-9"
-};
-
-const CADENCE_VALUE_TO_SKILL_CADENCE: Record<CadenceValue, UserSkillCadence> = {
-  "hourly-6": "daily",
-  "daily-9": "daily",
-  "weekdays-9": "daily",
-  "weekly-mon": "weekly"
-};
-
-export function rruleToCadence(rrule: string): CadenceValue {
-  return RRULE_TO_CADENCE[rrule] ?? "daily-9";
+export function isValidCronSlotHour(hour: number): boolean {
+  return Number.isInteger(hour) && hour >= 0 && hour <= 23;
 }
 
-export function cadenceToRRule(cadence: CadenceValue): string {
-  return CADENCE_TO_RRULE[cadence];
-}
+export const PREFERRED_HOUR_SELECT_OPTIONS = CRON_SLOTS.map((slot) => ({
+  value: String(slot.hour),
+  label: `${slot.label} \u2014 ${slot.description}`,
+}));
 
-export function skillCadenceToRRule(cadence: UserSkillCadence): string {
-  return SKILL_CADENCE_TO_RRULE[cadence] ?? "";
-}
+// ---------------------------------------------------------------------------
+// Day-of-week options (for weekly cadence)
+// ---------------------------------------------------------------------------
 
-export function skillCadenceToCadenceValue(cadence: UserSkillCadence): CadenceValue {
-  return SKILL_CADENCE_TO_CADENCE_VALUE[cadence] ?? "daily-9";
-}
+export const DEFAULT_PREFERRED_DAY = 1; // Monday
 
-export function cadenceValueToSkillCadence(cadence: CadenceValue): UserSkillCadence {
-  return CADENCE_VALUE_TO_SKILL_CADENCE[cadence] ?? "daily";
+export const DAY_OF_WEEK_OPTIONS = [
+  { value: "1", label: "Monday" },
+  { value: "2", label: "Tuesday" },
+  { value: "3", label: "Wednesday" },
+  { value: "4", label: "Thursday" },
+  { value: "5", label: "Friday" },
+  { value: "6", label: "Saturday" },
+  { value: "0", label: "Sunday" },
+] as const;
+
+export function isValidDayOfWeek(day: number): boolean {
+  return Number.isInteger(day) && day >= 0 && day <= 6;
 }
