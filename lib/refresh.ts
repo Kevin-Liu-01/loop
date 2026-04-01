@@ -468,7 +468,7 @@ function sortByMostOverdue(skills: UserSkillDocument[]): UserSkillDocument[] {
 
 async function refreshTrackedUserSkills(options: RefreshOptions): Promise<number> {
   const editorModel = getGatewayEditorModel();
-  console.info(`[refresh] Starting user skill refresh fan-out — model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}`);
+  console.info(`[refresh] Starting user skill refresh fan-out – model: ${editorModel ? getGatewayEditorModelId() : "heuristic-fallback"}`);
 
   const skills = await listUserSkillDocuments();
   const focusSet = options.focusSkillSlugs ? new Set(options.focusSkillSlugs) : null;
@@ -484,7 +484,7 @@ async function refreshTrackedUserSkills(options: RefreshOptions): Promise<number
   const sorted = sortByMostOverdue(eligibleSkills);
 
   if (sorted.length === 0) {
-    console.info("[refresh] No eligible user skills — nothing to dispatch");
+    console.info("[refresh] No eligible user skills – nothing to dispatch");
     return 0;
   }
 
@@ -645,7 +645,7 @@ async function refreshTrackedImportedSkills(options: RefreshOptions): Promise<vo
 }
 
 /**
- * Legacy filesystem sync — only runs in local dev when LOOP_SYNC_FS=1 is set.
+ * Legacy filesystem sync – only runs in local dev when LOOP_SYNC_FS=1 is set.
  * In production, all skills live in Supabase and this is a no-op.
  */
 async function syncFilesystemSkillsToDb(): Promise<void> {
@@ -659,7 +659,7 @@ async function syncFilesystemSkillsToDb(): Promise<void> {
 
   if (allSkillFiles.length === 0) return;
 
-  console.info(`[refresh] LOOP_SYNC_FS=1 — syncing ${allSkillFiles.length} filesystem skills to DB`);
+  console.info(`[refresh] LOOP_SYNC_FS=1 – syncing ${allSkillFiles.length} filesystem skills to DB`);
 
   await Promise.all(
     allSkillFiles.map(async (skillFile) => {

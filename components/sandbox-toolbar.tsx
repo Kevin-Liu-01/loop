@@ -215,7 +215,7 @@ export function SandboxToolbar({
           </div>
         </Tip>
 
-        <Tip content="Gateway model ID — type or pick from suggestions" side="bottom">
+        <Tip content="Gateway model ID – type or pick from suggestions" side="bottom">
           <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:max-w-[min(100%,16rem)] sm:flex-initial">
             <span className={sandboxToolbarLabel}>Model</span>
             <input
@@ -268,7 +268,7 @@ export function SandboxToolbar({
         </div>
       </div>
 
-      {/* Floating context dropdown — portaled to body so overflow:hidden parents can't clip it */}
+      {/* Floating context dropdown – portaled to body so overflow:hidden parents can't clip it */}
       {contextOpen &&
         createPortal(
           <ContextDropdown

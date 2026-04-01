@@ -86,7 +86,7 @@ export function SubscriptionPanel({
           </div>
           <LinkButton href="/api/billing/checkout?plan=operator" size="sm">
             <ZapIcon className="h-3.5 w-3.5" />
-            Upgrade to Operator — $19/mo
+            Upgrade to Operator – $19/mo
           </LinkButton>
         </div>
       </div>

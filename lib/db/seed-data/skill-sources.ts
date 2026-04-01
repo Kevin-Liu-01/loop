@@ -3,7 +3,7 @@ import { computeSourceLogoUrl } from "@/lib/skill-icons";
 import type { SkillAutomationState, SourceDefinition } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
-// Shared source pools — reuse across skills to avoid duplication
+// Shared source pools – reuse across skills to avoid duplication
 // ---------------------------------------------------------------------------
 
 const SRC = {
@@ -309,7 +309,7 @@ export const SKILL_SOURCE_CONFIGS: SkillSourceConfig[] = [
     [SRC.trivyReleases, SRC.snykBlog, SRC.dockerBlog, SRC.githubAdvisory, SRC.containerdReleases]),
 
   // =========================================================================
-  // A2A — AGENTS (5)
+  // A2A – AGENTS (5)
   // =========================================================================
   config("agent-orchestration", "daily",
     "Scan OpenAI, Anthropic, and Google blogs for multi-agent protocol changes, handoff-API updates, and orchestration pattern guidance. Check Vercel AI SDK releases for Agent class changes. Monitor LangChain for graph-based orchestration updates. Update the architecture decision tree and state-management patterns.",

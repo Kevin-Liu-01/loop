@@ -16,7 +16,7 @@ import {
 
 const FAQ_TITLE = "FAQ";
 const FAQ_DESCRIPTION =
-  "Frequently asked questions about Loop — the operator desk for self-updating agent skills.";
+  "Frequently asked questions about Loop – the operator desk for self-updating agent skills.";
 
 export const metadata: Metadata = {
   title: FAQ_TITLE,
@@ -47,7 +47,7 @@ export default function FaqPage() {
             <PageHeaderLead>
               <PageHeaderTitle>Frequently asked questions</PageHeaderTitle>
               <PageHeaderSub>
-                Everything you need to know about Loop — from skills and
+                Everything you need to know about Loop – from skills and
                 automations to billing and the refresh engine.
               </PageHeaderSub>
             </PageHeaderLead>

@@ -23,7 +23,7 @@ export function ShareButton({ href }: ShareButtonProps) {
         await navigator.share({ url });
         return;
       } catch {
-        /* user cancelled or not supported — fall through to clipboard */
+        /* user cancelled or not supported – fall through to clipboard */
       }
     }
 

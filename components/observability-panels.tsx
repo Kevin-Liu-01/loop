@@ -112,7 +112,7 @@ export function SystemObservabilityPanel({ overview }: SystemObservabilityPanelP
 
         <div className="p-5 sm:p-6">
           <SubCard
-            title="Event volume — 24h"
+            title="Event volume – 24h"
             legend={
               <div className="flex items-center gap-3">
                 <LegendDot color="var(--color-accent)" label="total" />

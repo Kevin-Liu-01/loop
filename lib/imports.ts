@@ -801,7 +801,7 @@ function inferIconUrlFromSource(sourceUrl: string): string | undefined {
 export type ImportSourceMeta = {
   sourceName?: string;
   sourceIconUrl?: string;
-  /** Pre-resolved verified author ID — skips URL-based author lookup when set. */
+  /** Pre-resolved verified author ID – skips URL-based author lookup when set. */
   authorId?: string;
 };
 

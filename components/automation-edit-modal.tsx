@@ -196,7 +196,7 @@ export function AutomationEditModal({
               <Tip content="Estimated runs this calendar month" side="bottom">
                 <div><StatCell label="This month" value={`${monthlyRuns} runs`} /></div>
               </Tip>
-              <Tip content={isActive ? "Automation is running on schedule" : "Automation is paused — no runs will fire"} side="bottom">
+              <Tip content={isActive ? "Automation is running on schedule" : "Automation is paused – no runs will fire"} side="bottom">
                 <div><StatCell label="Status" value={isActive ? "Active" : "Paused"} accent={isActive} /></div>
               </Tip>
             </div>

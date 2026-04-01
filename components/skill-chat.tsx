@@ -76,7 +76,7 @@ export function SkillChat({ starterPrompt, enabled }: SkillChatProps) {
         window.localStorage.setItem(CONVERSATION_KEY, data.id);
       }
     } catch {
-      // silent — persistence is best-effort
+      // silent – persistence is best-effort
     }
   }, [messages]);
 

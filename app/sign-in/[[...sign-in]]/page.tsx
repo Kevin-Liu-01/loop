@@ -6,7 +6,7 @@ import { AuthSplitLayout } from "@/components/auth-layout";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to Loop — the operator desk for self-updating agent skills.",
+  description: "Sign in to Loop – the operator desk for self-updating agent skills.",
 };
 
 export default function SignInPage() {

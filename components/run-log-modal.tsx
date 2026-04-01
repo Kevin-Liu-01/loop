@@ -167,7 +167,7 @@ function StepDetail({ step }: { step: AgentReasoningStep }) {
         </span>
         <span className="text-sm font-semibold text-ink">
           Step {step.index + 1}
-          {step.toolCall ? ` — ${toolDisplayName(step.toolCall.name)}` : " — Reasoning"}
+          {step.toolCall ? ` – ${toolDisplayName(step.toolCall.name)}` : " – Reasoning"}
         </span>
         <span className="ml-auto text-[0.65rem] text-ink-muted">
           {new Date(step.timestamp).toLocaleTimeString()}

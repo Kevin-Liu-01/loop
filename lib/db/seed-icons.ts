@@ -213,7 +213,7 @@ async function main() {
       .upload(path, buffer, { contentType, upsert: true });
 
     if (uploadErr) {
-      console.warn(`  ⚠ ${slug}: upload failed — ${uploadErr.message}`);
+      console.warn(`  ⚠ ${slug}: upload failed – ${uploadErr.message}`);
       continue;
     }
 
@@ -225,7 +225,7 @@ async function main() {
       .eq("slug", slug);
 
     if (updateErr) {
-      console.warn(`  ⚠ ${slug}: DB update failed — ${updateErr.message}`);
+      console.warn(`  ⚠ ${slug}: DB update failed – ${updateErr.message}`);
     } else {
       console.log(`  ✓ ${slug}`);
       skillCount++;
@@ -260,7 +260,7 @@ async function main() {
       .upload(path, buffer, { contentType, upsert: true });
 
     if (uploadErr) {
-      console.warn(`  ⚠ ${name}: upload failed — ${uploadErr.message}`);
+      console.warn(`  ⚠ ${name}: upload failed – ${uploadErr.message}`);
       continue;
     }
 
@@ -272,14 +272,14 @@ async function main() {
       .eq("name", name);
 
     if (updateErr) {
-      console.warn(`  ⚠ ${name}: DB update failed — ${updateErr.message}`);
+      console.warn(`  ⚠ ${name}: DB update failed – ${updateErr.message}`);
     } else {
       console.log(`  ✓ ${name}`);
       mcpCount++;
     }
   }
 
-  console.log(`\n✅ Done — ${skillCount} skills, ${mcpCount} MCPs updated.`);
+  console.log(`\n✅ Done – ${skillCount} skills, ${mcpCount} MCPs updated.`);
 }
 
 main().catch((err) => {

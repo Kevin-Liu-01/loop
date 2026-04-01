@@ -43,8 +43,8 @@ type FormState = {
 };
 
 const VISIBILITY_OPTIONS = [
-  { value: "private", label: "Private \u2014 only you can see it" },
-  { value: "public", label: "Public \u2014 visible in catalog" },
+  { value: "private", label: "Private \u00b7 only you can see it" },
+  { value: "public", label: "Public \u00b7 visible in catalog" },
 ];
 
 const STORAGE_KEY = "loop.user-skill-draft";
@@ -73,7 +73,7 @@ function createInitialState(categories: CategoryDefinition[]): FormState {
       "",
       "## When NOT to use",
       "",
-      "- Do not use for [anti-pattern] — reach for [alternative] instead",
+      "- Do not use for [anti-pattern] – reach for [alternative] instead",
       "",
       "## Core concepts",
       "",
@@ -105,7 +105,7 @@ function createInitialState(categories: CategoryDefinition[]): FormState {
       "",
       "## Edge cases and gotchas",
       "",
-      "1. [Non-obvious failure mode] — mitigation: [fix]",
+      "1. [Non-obvious failure mode] – mitigation: [fix]",
       "",
       "## Evaluation criteria",
       "",
@@ -313,7 +313,7 @@ export function UserSkillForm({ categories }: UserSkillFormProps) {
             )}
             <span className="grid gap-0.5">
               <span className="text-sm font-medium text-ink">{iconPreview ? "Change icon" : "Upload icon"}</span>
-              <span className="text-xs text-ink-faint">Square PNG, SVG, WebP, or JPEG — max 1 MB</span>
+              <span className="text-xs text-ink-faint">Square PNG, SVG, WebP, or JPEG – max 1 MB</span>
             </span>
             <input accept="image/png,image/svg+xml,image/webp,image/jpeg" className="sr-only" onChange={handleIconSelect} type="file" />
           </label>

@@ -69,16 +69,16 @@ test("isScheduledOnDate respects preferredDay", () => {
 // ---------------------------------------------------------------------------
 
 test("formatNextRun returns dash for manual cadence", () => {
-  assert.equal(formatNextRun("manual", 12), "—");
+  assert.equal(formatNextRun("manual", 12), "–");
 });
 
 test("formatNextRun returns a non-empty string for active cadences", () => {
   const daily = formatNextRun("daily", 9);
-  assert.notEqual(daily, "—");
+  assert.notEqual(daily, "–");
   assert.ok(daily.length > 0);
 
   const weekly = formatNextRun("weekly", 9);
-  assert.notEqual(weekly, "—");
+  assert.notEqual(weekly, "–");
   assert.ok(weekly.length > 0);
 });
 

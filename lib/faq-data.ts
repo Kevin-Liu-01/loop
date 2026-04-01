@@ -17,7 +17,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is Loop?",
         answer:
-          "Loop is an operator desk for self-updating agent skills. It lets you browse, track, fork, import, and author versioned skill playbooks — then keeps them current by scanning the sources they depend on and proposing targeted updates.",
+          "Loop is an operator desk for self-updating agent skills. It lets you browse, track, fork, import, and author versioned skill playbooks – then keeps them current by scanning the sources they depend on and proposing targeted updates.",
       },
       {
         question: "Why does Loop exist?",
@@ -27,7 +27,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Who is Loop for?",
         answer:
-          "Anyone who operates AI agents and wants their skill playbooks to stay accurate over time — prompt engineers, AI-ops teams, developer-tool authors, verified publishers, and agent builders who publish reusable skills. Loop also automatically imports high-signal skills weekly from trusted sources like Anthropic, OpenAI, and Cursor Directory so your catalog stays current.",
+          "Anyone who operates AI agents and wants their skill playbooks to stay accurate over time – prompt engineers, AI-ops teams, developer-tool authors, verified publishers, and agent builders who publish reusable skills. Loop also automatically imports high-signal skills weekly from trusted sources like Anthropic, OpenAI, and Cursor Directory so your catalog stays current.",
       },
       {
         question: "What problem does Loop solve?",
@@ -83,7 +83,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is the skill catalog?",
         answer:
-          "The catalog is the home view of Loop — a browsable, searchable collection of all public skills. Skills are sorted by quality score and featured rank. You can filter by category, search by name or tag, open skill detail pages, and fork skills into your editable set from here.",
+          "The catalog is the home view of Loop – a browsable, searchable collection of all public skills. Skills are sorted by quality score and featured rank. You can filter by category, search by name or tag, open skill detail pages, and fork skills into your editable set from here.",
       },
       {
         question: "What are public, member, and private skills?",
@@ -93,7 +93,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What are agent docs?",
         answer:
-          "Agent docs are platform-specific configuration files attached to a skill — AGENTS.md, cursor.md, claude.md, and codex.md. Each file contains instructions tailored to a specific agent platform. You can add or edit all four from the Author Studio's 'Agent docs' tab. Changes save via the same PATCH endpoint and sync immediately.",
+          "Agent docs are platform-specific configuration files attached to a skill – AGENTS.md, cursor.md, claude.md, and codex.md. Each file contains instructions tailored to a specific agent platform. You can add or edit all four from the Author Studio's 'Agent docs' tab. Changes save via the same PATCH endpoint and sync immediately.",
       },
       {
         question: "What are skill icons?",
@@ -103,7 +103,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is the research engine?",
         answer:
-          "Some skills have a research profile that documents how they were discovered, validated, and ranked. The research panel on a skill's detail page shows the discovery process, search queries used, trust signals, upstream source links, and the reason a skill was featured — giving you full provenance for catalog content.",
+          "Some skills have a research profile that documents how they were discovered, validated, and ranked. The research panel on a skill's detail page shows the discovery process, search queries used, trust signals, upstream source links, and the reason a skill was featured – giving you full provenance for catalog content.",
       },
     ],
   },
@@ -114,7 +114,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is a verified author?",
         answer:
-          "A verified author is a publisher with a confirmed identity in Loop's skill_authors system. Verified authors display a checkmark badge on every skill they publish. The badge label varies — 'Official' for first-party providers like Anthropic and OpenAI, and 'Verified' for trusted community sources like Cursor Directory.",
+          "A verified author is a publisher with a confirmed identity in Loop's skill_authors system. Verified authors display a checkmark badge on every skill they publish. The badge label varies – 'Official' for first-party providers like Anthropic and OpenAI, and 'Verified' for trusted community sources like Cursor Directory.",
       },
       {
         question: "Which providers are verified?",
@@ -124,7 +124,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "How does author verification work for imported skills?",
         answer:
-          "When a skill is imported from a known provider — whether through the weekly import cron, the admin bulk import, or a manual URL paste — Loop automatically matches the source URL to a registered provider and links the skill to that provider's verified author record. This means the verified badge and correct logo appear immediately without any manual step.",
+          "When a skill is imported from a known provider – whether through the weekly import cron, the admin bulk import, or a manual URL paste – Loop automatically matches the source URL to a registered provider and links the skill to that provider's verified author record. This means the verified badge and correct logo appear immediately without any manual step.",
       },
       {
         question: "Can I become a verified author?",
@@ -145,7 +145,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What are automations?",
         answer:
-          "Automations run an agent on a schedule against a selected skill. Each skill's automation config — prompt, cadence, model, and status — is stored directly on the skill in Supabase. Loop's cron checks which skills are due, fetches signals from their sources, and runs the agent to draft a revision.",
+          "Automations run an agent on a schedule against a selected skill. Each skill's automation config – prompt, cadence, model, and status – is stored directly on the skill in Supabase. Loop's cron checks which skills are due, fetches signals from their sources, and runs the agent to draft a revision.",
       },
       {
         question: "How do I manually trigger an update?",
@@ -170,7 +170,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Where are automations stored?",
         answer:
-          "Automations are stored as a JSONB column on the skill in Supabase — not in local files. The config includes enabled state, cadence, status, prompt, preferred model, and last run timestamp.",
+          "Automations are stored as a JSONB column on the skill in Supabase – not in local files. The config includes enabled state, cadence, status, prompt, preferred model, and last run timestamp.",
       },
       {
         question: "Can I edit automations from different places?",
@@ -180,7 +180,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Can I pause an automation?",
         answer:
-          "Yes. Paused automations keep their configuration but won't dispatch. Use pause when iterating on prompts or when an external API quota is tight. Disabling an automation sets enabled to false — you can re-enable it any time without losing your configuration.",
+          "Yes. Paused automations keep their configuration but won't dispatch. Use pause when iterating on prompts or when an external API quota is tight. Disabling an automation sets enabled to false – you can re-enable it any time without losing your configuration.",
       },
       {
         question: "Do automations require a paid plan?",
@@ -201,12 +201,12 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Which sources does Loop import from?",
         answer:
-          "Loop imports from five built-in sources. Anthropic Skills and OpenAI Skills are official, canonical repos — Loop imports skill files directly from their maintained directories. Cursor Directory is a community-curated collection of Cursor rules imported as canonical files. Awesome Agent Skills and Awesome MCP Servers are lead-list sources — Loop parses their README links to discover candidate repos with SKILL.md files. Each source has a trust tier (official or community) that is tagged on imported skills.",
+          "Loop imports from five built-in sources. Anthropic Skills and OpenAI Skills are official, canonical repos – Loop imports skill files directly from their maintained directories. Cursor Directory is a community-curated collection of Cursor rules imported as canonical files. Awesome Agent Skills and Awesome MCP Servers are lead-list sources – Loop parses their README links to discover candidate repos with SKILL.md files. Each source has a trust tier (official or community) that is tagged on imported skills.",
       },
       {
         question: "What is the difference between canonical and lead-list sources?",
         answer:
-          "Canonical sources (like Anthropic Skills, OpenAI Skills, and Cursor Directory) have a structured skills directory that Loop reads directly. Lead-list sources (like Awesome Agent Skills and Awesome MCP Servers) are curated README files — Loop parses the GitHub links, checks each linked repo for a SKILL.md, and imports those that have one. Canonical imports are more reliable; lead-list imports cast a wider net.",
+          "Canonical sources (like Anthropic Skills, OpenAI Skills, and Cursor Directory) have a structured skills directory that Loop reads directly. Lead-list sources (like Awesome Agent Skills and Awesome MCP Servers) are curated README files – Loop parses the GitHub links, checks each linked repo for a SKILL.md, and imports those that have one. Canonical imports are more reliable; lead-list imports cast a wider net.",
       },
       {
         question: "Can I import a skill from any URL?",
@@ -237,7 +237,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is MCP?",
         answer:
-          "MCP (Model Context Protocol) is an open standard for connecting AI agents to external tools and services. An MCP server exposes a set of tools — file operations, API calls, search, database queries — that any compatible client can discover and invoke at runtime.",
+          "MCP (Model Context Protocol) is an open standard for connecting AI agents to external tools and services. An MCP server exposes a set of tools – file operations, API calls, search, database queries – that any compatible client can discover and invoke at runtime.",
       },
       {
         question: "How does Loop integrate with MCP?",
@@ -283,7 +283,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Is the Sandbox safe to run untrusted code in?",
         answer:
-          "Yes. Sandbox sessions run inside Vercel's Firecracker microVMs — ephemeral, isolated environments that are destroyed after use. They're designed for running AI-generated and user-generated code safely.",
+          "Yes. Sandbox sessions run inside Vercel's Firecracker microVMs – ephemeral, isolated environments that are destroyed after use. They're designed for running AI-generated and user-generated code safely.",
       },
     ],
   },
@@ -340,7 +340,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Is there per-skill observability?",
         answer:
-          "Yes. Each skill's detail sidebar includes a skill-level observability panel showing usage metrics specific to that skill — views, copies, API hits, and automation runs. This helps you understand which skills get the most traffic and engagement.",
+          "Yes. Each skill's detail sidebar includes a skill-level observability panel showing usage metrics specific to that skill – views, copies, API hits, and automation runs. This helps you understand which skills get the most traffic and engagement.",
       },
       {
         question: "What is the activity dashboard?",
@@ -412,7 +412,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "What is the raw skill URL API?",
         answer:
-          "Every public skill has a raw markdown endpoint at /api/skills/{slug}/raw that returns the skill body as text/markdown. Append ?v=N to pin a specific version. This URL is what agents fetch when you paste a skill link into their context — no HTML, just clean markdown with YAML frontmatter. There's also /api/skills/raw/all, which returns a plain-text index of all public skills and MCP servers for agent discovery.",
+          "Every public skill has a raw markdown endpoint at /api/skills/{slug}/raw that returns the skill body as text/markdown. Append ?v=N to pin a specific version. This URL is what agents fetch when you paste a skill link into their context – no HTML, just clean markdown with YAML frontmatter. There's also /api/skills/raw/all, which returns a plain-text index of all public skills and MCP servers for agent discovery.",
       },
       {
         question: "What is the skill icon API?",
@@ -427,7 +427,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         question: "Does Loop support MCP servers?",
         answer:
-          "Yes — MCP is a first-class integration. Loop imports, versions, and executes MCP server definitions with full stdio and HTTP transport support. See the MCP integration section above for details on transports, the seed catalog, and agent attachment.",
+          "Yes – MCP is a first-class integration. Loop imports, versions, and executes MCP server definitions with full stdio and HTTP transport support. See the MCP integration section above for details on transports, the seed catalog, and agent attachment.",
       },
       {
         question: "How does Loop send emails?",

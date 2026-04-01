@@ -14,12 +14,12 @@ type CopyButtonProps = {
   value: string;
   label?: string;
   iconOnly?: boolean;
-  /** Full-width CTA style — prominent dark button spanning the container. */
+  /** Full-width CTA style – prominent dark button spanning the container. */
   block?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
-  /** Match compact row actions (e.g. skill header) — same icon size as sm LinkButton + Play icon */
+  /** Match compact row actions (e.g. skill header) – same icon size as sm LinkButton + Play icon */
   iconSize?: "sm" | "md";
   usageEvent?: {
     kind: Exclude<UsageEventKind, "api_call">;

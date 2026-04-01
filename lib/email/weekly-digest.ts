@@ -153,7 +153,7 @@ export async function sendWeeklyDigest(
 ): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set — skipping weekly digest");
+    console.warn("[email] RESEND_API_KEY not set – skipping weekly digest");
     return;
   }
 

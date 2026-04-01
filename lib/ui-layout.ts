@@ -17,7 +17,7 @@ export function pageInsetColumnClass(extra?: string) {
 export const pageHeaderSub =
   "m-0 max-w-[min(100%,44ch)] text-pretty text-sm leading-relaxed text-ink-muted";
 
-/** Small label inside a surface (e.g. prompt box header) — not an eyebrow above a page title. */
+/** Small label inside a surface (e.g. prompt box header) – not an eyebrow above a page title. */
 export const inlineSectionLabel = "text-xs font-medium text-ink-muted";
 
 /** Site header height in px (banner min-h-[52px] + py-2.5 + border-b ≈ 57px). */

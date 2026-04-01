@@ -233,7 +233,7 @@ export function SandboxToolBlock({
           </span>
         )}
         {exitCode !== undefined && (
-          <Tip content={exitCode === 0 ? "Process exited cleanly" : "Non-zero exit — check stderr"} side="top">
+          <Tip content={exitCode === 0 ? "Process exited cleanly" : "Non-zero exit – check stderr"} side="top">
             <span
               className={cn(
                 "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[0.55rem] font-semibold tabular-nums",

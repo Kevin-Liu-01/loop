@@ -141,7 +141,7 @@ test("no known skill slug uses parenthetical format in name", () => {
   for (const slug of KNOWN_SKILL_SLUGS) {
     assert.ok(
       !slug.match(/\(.+\)\s*$/),
-      `Slug "${slug}" uses parenthetical format — should lead with brand name instead`
+      `Slug "${slug}" uses parenthetical format – should lead with brand name instead`
     );
   }
 });

@@ -124,7 +124,7 @@ function buildDiscoverySection(skill: SkillRecord): string {
   return sources
     .map((source) => {
       const metadata = [source.kind, source.mode, source.trust].filter(Boolean).join(" · ");
-      return `- [${source.label}](${source.url}) — ${metadata}. ${source.rationale ?? "Tracked for material changes."}`;
+      return `- [${source.label}](${source.url}) – ${metadata}. ${source.rationale ?? "Tracked for material changes."}`;
     })
     .join("\n");
 }
@@ -135,7 +135,7 @@ function buildUpstreamSection(upstreams: SkillUpstreamRecord[]): string {
   }
 
   return upstreams
-    .map((upstream) => `- [${upstream.title}](${upstream.upstreamUrl}) — ${upstream.description}`)
+    .map((upstream) => `- [${upstream.title}](${upstream.upstreamUrl}) – ${upstream.description}`)
     .join("\n");
 }
 

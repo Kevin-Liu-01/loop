@@ -92,7 +92,7 @@ export function formatNextRun(
   preferredDay?: number,
 ): string {
   const next = getNextRunDate(cadence, preferredHour, preferredDay);
-  if (!next) return "—";
+  if (!next) return "–";
   return formatRelativeDate(next);
 }
 

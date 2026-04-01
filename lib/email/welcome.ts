@@ -140,7 +140,7 @@ function buildWelcomeText({ firstName }: WelcomeEmailParams): string {
     "=".repeat(greeting.length),
     "",
     `${BRAND_NAME} keeps your agent skills sharp. Every playbook stays current,`,
-    "every parameter stays optimal — automatically.",
+    "every parameter stays optimal – automatically.",
     "",
     "WHAT YOU CAN DO",
     "---------------",
@@ -151,9 +151,9 @@ function buildWelcomeText({ firstName }: WelcomeEmailParams): string {
     "",
     "WHY LOOP",
     "--------",
-    "  • Continuous monitoring — sources are watched and skills update when the world changes",
-    "  • Reviewable diffs — every change is eval-gated and visible before it ships",
-    "  • MCP integration — connect any server, wire tools, version everything alongside skills",
+    "  • Continuous monitoring – sources are watched and skills update when the world changes",
+    "  • Reviewable diffs – every change is eval-gated and visible before it ships",
+    "  • MCP integration – connect any server, wire tools, version everything alongside skills",
     "",
     `Get started: ${base}`,
   ].join("\n");
@@ -164,14 +164,14 @@ export async function sendWelcomeEmail(
 ): Promise<void> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set — skipping welcome email");
+    console.warn("[email] RESEND_API_KEY not set – skipping welcome email");
     return;
   }
 
   await resend.emails.send({
     from: EMAIL_FROM,
     to: [params.email],
-    subject: `Welcome to ${BRAND_NAME} — your skills, always current`,
+    subject: `Welcome to ${BRAND_NAME} – your skills, always current`,
     html: buildWelcomeHtml(params),
     text: buildWelcomeText(params),
   });

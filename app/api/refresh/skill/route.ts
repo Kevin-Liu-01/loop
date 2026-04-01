@@ -17,12 +17,12 @@ export const POST = handleCallback<SkillRefreshMessage>(
     const skill = skills.find((entry) => entry.slug === slug);
 
     if (!skill) {
-      console.warn(`[skill-worker] Skill "${slug}" not found — acknowledging to avoid retry`);
+      console.warn(`[skill-worker] Skill "${slug}" not found – acknowledging to avoid retry`);
       return;
     }
 
     if (skill.sources.length === 0) {
-      console.warn(`[skill-worker] Skill "${slug}" has no sources — skipping`);
+      console.warn(`[skill-worker] Skill "${slug}" has no sources – skipping`);
       return;
     }
 
@@ -54,7 +54,7 @@ export const POST = handleCallback<SkillRefreshMessage>(
         details: cycle.result.changed ? cycle.result.nextVersionLabel : "No diff"
       });
 
-      console.info(`[skill-worker] Completed "${slug}" — ${cycle.result.changed ? cycle.result.nextVersionLabel : "no diff"}`);
+      console.info(`[skill-worker] Completed "${slug}" – ${cycle.result.changed ? cycle.result.nextVersionLabel : "no diff"}`);
     } catch (error) {
       const failedAt = new Date().toISOString();
       const errorMessage = error instanceof Error
@@ -76,7 +76,7 @@ export const POST = handleCallback<SkillRefreshMessage>(
       console.error(`[skill-worker] Failed "${slug}" (attempt ${metadata.deliveryCount}):`, errorMessage);
 
       if (failures >= 3) {
-        console.warn(`[skill-worker] Skill "${slug}" hit ${failures} consecutive failures — acknowledging to stop retries`);
+        console.warn(`[skill-worker] Skill "${slug}" hit ${failures} consecutive failures – acknowledging to stop retries`);
         return;
       }
 

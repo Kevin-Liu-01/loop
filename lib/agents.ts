@@ -196,7 +196,7 @@ export function getGatewayEditorModel(): LanguageModel | null {
   const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
     if (!_gatewayKeyWarnedOnce) {
-      console.warn("[agents] AI_GATEWAY_API_KEY is not set — skill updates will use heuristic fallback (no AI)");
+      console.warn("[agents] AI_GATEWAY_API_KEY is not set – skill updates will use heuristic fallback (no AI)");
       _gatewayKeyWarnedOnce = true;
     }
     return null;
@@ -217,7 +217,7 @@ export function getGatewayModelForSkill(preferredModel?: string): LanguageModel 
   const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
     if (!_gatewayKeyWarnedOnce) {
-      console.warn("[agents] AI_GATEWAY_API_KEY is not set — skill updates will use heuristic fallback (no AI)");
+      console.warn("[agents] AI_GATEWAY_API_KEY is not set – skill updates will use heuristic fallback (no AI)");
       _gatewayKeyWarnedOnce = true;
     }
     return null;

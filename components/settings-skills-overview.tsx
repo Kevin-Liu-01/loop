@@ -148,7 +148,7 @@ export function SettingsSkillsOverview({ skills, latestRuns }: SettingsSkillsOve
               </div>
 
               <span className="hidden text-xs tabular-nums text-ink-soft sm:block">
-                {latestRun ? formatRelativeDate(latestRun.finishedAt) : "—"}
+                {latestRun ? formatRelativeDate(latestRun.finishedAt) : "–"}
               </span>
 
               <div className="flex gap-2">

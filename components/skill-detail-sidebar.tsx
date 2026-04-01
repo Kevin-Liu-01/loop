@@ -256,7 +256,7 @@ function LatestRefreshPanel({
           </div>
           <div className="grid gap-0.5 rounded-none border border-line bg-paper-3/90 px-3 py-2 dark:bg-paper-2/40">
             <small className={metaLabel}>editor</small>
-            <strong className={cn(metaValue, "truncate")}>{latestRun.editorModel ?? "—"}</strong>
+            <strong className={cn(metaValue, "truncate")}>{latestRun.editorModel ?? "–"}</strong>
           </div>
           <div className="grid gap-0.5 rounded-none border border-line bg-paper-3/90 px-3 py-2 dark:bg-paper-2/40">
             <small className={metaLabel}>duration</small>

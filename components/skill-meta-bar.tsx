@@ -26,7 +26,7 @@ export function SkillMetaBar({
   const srcCount = skill.sources?.length ?? 0;
 
   const details = [originLabel(skill), freshness.label];
-  if (nextRun && nextRun !== "—") details.push(`Next ${nextRun}`);
+  if (nextRun && nextRun !== "–") details.push(`Next ${nextRun}`);
 
   return (
     <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.6875rem] leading-none text-ink-faint">

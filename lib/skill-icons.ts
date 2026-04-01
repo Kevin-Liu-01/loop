@@ -1,7 +1,7 @@
 import type { CategorySlug } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
-// Icon types — supports both Lucide icon names and external logo URLs
+// Icon types – supports both Lucide icon names and external logo URLs
 // ---------------------------------------------------------------------------
 
 export type IconRef =
@@ -9,14 +9,14 @@ export type IconRef =
   | { kind: "url"; url: string; alt: string };
 
 // ---------------------------------------------------------------------------
-// Brand logo URLs — SimpleIcons CDN first, GitHub avatar fallback
+// Brand logo URLs – SimpleIcons CDN first, GitHub avatar fallback
 // ---------------------------------------------------------------------------
 
 const SI = "https://cdn.simpleicons.org";
 const GH = "https://github.com";
 
 const BRAND_LOGOS = {
-  // SimpleIcons — default = official brand color
+  // SimpleIcons – default = official brand color
   anthropic:  `${SI}/anthropic`,
   auth0:      `${SI}/auth0`,
   brave:      `${SI}/brave`,
@@ -53,7 +53,7 @@ const BRAND_LOGOS = {
 
   slack:      `${SI}/slack`,
 
-  // Not on SimpleIcons — GitHub avatar fallback
+  // Not on SimpleIcons – GitHub avatar fallback
   aws:        `${GH}/amazon.png?size=64`,
   context7:   `${GH}/context7.png?size=64`,
   exa:        `${GH}/exa-labs.png?size=64`,
@@ -118,7 +118,7 @@ export const CATEGORY_ICONS: Record<CategorySlug, IconRef> = {
 };
 
 // ---------------------------------------------------------------------------
-// Skill icons — brand logos for provider-associated skills, Lucide for generic
+// Skill icons – brand logos for provider-associated skills, Lucide for generic
 // ---------------------------------------------------------------------------
 
 const SKILL_ICONS: Record<string, IconRef> = {
@@ -161,7 +161,7 @@ const SKILL_ICONS: Record<string, IconRef> = {
   "kubernetes-essentials": brand("kubernetes", "Kubernetes"),
   "container-security": lucide("shield-check"),
 
-  // A2A — Agents
+  // A2A – Agents
   "agent-orchestration": lucide("brain"),
   "mcp-development": brand("anthropic", "Anthropic"),
   "prompt-engineering": brand("openai", "OpenAI"),
@@ -188,7 +188,7 @@ export function getCategoryIcon(slug: CategorySlug): IconRef {
 }
 
 // ---------------------------------------------------------------------------
-// MCP icons — brand logos for imported MCP servers, keyed by name
+// MCP icons – brand logos for imported MCP servers, keyed by name
 // ---------------------------------------------------------------------------
 
 const MCP_ICONS: Record<string, IconRef> = {
@@ -303,7 +303,7 @@ const MCP_ICONS: Record<string, IconRef> = {
 };
 
 // ---------------------------------------------------------------------------
-// Platform doc icons — brand logos for agent doc tabs (cursor.md, claude.md…)
+// Platform doc icons – brand logos for agent doc tabs (cursor.md, claude.md…)
 // ---------------------------------------------------------------------------
 
 export type PlatformDocIcon = {
@@ -332,7 +332,7 @@ export function getMcpIcon(name: string, homepageUrl?: string): IconRef {
 }
 
 // ---------------------------------------------------------------------------
-// Source logo computation — precompute from URL hostname via Google favicons
+// Source logo computation – precompute from URL hostname via Google favicons
 // ---------------------------------------------------------------------------
 
 export function computeSourceLogoUrl(url: string): string {

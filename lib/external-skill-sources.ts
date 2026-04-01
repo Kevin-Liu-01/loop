@@ -21,7 +21,7 @@ export type ExternalSkillSource = {
   discoveryMode: "canonical" | "lead-list";
   searchQueries: string[];
   discoveryRationale: string;
-  /** Slug in `skill_authors` table — skills from this source get linked to the verified author. */
+  /** Slug in `skill_authors` table – skills from this source get linked to the verified author. */
   authorSlug?: string;
 };
 
@@ -34,7 +34,7 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     branch: "main",
     skillsPath: "skills",
     iconUrl: resolveBrandIcon("anthropic")!,
-    description: "Official Claude agent skills from Anthropic — PDF generation, MCP building, frontend design, and more.",
+    description: "Official Claude agent skills from Anthropic – PDF generation, MCP building, frontend design, and more.",
     homepage: "https://github.com/anthropics/skills",
     trustTier: "official",
     discoveryMode: "canonical",
@@ -50,7 +50,7 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     branch: "main",
     skillsPath: "skills/.curated",
     iconUrl: resolveBrandIcon("openai")!,
-    description: "Official Codex agent skills from OpenAI — curated skills for coding, research, and development.",
+    description: "Official Codex agent skills from OpenAI – curated skills for coding, research, and development.",
     homepage: "https://github.com/openai/skills",
     trustTier: "official",
     discoveryMode: "canonical",
@@ -66,7 +66,7 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     branch: "main",
     skillsPath: "__readme_links__",
     iconUrl: resolveBrandIcon("github")!,
-    description: "Community-curated list of agent skill repos — links parsed from the README.",
+    description: "Community-curated list of agent skill repos – links parsed from the README.",
     homepage: "https://github.com/heilcheng/awesome-agent-skills",
     trustTier: "community",
     discoveryMode: "lead-list",
@@ -83,7 +83,7 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     skillsPath: "src/data/rules",
     fileExtensions: [".ts"],
     iconUrl: resolveBrandIcon("cursor")!,
-    description: "Community-curated Cursor rules from cursor.directory — the largest public collection of .cursorrules files.",
+    description: "Community-curated Cursor rules from cursor.directory – the largest public collection of .cursorrules files.",
     homepage: "https://cursor.directory",
     trustTier: "community",
     discoveryMode: "canonical",
@@ -99,7 +99,7 @@ export const EXTERNAL_SKILL_SOURCES: ExternalSkillSource[] = [
     branch: "main",
     skillsPath: "__readme_links__",
     iconUrl: resolveBrandIcon("mcp")!,
-    description: "Community-curated list of MCP servers — the definitive awesome-list for Model Context Protocol integrations.",
+    description: "Community-curated list of MCP servers – the definitive awesome-list for Model Context Protocol integrations.",
     homepage: "https://github.com/appcypher/awesome-mcp-servers",
     trustTier: "community",
     discoveryMode: "lead-list",

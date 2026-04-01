@@ -196,7 +196,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
         window.localStorage.setItem("loop.agent-studio.conversationId", data.id);
       }
     } catch {
-      // silent — persistence is best-effort
+      // silent – persistence is best-effort
     }
   }, [messages, config.model, config.providerId]);
 
@@ -396,7 +396,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                         {mcp.name}
                         <small className="text-xs text-ink-soft">
                           {mcp.transport} ·{" "}
-                          <Tip content={["stdio", "http"].includes(mcp.transport) ? "This MCP can be called at runtime in the sandbox" : "Schema-only — tools are described but not executable"} side="right">
+                          <Tip content={["stdio", "http"].includes(mcp.transport) ? "This MCP can be called at runtime in the sandbox" : "Schema-only – tools are described but not executable"} side="right">
                             <span>{["stdio", "http"].includes(mcp.transport) ? "runtime ready" : "metadata only"}</span>
                           </Tip>
                         </small>
@@ -555,7 +555,7 @@ export function AgentStudio({ presets, skills, mcps }: AgentStudioProps) {
                 } catch { /* silent */ }
               }}
             />
-            <Tip content={status === "submitted" ? "Agent is processing your request" : "Agent is ready — type a message and hit Run"} side="bottom">
+            <Tip content={status === "submitted" ? "Agent is processing your request" : "Agent is ready – type a message and hit Run"} side="bottom">
               <small className="text-sm text-ink-soft">{status === "submitted" ? "Thinking" : selectedPreset?.label ?? "Ready"}</small>
             </Tip>
           </div>

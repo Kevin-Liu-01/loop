@@ -6,7 +6,7 @@ export const STATUS_OPTIONS = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// Cadence options — selectable vs coming-soon
+// Cadence options – selectable vs coming-soon
 // ---------------------------------------------------------------------------
 
 export type CadenceOption = {
@@ -31,7 +31,7 @@ export const CADENCE_ALL_OPTIONS: CadenceOption[] = [
 export const CADENCE_SIMPLE_OPTIONS = CADENCE_ALL_OPTIONS.filter((o) => !o.disabled) as CadenceOption[];
 
 // ---------------------------------------------------------------------------
-// Cron time slots — 24 hourly slots across the day (UTC)
+// Cron time slots – 24 hourly slots across the day (UTC)
 // ---------------------------------------------------------------------------
 
 export type CronSlot = {
@@ -78,7 +78,7 @@ export function isValidCronSlotHour(hour: number): boolean {
 
 export const PREFERRED_HOUR_SELECT_OPTIONS = CRON_SLOTS.map((slot) => ({
   value: String(slot.hour),
-  label: `${slot.label} \u2014 ${slot.description}`,
+  label: `${slot.label} \u00b7 ${slot.description}`,
   disabled: slot.hour !== CRON_DAILY_HOUR,
   badge: slot.hour !== CRON_DAILY_HOUR ? "Coming soon" : undefined,
 }));

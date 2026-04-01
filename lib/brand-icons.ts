@@ -33,7 +33,7 @@ export function githubAvatar(org: string, size = 64): string {
 //
 // SimpleIcons URLs get `/white` appended for a pre-colored white SVG.
 // Local brand SVGs (black fill) get `brightness-0 invert` applied via CSS
-// by the caller — this function just returns the URL.
+// by the caller – this function just returns the URL.
 // ---------------------------------------------------------------------------
 
 export function brandIconForDarkBg(key: string): string | undefined {
@@ -47,7 +47,7 @@ export function brandIconForDarkBg(key: string): string | undefined {
 }
 
 // ---------------------------------------------------------------------------
-// Resolve brand icon — tries BRAND_LOGOS first, then local SVGs
+// Resolve brand icon – tries BRAND_LOGOS first, then local SVGs
 // ---------------------------------------------------------------------------
 
 export function resolveBrandIcon(key: string): string | undefined {

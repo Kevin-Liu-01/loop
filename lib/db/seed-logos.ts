@@ -25,7 +25,7 @@ async function applySourceLogos(): Promise<{ updated: number; errors: number }> 
       }));
 
       await updateSkill(cfg.slug, { sources: sourcesWithLogos });
-      console.log(`  [ok]   ${cfg.slug} — ${sourcesWithLogos.length} sources with logos`);
+      console.log(`  [ok]   ${cfg.slug} – ${sourcesWithLogos.length} sources with logos`);
       updated++;
     } catch (error) {
       console.error(`  [err]  ${cfg.slug}: ${(error as Error).message}`);

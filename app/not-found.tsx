@@ -32,7 +32,7 @@ export default function NotFound() {
             </h1>
             <p className={cn("mx-auto mt-1 max-w-[min(100%,40ch)] text-pretty text-sm text-ink-muted")}>
               The URL may be mistyped, or the page was moved. Use search{" "}
-              <kbd className="rounded-none border border-line bg-paper-2 px-1.5 py-0.5 font-mono text-[0.7rem] text-ink-soft" title="Command palette — Ctrl+K on Windows">
+              <kbd className="rounded-none border border-line bg-paper-2 px-1.5 py-0.5 font-mono text-[0.7rem] text-ink-soft" title="Command palette – Ctrl+K on Windows">
                 ⌘K
               </kbd>{" "}
               from anywhere in the app.

@@ -17,7 +17,7 @@ async function isAuthorized(request: Request): Promise<boolean> {
   }
 
   if (!secret && authorization) {
-    console.error("[refresh] CRON_SECRET is not set — bearer token auth cannot succeed. Set CRON_SECRET in your environment.");
+    console.error("[refresh] CRON_SECRET is not set – bearer token auth cannot succeed. Set CRON_SECRET in your environment.");
   }
 
   const { userId } = await auth();

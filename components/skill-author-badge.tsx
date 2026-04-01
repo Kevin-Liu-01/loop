@@ -11,7 +11,7 @@ import type { SkillAuthorRecord, SkillRecord } from "@/lib/types";
 type SkillAuthorBadgeProps = {
   author?: SkillAuthorRecord;
   ownerName?: string;
-  /** Explicit icon override — when omitted the resolver infers from ownerName. */
+  /** Explicit icon override – when omitted the resolver infers from ownerName. */
   iconUrl?: string;
   compact?: boolean;
   className?: string;

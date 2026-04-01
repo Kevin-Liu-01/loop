@@ -34,7 +34,7 @@ function ChipPath({ className }: { className?: string }) {
  * Rest: chip floating. Hover: chip seats + gear spins (reduced motion: seat, no spin).
  *
  * Chip uses Motion x/y on SVG (user units). `reducedMotion` does not force the chip seated
- * at rest — that made the piece look “locked” until hover for prefers-reduced-motion users.
+ * at rest – that made the piece look “locked” until hover for prefers-reduced-motion users.
  */
 export function LoopLogo({
   title = "Loop",

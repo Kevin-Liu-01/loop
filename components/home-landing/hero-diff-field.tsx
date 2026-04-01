@@ -459,7 +459,7 @@ export function HeroDiffField() {
         ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
       }}
     >
-      {/* Left card — desktop only */}
+      {/* Left card – desktop only */}
       <FloatingCard
         placement={CARD_PLACEMENTS[0]!}
         mouseX={mouseX}
@@ -474,7 +474,7 @@ export function HeroDiffField() {
         </DiffCardChrome>
       </FloatingCard>
 
-      {/* Center card — animated reel */}
+      {/* Center card – animated reel */}
       <FloatingCard
         placement={CARD_PLACEMENTS[1]!}
         mouseX={mouseX}
@@ -503,7 +503,7 @@ export function HeroDiffField() {
         </DiffCardChrome>
       </FloatingCard>
 
-      {/* Right card — desktop only */}
+      {/* Right card – desktop only */}
       <FloatingCard
         placement={CARD_PLACEMENTS[2]!}
         mouseX={mouseX}

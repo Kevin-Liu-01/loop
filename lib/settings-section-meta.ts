@@ -23,7 +23,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Skill lifecycle",
         body:
-          "Each skill starts as a draft. Once you add sources and enable automation, Loop refreshes it on schedule — fetching signals, running the editor agent, and minting new revisions automatically.",
+          "Each skill starts as a draft. Once you add sources and enable automation, Loop refreshes it on schedule – fetching signals, running the editor agent, and minting new revisions automatically.",
       },
       {
         title: "Automation at a glance",
@@ -40,7 +40,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Imports vs authored",
         body:
-          "This page shows skills you authored. Imported skills from external registries appear under Imports — they sync automatically and don't count toward your authoring limits.",
+          "This page shows skills you authored. Imported skills from external registries appear under Imports – they sync automatically and don't count toward your authoring limits.",
       },
     ],
   },
@@ -57,7 +57,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Checkout & receipts",
         body:
-          "When you upgrade, Stripe Checkout collects payment and attaches the subscription to your account. Confirmation emails and receipts come from Stripe—keep the same email as your Clerk sign-in for the least confusion.",
+          "When you upgrade, Stripe Checkout collects payment and attaches the subscription to your account. Confirmation emails and receipts come from Stripe–keep the same email as your Clerk sign-in for the least confusion.",
       },
     ],
     afterPrimary: [
@@ -69,7 +69,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Support",
         body:
-          "If a charge looks wrong or the portal won’t load, grab the Stripe customer id from your operator dashboard or email receipt and contact support with timestamps—we can trace webhook delivery on our side.",
+          "If a charge looks wrong or the portal won’t load, grab the Stripe customer id from your operator dashboard or email receipt and contact support with timestamps–we can trace webhook delivery on our side.",
       },
     ],
   },
@@ -93,19 +93,19 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Return URLs",
         body:
-          "After onboarding, Stripe sends you back to Loop with status query params. If you land on “refresh”, Stripe needs another pass—open Connect again from here. “Complete” means the return handshake fired; check Stripe if payouts are still paused.",
+          "After onboarding, Stripe sends you back to Loop with status query params. If you land on “refresh”, Stripe needs another pass–open Connect again from here. “Complete” means the return handshake fired; check Stripe if payouts are still paused.",
       },
       {
         title: "Payout timing",
         body:
-          "Payout speed and holds are controlled by Stripe and your bank country. Loop doesn’t hold funds beyond what Stripe’s Connect rules require—see your Express dashboard for balance and payout schedule.",
+          "Payout speed and holds are controlled by Stripe and your bank country. Loop doesn’t hold funds beyond what Stripe’s Connect rules require–see your Express dashboard for balance and payout schedule.",
       },
     ],
   },
   refresh: {
     heading: "Content & snapshot refresh",
     lead:
-      "Refresh rebuilds the local Loop snapshot: skills, briefs, and related generated content. Use it after imports, registry changes, or when the catalog looks stale—runs are server-side and may take a few seconds.",
+      "Refresh rebuilds the local Loop snapshot: skills, briefs, and related generated content. Use it after imports, registry changes, or when the catalog looks stale–runs are server-side and may take a few seconds.",
     beforePrimary: [
       {
         title: "What “full refresh” does",
@@ -122,12 +122,12 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Operational notes",
         body:
-          "Large refreshes can be IO-heavy. If a run fails, read the error string in the panel—often it’s a missing env, blob permission, or transient network issue. Fix the cause and run again.",
+          "Large refreshes can be IO-heavy. If a run fails, read the error string in the panel–often it’s a missing env, blob permission, or transient network issue. Fix the cause and run again.",
       },
       {
         title: "Automation vs manual refresh",
         body:
-          "Automations execute on their own cadence; this button is manual and immediate. It doesn’t pause or reschedule automations—it only rebuilds the shared snapshot content layer they rely on.",
+          "Automations execute on their own cadence; this button is manual and immediate. It doesn’t pause or reschedule automations–it only rebuilds the shared snapshot content layer they rely on.",
       },
     ],
   },
@@ -139,19 +139,19 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Cadence & time zones",
         body:
-          "Schedules use RRULE semantics. Times follow the server’s automation pipeline—if something fires “at the wrong hour”, confirm your machine or deployment TZ and how cron interprets the rule.",
+          "Schedules use RRULE semantics. Times follow the server’s automation pipeline–if something fires “at the wrong hour”, confirm your machine or deployment TZ and how cron interprets the rule.",
       },
       {
         title: "Skills & prompts",
         body:
-          "Each automation binds to one skill. Changing the skill’s body or agent prompt affects the next run—no need to recreate the automation unless you want a different skill or schedule.",
+          "Each automation binds to one skill. Changing the skill’s body or agent prompt affects the next run–no need to recreate the automation unless you want a different skill or schedule.",
       },
     ],
     afterPrimary: [
       {
         title: "Pausing & safety",
         body:
-          "Paused automations keep their configuration but won’t dispatch. Use pause when iterating on prompts or when an external API quota is tight. Deletes are permanent—export or note prompts before removal.",
+          "Paused automations keep their configuration but won’t dispatch. Use pause when iterating on prompts or when an external API quota is tight. Deletes are permanent–export or note prompts before removal.",
       },
       {
         title: "Operator requirement",
@@ -168,7 +168,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Weekly schedule",
         body:
-          "Imports run automatically every Monday (UTC). The next run time shown here is derived from that schedule—exact wall-clock time in your locale may differ from cron drift or maintenance windows.",
+          "Imports run automatically every Monday (UTC). The next run time shown here is derived from that schedule–exact wall-clock time in your locale may differ from cron drift or maintenance windows.",
       },
       {
         title: "Trust tiers",
@@ -192,12 +192,12 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
   health: {
     heading: "System health & usage",
     lead:
-      "This view summarizes recent usage: page views, interactions, API traffic, route-level latency, and rolling windows. It’s meant for spotting spikes, regressions, or noisy endpoints—not for billing-grade metering.",
+      "This view summarizes recent usage: page views, interactions, API traffic, route-level latency, and rolling windows. It’s meant for spotting spikes, regressions, or noisy endpoints–not for billing-grade metering.",
     beforePrimary: [
       {
         title: "How metrics are collected",
         body:
-          "Events are recorded as you use Loop: navigation, skill actions, and API calls aggregate into the tiles and charts. Latency averages are sampled from recorded durations—expect jitter under load.",
+          "Events are recorded as you use Loop: navigation, skill actions, and API calls aggregate into the tiles and charts. Latency averages are sampled from recorded durations–expect jitter under load.",
       },
       {
         title: "24h windows",
@@ -214,7 +214,7 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       {
         title: "Privacy",
         body:
-          "We don’t surface raw request bodies here—only aggregates and labels safe for operators. If you need deeper traces, use your hosting provider’s logs or ask for an export under your data agreement.",
+          "We don’t surface raw request bodies here–only aggregates and labels safe for operators. If you need deeper traces, use your hosting provider’s logs or ask for an export under your data agreement.",
       },
     ],
   },

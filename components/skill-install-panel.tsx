@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { DownloadSkillButton } from "@/components/download-skill-button";
 import {
   BotIcon,
+  ChevronDownIcon,
   CodeIcon,
   UserIcon,
 } from "@/components/frontier-icons";

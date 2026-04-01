@@ -186,7 +186,7 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
           </div>
         </nav>
 
-        {/* Hero — centered stack */}
+        {/* Hero – centered stack */}
         <div className="relative z-10 mx-auto max-w-[1100px] px-6 pb-16 pt-[min(14vh,120px)] text-center">
           <motion.div className="mx-auto grid max-w-[700px] gap-7" {...fadeUp}>
             <div className="grid gap-5">
@@ -359,7 +359,7 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
                   Scheduled intelligence
                 </h2>
                 <p className="max-w-[26rem] text-sm leading-[1.65] text-ink-soft">
-                  Every dot is an automated agent run — skills refresh themselves on a schedule you control.
+                  Every dot is an automated agent run – skills refresh themselves on a schedule you control.
                 </p>
               </div>
               <AutomationCalendar automations={automations} maxLegendRows={5} skillMap={skillMap} variant="sidebar" />
@@ -372,7 +372,7 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
                   Connect any tool
                 </h2>
                 <p className="max-w-[26rem] text-sm leading-[1.65] text-ink-soft">
-                  Import from the open MCP ecosystem — Loop versions everything alongside your skills.
+                  Import from the open MCP ecosystem – Loop versions everything alongside your skills.
                 </p>
               </div>
               <div className="grid gap-1.5">

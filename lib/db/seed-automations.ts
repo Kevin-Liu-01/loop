@@ -2,7 +2,7 @@
  * Apply sources and automation config to all seeded skills.
  * Also changes origin to "user" so the refresh pipeline can track them.
  *
- * Safe to re-run — updates are idempotent.
+ * Safe to re-run – updates are idempotent.
  *
  * Usage: npx tsx lib/db/seed-automations.ts
  */
@@ -25,7 +25,7 @@ async function applySourcesAndAutomation(): Promise<{
     try {
       const existing = await getSkillBySlug(cfg.slug);
       if (!existing) {
-        console.log(`  [skip] ${cfg.slug} — not found in DB`);
+        console.log(`  [skip] ${cfg.slug} – not found in DB`);
         skipped++;
         continue;
       }
@@ -38,7 +38,7 @@ async function applySourcesAndAutomation(): Promise<{
 
       const sourceCount = cfg.sources.length;
       const cadence = cfg.automation.cadence;
-      console.log(`  [ok]   ${cfg.slug} — ${sourceCount} sources, ${cadence} cadence`);
+      console.log(`  [ok]   ${cfg.slug} – ${sourceCount} sources, ${cadence} cadence`);
       updated++;
     } catch (error) {
       console.error(`  [err]  ${cfg.slug}: ${(error as Error).message}`);

@@ -1,5 +1,5 @@
 /**
- * Landing page data — sourced from the real skill registry, MCP catalog, and
+ * Landing page data – sourced from the real skill registry, MCP catalog, and
  * automation configs so visitors see actual platform content.
  */
 
@@ -19,7 +19,7 @@ export type LandingSkillRow = {
 };
 
 // ---------------------------------------------------------------------------
-// Top skills — mirrors FEATURED_SKILLS from registry.ts + SKILL_SOURCE_CONFIGS
+// Top skills – mirrors FEATURED_SKILLS from registry.ts + SKILL_SOURCE_CONFIGS
 // ---------------------------------------------------------------------------
 
 export const LANDING_SKILLS: LandingSkillRow[] = [
@@ -114,7 +114,7 @@ export const LANDING_SKILLS: LandingSkillRow[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Automations — real schedules from SKILL_SOURCE_CONFIGS automation cadences
+// Automations – real schedules from SKILL_SOURCE_CONFIGS automation cadences
 // Uses actual RRULE format consumed by the AutomationCalendar
 // ---------------------------------------------------------------------------
 
@@ -234,7 +234,7 @@ export const LANDING_AUTOMATIONS: AutomationSummary[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Top MCPs — from SEED_MCP_DEFINITIONS (real catalog entries)
+// Top MCPs – from SEED_MCP_DEFINITIONS (real catalog entries)
 // ---------------------------------------------------------------------------
 
 export type LandingMcpRow = Pick<
@@ -328,7 +328,7 @@ export const LANDING_MCPS: LandingMcpRow[] = [
     id: "mcp-playwright",
     name: "Playwright",
     description:
-      "Browser automation using accessibility snapshots — navigate, fill forms, screenshot",
+      "Browser automation using accessibility snapshots – navigate, fill forms, screenshot",
     transport: "stdio",
     iconUrl: githubAvatar("microsoft"),
     homepageUrl: "https://github.com/microsoft/playwright-mcp",

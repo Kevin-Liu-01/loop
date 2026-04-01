@@ -24,7 +24,7 @@ async function stdout(result: Awaited<ReturnType<Sandbox["runCommand"]>>): Promi
 }
 
 // ---------------------------------------------------------------------------
-// Parsers — pure functions, individually testable
+// Parsers – pure functions, individually testable
 // ---------------------------------------------------------------------------
 
 export function parseProcesses(raw: string): ProcessInfo[] {
@@ -142,7 +142,7 @@ export function parseLsOutput(raw: string, basePath: string): FileEntry[] {
 }
 
 // ---------------------------------------------------------------------------
-// Orchestrator — runs all diagnostic commands in parallel
+// Orchestrator – runs all diagnostic commands in parallel
 // ---------------------------------------------------------------------------
 
 export async function inspectSandbox(

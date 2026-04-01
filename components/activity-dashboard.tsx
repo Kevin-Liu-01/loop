@@ -190,7 +190,7 @@ function ActivitySidebarView({
         <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1.5">
             <h3 className="m-0 font-serif text-lg font-medium leading-snug tracking-[-0.02em] text-ink">
-              Event volume — 24h
+              Event volume – 24h
             </h3>
             {peak ? (
               <p className="m-0 text-xs leading-relaxed text-ink-muted">
@@ -485,7 +485,7 @@ export function ActivityDashboard({
           <div className="flex items-end justify-between gap-3">
             <div>
               <h3 className="m-0 font-serif text-lg font-medium leading-snug tracking-[-0.02em] text-ink">
-                Event volume — 24h
+                Event volume – 24h
               </h3>
             </div>
             <div className="flex items-center gap-3 text-[0.65rem] text-ink-faint">

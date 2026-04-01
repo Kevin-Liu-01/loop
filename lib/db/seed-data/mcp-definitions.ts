@@ -46,7 +46,7 @@ export function toMcpRow(seed: SeedMcp) {
 }
 
 // ---------------------------------------------------------------------------
-// stdio helper — for npm-based MCP servers run via npx
+// stdio helper – for npm-based MCP servers run via npx
 // ---------------------------------------------------------------------------
 
 function stdio(
@@ -75,7 +75,7 @@ function stdio(
 }
 
 // ---------------------------------------------------------------------------
-// uvx helper — for Python-based MCP servers run via uvx
+// uvx helper – for Python-based MCP servers run via uvx
 // ---------------------------------------------------------------------------
 
 function uvx(
@@ -104,7 +104,7 @@ function uvx(
 }
 
 // ---------------------------------------------------------------------------
-// http helper — for remote/hosted MCP servers
+// http helper – for remote/hosted MCP servers
 // ---------------------------------------------------------------------------
 
 function http(
@@ -925,7 +925,7 @@ const dataAnalytics: SeedMcp[] = [
 const infraCloud: SeedMcp[] = [
   uvx(
     "AWS API",
-    "Official AWS Labs MCP server — interact with AWS services and resources through AWS CLI commands. Covers S3, Lambda, DynamoDB, EC2, CloudFormation, and all other AWS APIs.",
+    "Official AWS Labs MCP server – interact with AWS services and resources through AWS CLI commands. Covers S3, Lambda, DynamoDB, EC2, CloudFormation, and all other AWS APIs.",
     "awslabs.aws-api-mcp-server",
     [],
     {

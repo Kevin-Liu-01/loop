@@ -53,7 +53,7 @@ export default async function RootPage() {
   try {
     ({ userId } = await auth());
   } catch {
-    // Bots and crawlers that bypass middleware can't resolve auth —
+    // Bots and crawlers that bypass middleware can't resolve auth –
     // treat them as signed-out so the landing page (with OG tags) renders.
   }
 

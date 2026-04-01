@@ -145,7 +145,7 @@ function RunMetadataBar({
       <div className={statBox}>
         <small className={statLabel}>duration</small>
         <strong className={statValue}>
-          {startedAt && finishedAt ? formatDuration(startedAt, finishedAt) : "—"}
+          {startedAt && finishedAt ? formatDuration(startedAt, finishedAt) : "–"}
         </strong>
       </div>
       <div className={statBox}>
@@ -254,7 +254,7 @@ export function SkillActivitySection({
   const runReasoningSteps = latestRun?.reasoningSteps ?? [];
   const runError = latestRun?.errorMessage ?? null;
   const runDiffLines: DiffLine[] = latestRun?.diffLines ?? [];
-  const runTrigger = latestRun ? formatTriggerLabel(latestRun.trigger) : "—";
+  const runTrigger = latestRun ? formatTriggerLabel(latestRun.trigger) : "–";
   const runEditorModel = latestRun?.editorModel ?? null;
   const runStatus: "success" | "error" | "running" =
     runError ? "error" : latestRun?.status ?? "success";
