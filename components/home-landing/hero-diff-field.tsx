@@ -256,6 +256,7 @@ function FloatingCard({
         x: pxVal,
         y: pyVal,
         z: placement.zPx,
+        zIndex: placement.zPx > 0 ? 2 : 1,
         rotateY: placement.rotateYDeg,
         rotateZ: placement.rotateZDeg,
         scale: placement.scale,

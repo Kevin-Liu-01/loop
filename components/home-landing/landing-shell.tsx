@@ -138,7 +138,7 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
       <section className="relative w-full overflow-hidden">
         <div className="absolute inset-0">
           <GrainShader />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper" />
+          <div className="hero-fade absolute inset-0" />
         </div>
 
         {/* Nav */}
@@ -153,29 +153,29 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
               className="h-7 w-7 text-accent"
               interactionActive={brandHover}
             />
-            <strong className="font-serif text-[1.05rem] font-medium tracking-[-0.03em] text-white/90">
+            <strong className="font-serif text-[1.05rem] font-medium tracking-[-0.03em] text-ink/90">
               Loop
             </strong>
           </Link>
           <div className="flex items-center gap-2">
-            <div className="hidden h-9 items-center border border-white/[0.08] bg-white/[0.03] sm:flex">
+            <div className="hidden h-9 items-center border border-ink/[0.08] bg-ink/[0.03] sm:flex">
               <Link
-                className="inline-flex h-full items-center px-4 text-xs font-medium text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+                className="inline-flex h-full items-center px-4 text-xs font-medium text-ink/50 transition-colors hover:bg-ink/[0.06] hover:text-ink/85"
                 href="#skills"
               >
                 Skills
               </Link>
-              <span className="h-4 w-px bg-white/[0.10]" />
+              <span className="h-4 w-px bg-ink/[0.10]" />
               <Link
-                className="inline-flex h-full items-center px-4 text-xs font-medium text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+                className="inline-flex h-full items-center px-4 text-xs font-medium text-ink/50 transition-colors hover:bg-ink/[0.06] hover:text-ink/85"
                 href="#mcps"
               >
                 Automations
               </Link>
             </div>
-            <ThemeToggle className="size-9 border-white/[0.08] bg-transparent text-white/40 hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white/80 rounded-none" />
+            <ThemeToggle className="size-9 border-ink/[0.08] bg-transparent text-ink/45 hover:border-ink/[0.14] hover:bg-ink/[0.06] hover:text-ink/85 rounded-none" />
             <Link
-              className="hidden h-9 items-center px-3 text-xs font-medium text-white/45 transition-colors hover:text-white/80 sm:inline-flex"
+              className="hidden h-9 items-center px-3 text-xs font-medium text-ink/50 transition-colors hover:text-ink/85 sm:inline-flex"
               href="/sign-in"
             >
               Sign in
@@ -190,13 +190,13 @@ export function LandingShell({ skills, staticSkills, mcps, automations }: Landin
         <div className="relative z-10 mx-auto max-w-[1100px] px-6 pb-16 pt-[min(14vh,120px)] text-center">
           <motion.div className="mx-auto grid max-w-[700px] gap-7" {...fadeUp}>
             <div className="grid gap-5">
-              <h1 className="font-serif text-[clamp(2.8rem,5.8vw,4.8rem)] font-medium leading-[1.02] tracking-[-0.045em] text-white">
+              <h1 className="font-serif text-[clamp(2.8rem,5.8vw,4.8rem)] font-medium leading-[1.02] tracking-[-0.045em] text-ink">
                 Skills that{"\u00A0"}never
                 <br className="max-sm:hidden" />
                 {" "}go{"\u00A0"}stale
               </h1>
 
-              <p className="mx-auto max-w-[34rem] text-balance text-[1.1rem] leading-[1.7] text-white/50">
+              <p className="mx-auto max-w-[34rem] text-balance text-[1.1rem] leading-[1.7] text-ink/55">
                 Loop autonomously monitors, evaluates, and updates your agent
                 playbooks, so every skill evolves on its own.
               </p>

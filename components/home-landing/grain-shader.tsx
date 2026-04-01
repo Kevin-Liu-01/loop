@@ -18,6 +18,7 @@ const FRAGMENT = /* glsl */ `
   varying vec2 vUv;
   uniform float uTime;
   uniform vec2 uResolution;
+  uniform float uLight;
 
   float hash(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -33,17 +34,21 @@ const FRAGMENT = /* glsl */ `
     vec2 uv = vUv;
     float t = uTime * 0.15;
 
-    vec3 base = vec3(0.031, 0.031, 0.039);
+    vec3 darkBase = vec3(0.031, 0.031, 0.039);
+    vec3 lightBase = vec3(0.96, 0.96, 0.96);
+    vec3 base = mix(darkBase, lightBase, uLight);
 
     float glow = smoothstep(0.85, 0.0, length((uv - vec2(0.5, 0.28)) * vec2(1.1, 1.4)));
-    vec3 accent = vec3(0.91, 0.396, 0.039) * glow * 0.09;
+    float darkGlowStr = 0.09;
+    float lightGlowStr = 0.38;
+    vec3 accent = vec3(0.91, 0.396, 0.039) * glow * mix(darkGlowStr, lightGlowStr, uLight);
 
     float drift = sin(uv.x * 3.0 + t * 0.8) * 0.003
                 + cos(uv.y * 2.5 - t * 0.6) * 0.003;
     accent *= 1.0 + drift * 8.0;
 
-    float g = grain(uv, uTime);
-    vec3 color = base + accent + vec3(g);
+    float grainAmt = grain(uv, uTime) * mix(1.0, 0.45, uLight);
+    vec3 color = base + accent + vec3(grainAmt);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -53,10 +58,15 @@ type GrainShaderProps = {
   className?: string;
 };
 
+function getThemeLight(): number {
+  return document.documentElement.getAttribute("data-theme") === "light" ? 1.0 : 0.0;
+}
+
 export function GrainShader({ className }: GrainShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const rafRef = useRef<number>(0);
+  const programRef = useRef<Program | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -66,10 +76,15 @@ export function GrainShader({ className }: GrainShaderProps) {
     const isMobile = window.innerWidth < 768;
     const dpr = isMobile ? Math.min(window.devicePixelRatio, 1) : Math.min(window.devicePixelRatio, 1.5);
 
+    const light = getThemeLight();
+
     const renderer = new Renderer({ dpr, alpha: false });
     rendererRef.current = renderer;
     const gl = renderer.gl;
-    gl.clearColor(0.031, 0.031, 0.039, 1);
+    const clearR = light === 1.0 ? 0.96 : 0.031;
+    const clearG = light === 1.0 ? 0.96 : 0.031;
+    const clearB = light === 1.0 ? 0.96 : 0.039;
+    gl.clearColor(clearR, clearG, clearB, 1);
     container.appendChild(gl.canvas);
 
     const geometry = new Triangle(gl);
@@ -79,8 +94,10 @@ export function GrainShader({ className }: GrainShaderProps) {
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: [gl.canvas.width, gl.canvas.height] },
+        uLight: { value: light },
       },
     });
+    programRef.current = program;
     const mesh = new Mesh(gl, { geometry, program });
 
     function resize() {
@@ -93,6 +110,16 @@ export function GrainShader({ className }: GrainShaderProps) {
 
     resize();
     window.addEventListener("resize", resize);
+
+    const observer = new MutationObserver(() => {
+      const val = getThemeLight();
+      program.uniforms.uLight.value = val;
+      const cr = val === 1.0 ? 0.96 : 0.031;
+      const cg = val === 1.0 ? 0.96 : 0.031;
+      const cb = val === 1.0 ? 0.96 : 0.039;
+      gl.clearColor(cr, cg, cb, 1);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
     if (reducedMotion) {
       program.uniforms.uTime.value = 0;
@@ -109,6 +136,7 @@ export function GrainShader({ className }: GrainShaderProps) {
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      observer.disconnect();
       window.removeEventListener("resize", resize);
       if (container.contains(gl.canvas)) {
         container.removeChild(gl.canvas);

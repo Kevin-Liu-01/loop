@@ -987,6 +987,23 @@ html[data-theme="dark"] .dither-overlay::after {
   mix-blend-mode: soft-light;
 }
 
+/* ── Hero section fade overlay ─────────────────────────────────── */
+
+.hero-fade {
+  background: linear-gradient(to bottom, transparent 0%, transparent 55%, var(--color-paper) 100%);
+}
+
+html[data-theme="light"] .hero-fade {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 40%,
+    color-mix(in srgb, var(--color-paper) 50%, transparent) 60%,
+    color-mix(in srgb, var(--color-paper) 85%, transparent) 75%,
+    var(--color-paper) 90%
+  );
+}
+
 .dither-gradient-orange {
   position: relative;
   isolation: isolate;
