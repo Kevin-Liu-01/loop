@@ -6,7 +6,7 @@ const DEFAULT_DESCRIPTION =
   "Loop turns your agent playbooks, updates, and source scans into a living operator desk that stays current.";
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const OG_IMAGE_PATH = "/og";
+const OG_IMAGE_PATH = "/og.png";
 
 export const SOCIAL_BOT_RE =
   /Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Applebot|Pinterestbot/i;
