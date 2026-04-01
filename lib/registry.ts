@@ -18,10 +18,17 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "live",
     keywords: ["frontend", "motion", "design", "react", "next.js", "ui", "animation"],
     sources: [
-      s("vercel-blog", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "next.js", "ai", "frontend"]),
-      s("react-blog", "React", "https://react.dev/rss.xml", "rss", ["react", "frontend"]),
+      s("vercel-blog", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "next.js", "frontend"]),
+      s("react-blog", "React Blog", "https://react.dev/rss.xml", "rss", ["react", "frontend"]),
       s("nextjs-releases", "Next.js Releases", "https://github.com/vercel/next.js/releases.atom", "atom", ["next.js", "releases"]),
-      s("hn-show", "Hacker News Show", "https://hnrss.org/show", "rss", ["hn", "show-hn"])
+      s("web-dev-blog", "web.dev", "https://web.dev/blog/feed.xml", "rss", ["chrome", "web-platform", "performance"]),
+      s("chrome-devrel", "Chrome DevRel", "https://developer.chrome.com/static/blog/feed.xml", "rss", ["chrome", "devtools", "web-platform"]),
+      s("smashing-magazine", "Smashing Magazine", "https://www.smashingmagazine.com/feed/", "rss", ["frontend", "css", "ux"]),
+      s("webkit-blog", "WebKit Blog", "https://webkit.org/feed/", "rss", ["webkit", "safari", "web-platform"]),
+      s("frontend-masters", "Frontend Masters Blog", "https://frontendmasters.com/blog/feed/", "rss", ["frontend", "tutorials"]),
+      s("typescript-releases", "TypeScript Releases", "https://github.com/microsoft/TypeScript/releases.atom", "atom", ["typescript", "releases"]),
+      s("tailwind-releases", "Tailwind CSS Releases", "https://github.com/tailwindlabs/tailwindcss/releases.atom", "atom", ["tailwind", "css", "releases"]),
+      s("motion-releases", "Motion Releases", "https://github.com/motiondivision/motion/releases.atom", "atom", ["motion", "animation", "releases"])
     ]
   },
   {
@@ -36,9 +43,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "live",
     keywords: ["seo", "geo", "aeo", "search", "schema", "crawler", "citability"],
     sources: [
-      s("google-search-central", "Google Search Central", "https://developers.google.com/search/blog", "docs", ["google", "search"]),
-      s("moz-blog", "Moz Blog", "https://moz.com/blog/feed", "rss", ["seo", "industry"]),
-      s("search-engine-land", "Search Engine Land", "https://searchengineland.com/feed", "rss", ["seo", "industry"])
+      s("google-search-central", "Google Search Central", "https://developers.google.com/search/blog", "docs", ["google", "search", "crawlers"]),
+      s("moz-blog", "Moz Blog", "https://moz.com/blog/feed", "rss", ["seo", "link-building", "research"]),
+      s("search-engine-land", "Search Engine Land", "https://searchengineland.com/feed", "rss", ["seo", "sem", "industry"]),
+      s("search-engine-journal", "Search Engine Journal", "https://www.searchenginejournal.com/feed/", "rss", ["seo", "tutorials", "news"]),
+      s("ahrefs-blog", "Ahrefs Blog", "https://ahrefs.com/blog/feed/", "rss", ["seo", "keywords", "backlinks"]),
+      s("semrush-blog", "Semrush Blog", "https://www.semrush.com/blog/feed/", "rss", ["seo", "content-strategy", "sem"]),
+      s("yoast-blog", "Yoast Blog", "https://yoast.com/feed/", "rss", ["seo", "wordpress", "technical-seo"]),
+      s("schema-org-releases", "Schema.org Releases", "https://github.com/schemaorg/schemaorg/releases.atom", "atom", ["schema", "structured-data", "releases"]),
+      s("google-ai-blog", "Google AI Blog", "https://blog.google/technology/ai/rss/", "rss", ["google", "ai-search", "geo"]),
+      s("bing-webmaster", "Bing Webmaster Blog", "https://blogs.bing.com/webmaster/feed", "rss", ["bing", "search", "crawlers"])
     ]
   },
   {
@@ -53,8 +67,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "live",
     keywords: ["social", "content", "linkedin", "x", "post", "distribution"],
     sources: [
-      s("signal-radar", "Signal Radar", "https://hnrss.org/frontpage", "rss", ["hn", "social-angle"]),
-      s("product-hunt", "Product Hunt", "https://www.producthunt.com/feed", "rss", ["launches", "products"])
+      s("social-media-examiner", "Social Media Examiner", "https://www.socialmediaexaminer.com/feed/", "rss", ["social", "strategy", "ads"]),
+      s("buffer-blog", "Buffer Blog", "https://buffer.com/resources/feed/", "rss", ["social", "scheduling", "analytics"]),
+      s("copyblogger", "Copyblogger", "https://copyblogger.com/feed/", "rss", ["copywriting", "content-marketing"]),
+      s("hubspot-marketing", "HubSpot Marketing", "https://blog.hubspot.com/marketing/rss.xml", "rss", ["inbound", "marketing", "seo"]),
+      s("content-marketing-institute", "Content Marketing Institute", "https://contentmarketinginstitute.com/feed/", "rss", ["content-strategy", "distribution"]),
+      s("social-media-today", "Social Media Today", "https://www.socialmediatoday.com/feed/", "rss", ["social", "trends", "enterprise"]),
+      s("orbit-media", "Orbit Media", "https://www.orbitmedia.com/blog/feed/", "rss", ["content", "analytics", "strategy"]),
+      s("sprout-social", "Sprout Social Insights", "https://sproutsocial.com/insights/feed/", "rss", ["social", "data", "engagement"]),
+      s("product-hunt", "Product Hunt", "https://www.producthunt.com/feed", "rss", ["launches", "products", "distribution"]),
+      s("signal-radar", "Hacker News Front Page", "https://hnrss.org/frontpage", "rss", ["hn", "signal", "tech-news"])
     ]
   },
   {
@@ -69,9 +91,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "seeded",
     keywords: ["infra", "hosting", "edge", "observability", "serverless", "platform"],
     sources: [
-      s("cloudflare-blog", "Cloudflare Blog", "https://blog.cloudflare.com/rss/", "rss", ["cloudflare", "edge"]),
-      s("vercel-blog-infra", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "infra"]),
-      s("kubernetes-blog", "Kubernetes", "https://kubernetes.io/feed.xml", "rss", ["kubernetes", "infra"])
+      s("cloudflare-blog", "Cloudflare Blog", "https://blog.cloudflare.com/rss/", "rss", ["cloudflare", "edge", "workers"]),
+      s("vercel-blog-infra", "Vercel Blog", "https://vercel.com/atom", "atom", ["vercel", "serverless", "edge"]),
+      s("aws-blog", "AWS Blog", "https://aws.amazon.com/blogs/aws/feed/", "rss", ["aws", "cloud", "compute"]),
+      s("the-new-stack", "The New Stack", "https://thenewstack.io/feed/", "rss", ["devops", "cloud-native", "platform"]),
+      s("fly-io-blog", "Fly.io Blog", "https://fly.io/blog/feed.xml", "rss", ["fly", "edge", "deploy"]),
+      s("supabase-blog", "Supabase Blog", "https://supabase.com/blog/rss.xml", "rss", ["supabase", "postgres", "storage"]),
+      s("deno-blog", "Deno Blog", "https://deno.com/blog/feed", "rss", ["deno", "runtime", "deploy"]),
+      s("kubernetes-blog", "Kubernetes Blog", "https://kubernetes.io/feed.xml", "rss", ["kubernetes", "orchestration"]),
+      s("hashicorp-blog", "HashiCorp Blog", "https://www.hashicorp.com/blog/feed.xml", "rss", ["terraform", "vault", "iac"]),
+      s("grafana-blog", "Grafana Blog", "https://grafana.com/blog/index.xml", "rss", ["observability", "monitoring", "dashboards"])
     ]
   },
   {
@@ -86,8 +115,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "seeded",
     keywords: ["container", "docker", "oci", "kubernetes", "podman"],
     sources: [
-      s("docker-blog", "Docker", "https://www.docker.com/blog/feed/", "rss", ["docker", "containers"]),
-      s("containerd-releases", "containerd Releases", "https://github.com/containerd/containerd/releases.atom", "atom", ["containerd", "releases"])
+      s("docker-blog", "Docker Blog", "https://www.docker.com/blog/feed/", "rss", ["docker", "containers"]),
+      s("containerd-releases", "containerd Releases", "https://github.com/containerd/containerd/releases.atom", "atom", ["containerd", "releases"]),
+      s("kubernetes-blog-ct", "Kubernetes Blog", "https://kubernetes.io/feed.xml", "rss", ["kubernetes", "pods", "scheduling"]),
+      s("cncf-blog", "CNCF Blog", "https://www.cncf.io/blog/feed/", "rss", ["cncf", "cloud-native", "governance"]),
+      s("helm-releases", "Helm Releases", "https://github.com/helm/helm/releases.atom", "atom", ["helm", "charts", "releases"]),
+      s("istio-blog", "Istio Blog", "https://istio.io/latest/blog/feed.xml", "rss", ["istio", "service-mesh"]),
+      s("oci-image-spec", "OCI Image Spec Releases", "https://github.com/opencontainers/image-spec/releases.atom", "atom", ["oci", "image-spec", "releases"]),
+      s("buildkit-releases", "BuildKit Releases", "https://github.com/moby/buildkit/releases.atom", "atom", ["buildkit", "builds", "releases"]),
+      s("k8s-cve-feed", "Kubernetes CVE Feed", "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/feed.xml", "rss", ["kubernetes", "security", "cve"]),
+      s("docker-compose-releases", "Docker Compose Releases", "https://github.com/docker/compose/releases.atom", "atom", ["docker-compose", "releases"])
     ]
   },
   {
@@ -102,9 +139,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "seeded",
     keywords: ["agent", "a2a", "orchestration", "tools", "mcp", "sdk"],
     sources: [
-      s("openai-news", "OpenAI News", "https://openai.com/news/rss.xml", "rss", ["agents", "llms"]),
-      s("anthropic-news", "Anthropic News", "https://www.anthropic.com/news", "docs", ["agents", "llms"]),
-      s("vercel-ai", "Vercel AI", "https://vercel.com/atom", "atom", ["ai-sdk", "agents"])
+      s("openai-news", "OpenAI News", "https://openai.com/news/rss.xml", "rss", ["openai", "models", "agents"]),
+      s("anthropic-news", "Anthropic News", "https://www.anthropic.com/news", "docs", ["anthropic", "claude", "safety"]),
+      s("vercel-ai-blog", "Vercel AI Blog", "https://vercel.com/atom", "atom", ["ai-sdk", "vercel", "agents"]),
+      s("google-ai-blog-a2a", "Google AI Blog", "https://blog.google/technology/ai/rss/", "rss", ["google", "gemini", "models"]),
+      s("huggingface-blog", "Hugging Face Blog", "https://huggingface.co/blog/feed.xml", "rss", ["huggingface", "models", "open-source"]),
+      s("langchain-blog", "LangChain Blog", "https://blog.langchain.dev/rss/", "rss", ["langchain", "agents", "chains"]),
+      s("ai-sdk-releases", "AI SDK Releases", "https://github.com/vercel/ai/releases.atom", "atom", ["ai-sdk", "releases"]),
+      s("mcp-spec-releases", "MCP Spec Releases", "https://github.com/modelcontextprotocol/specification/releases.atom", "atom", ["mcp", "protocol", "releases"]),
+      s("arxiv-cs-ai", "arXiv cs.AI", "https://rss.arxiv.org/rss/cs.AI", "rss", ["arxiv", "research", "papers"]),
+      s("arxiv-cs-cl", "arXiv cs.CL", "https://rss.arxiv.org/rss/cs.CL", "rss", ["arxiv", "nlp", "llm-research"])
     ]
   },
   {
@@ -120,8 +164,15 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     keywords: ["security", "threat", "auth", "abuse", "hardening"],
     sources: [
       s("github-advisory", "GitHub Security Advisories", "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm", "docs", ["security", "npm", "advisories"]),
-      s("portswigger-research", "PortSwigger Research", "https://portswigger.net/research/rss", "rss", ["security", "research", "web"]),
-      s("krebs-security", "Krebs on Security", "https://krebsonsecurity.com/feed/", "rss", ["security", "industry"])
+      s("portswigger-research", "PortSwigger Research", "https://portswigger.net/research/rss", "rss", ["web-security", "research", "exploits"]),
+      s("krebs-security", "Krebs on Security", "https://krebsonsecurity.com/feed/", "rss", ["security", "breaches", "industry"]),
+      s("owasp-blog", "OWASP Blog", "https://owasp.org/feed.xml", "rss", ["owasp", "appsec", "standards"]),
+      s("the-hacker-news", "The Hacker News", "https://feeds.feedburner.com/TheHackersNews", "rss", ["security", "vulnerabilities", "news"]),
+      s("troy-hunt", "Troy Hunt", "https://www.troyhunt.com/rss/", "rss", ["security", "breaches", "identity"]),
+      s("schneier-on-security", "Schneier on Security", "https://www.schneier.com/feed/", "rss", ["security", "cryptography", "policy"]),
+      s("security-boulevard", "Security Boulevard", "https://securityboulevard.com/feed/", "rss", ["appsec", "devsecops", "analysis"]),
+      s("project-zero", "Google Project Zero", "https://googleprojectzero.blogspot.com/feeds/posts/default", "atom", ["google", "zero-day", "research"]),
+      s("nodejs-security", "Node.js Security Releases", "https://github.com/nodejs/node/releases.atom", "atom", ["nodejs", "security", "releases"])
     ]
   },
   {
@@ -136,9 +187,16 @@ export const CATEGORY_REGISTRY: CategoryDefinition[] = [
     status: "live",
     keywords: ["ops", "github", "linear", "automation", "maintenance", "workflow"],
     sources: [
-      s("github-blog", "GitHub Blog", "https://github.blog/feed/", "rss", ["github", "ops", "releases"]),
-      s("github-changelog", "GitHub Changelog", "https://github.blog/changelog/feed/", "rss", ["github", "changelog"]),
-      s("linear-changelog", "Linear Changelog", "https://linear.app/changelog", "docs", ["linear", "ops"])
+      s("github-blog", "GitHub Blog", "https://github.blog/feed/", "rss", ["github", "features", "releases"]),
+      s("github-changelog", "GitHub Changelog", "https://github.blog/changelog/feed/", "rss", ["github", "changelog", "api"]),
+      s("linear-changelog", "Linear Changelog", "https://linear.app/changelog", "docs", ["linear", "issues", "workflow"]),
+      s("sentry-blog", "Sentry Blog", "https://blog.sentry.io/feed.xml", "rss", ["sentry", "errors", "observability"]),
+      s("gitlab-blog", "GitLab Blog", "https://about.gitlab.com/atom.xml", "atom", ["gitlab", "ci-cd", "devops"]),
+      s("github-actions-runner", "Actions Runner Releases", "https://github.com/actions/runner/releases.atom", "atom", ["github-actions", "ci", "releases"]),
+      s("turborepo-releases", "Turborepo Releases", "https://github.com/vercel/turborepo/releases.atom", "atom", ["turborepo", "monorepo", "builds"]),
+      s("pnpm-releases", "pnpm Releases", "https://github.com/pnpm/pnpm/releases.atom", "atom", ["pnpm", "packages", "releases"]),
+      s("eslint-releases", "ESLint Releases", "https://github.com/eslint/eslint/releases.atom", "atom", ["eslint", "linting", "releases"]),
+      s("datadog-blog", "Datadog Blog", "https://www.datadoghq.com/blog/feed/", "rss", ["datadog", "monitoring", "apm"])
     ]
   }
 ];
