@@ -216,35 +216,35 @@ export function getGatewayEditorModel(): LanguageModel | null {
   const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
     if (!_gatewayKeyWarnedOnce) {
-      console.warn("[agents] AI_GATEWAY_API_KEY is not set – skill updates will use heuristic fallback (no AI)");
+      console.warn("[agents] AI_GATEWAY_API_KEY not set – falling back to heuristic (no AI)");
       _gatewayKeyWarnedOnce = true;
     }
     return null;
   }
   const provider = createGateway({ apiKey });
-  return provider(GATEWAY_EDITOR_MODEL);
+  const model = provider(GATEWAY_EDITOR_MODEL);
+  console.info(`[agents] Resolved gateway editor model: ${GATEWAY_EDITOR_MODEL} (key: ${apiKey.slice(0, 6)}…)`);
+  return model;
 }
 
 export function getGatewayEditorModelId(preferredModel?: string): string {
   return preferredModel || GATEWAY_EDITOR_MODEL;
 }
 
-/**
- * Resolve the editor model for a specific skill.
- * Uses the skill's preferredModel when set, otherwise the global default.
- */
 export function getGatewayModelForSkill(preferredModel?: string): LanguageModel | null {
   const apiKey = process.env.AI_GATEWAY_API_KEY;
+  const modelId = preferredModel || GATEWAY_EDITOR_MODEL;
   if (!apiKey) {
     if (!_gatewayKeyWarnedOnce) {
-      console.warn("[agents] AI_GATEWAY_API_KEY is not set – skill updates will use heuristic fallback (no AI)");
+      console.warn(`[agents] AI_GATEWAY_API_KEY not set – cannot create model "${modelId}"`);
       _gatewayKeyWarnedOnce = true;
     }
     return null;
   }
-  const modelId = preferredModel || GATEWAY_EDITOR_MODEL;
   const provider = createGateway({ apiKey });
-  return provider(modelId);
+  const model = provider(modelId);
+  console.info(`[agents] Resolved skill model: ${modelId} (preferred: ${preferredModel ?? "none"}, key: ${apiKey.slice(0, 6)}…)`);
+  return model;
 }
 
 export async function listGatewayModels(): Promise<Array<{ id: string; name: string; provider: string }>> {

@@ -63,12 +63,14 @@ export function buildAddSourceTool(
     }),
     execute: async ({ label, url, kind, tags, rationale }): Promise<AddSourceToolOutput> => {
       if (collector.sources.length >= MAX_ADDED_SOURCES_PER_RUN) {
+        console.warn(`[tool:add_source] Limit reached (${MAX_ADDED_SOURCES_PER_RUN}) – rejecting "${label}" (${url})`);
         return {
           error: `Source limit reached (${MAX_ADDED_SOURCES_PER_RUN} per refresh). Cannot add more.`,
         };
       }
 
       if (isDuplicateSource(url, existingSources, collector)) {
+        console.info(`[tool:add_source] Duplicate skipped: "${label}" (${url})`);
         return { error: `Source URL already tracked: ${url}` };
       }
 
@@ -85,6 +87,7 @@ export function buildAddSourceTool(
       };
 
       collector.sources.push(source);
+      console.info(`[tool:add_source] Added "${label}" (${kind}) – ${url} – total: ${collector.sources.length}`);
 
       return { added: true, source };
     },

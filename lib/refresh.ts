@@ -322,26 +322,42 @@ export async function synthesizeSkillUpdate(
     reasoningSteps: []
   };
 
+  const modelId = getGatewayEditorModelId(preferredModel);
   const editorModel = getGatewayModelForSkill(preferredModel);
-  if (items.length === 0 || !editorModel) {
+  if (!editorModel) {
+    console.warn(
+      `[refresh:synthesize] FALLBACK – no gateway model (modelId: ${modelId}, preferred: ${preferredModel ?? "none"}, ` +
+      `AI_GATEWAY_API_KEY set: ${!!process.env.AI_GATEWAY_API_KEY}) – returning heuristic draft for "${skill.title}"`
+    );
     return fallbackDraft;
   }
 
-  try {
-    const result = await runSkillEditorAgent(
-      skill,
-      items,
-      sourceLogs,
-      editorModel,
-      getGatewayEditorModelId(preferredModel),
-      onReasoningStep
-    );
-    return result;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown AI error";
-    console.warn(`[refresh] synthesizeSkillUpdate failed for "${skill.title}": ${message}`);
-    return fallbackDraft;
-  }
+  console.info(
+    `[refresh:synthesize] Starting agent for "${skill.title}" – ` +
+    `model: ${modelId}, signals: ${items.length}, sources: ${sourceLogs.length}, ` +
+    `searchBudget: ${skill.automation.searchBudget ?? "default"}, ` +
+    `preferred: ${preferredModel ?? "none"}`
+  );
+  const agentStartMs = Date.now();
+
+  const result = await runSkillEditorAgent(
+    skill,
+    items,
+    sourceLogs,
+    editorModel,
+    modelId,
+    onReasoningStep
+  );
+
+  const agentElapsedMs = Date.now() - agentStartMs;
+  console.info(
+    `[refresh:synthesize] Agent finished for "${skill.title}" in ${(agentElapsedMs / 1000).toFixed(1)}s – ` +
+    `model: ${result.editorModel}, bodyChanged: ${result.bodyChanged}, ` +
+    `searches: ${result.searchesUsed}, addedSources: ${result.addedSources.length}, ` +
+    `steps: ${result.reasoningSteps.length}, revised: ${result.bodyChanged}`
+  );
+
+  return result;
 }
 
 export async function runTrackedUserSkillUpdate(
@@ -349,30 +365,44 @@ export async function runTrackedUserSkillUpdate(
   trigger: LoopRunRecord["trigger"],
   hooks: UserSkillRefreshHooks = {}
 ): Promise<UserSkillRefreshCycle> {
+  const updateStartMs = Date.now();
   const startedAt = new Date().toISOString();
   const beforeRecord = buildUserSkillRecord(skill);
   const target = buildLoopUpdateTarget(beforeRecord);
   const messages: string[] = [];
   let sourceLogs = skill.sources.map((source) => buildLoopUpdateSourceLog(source, "pending"));
 
+  console.info(
+    `[refresh:tracked] BEGIN "${skill.title}" (${skill.slug}) – ` +
+    `trigger: ${trigger}, sources: ${skill.sources.length}, ` +
+    `version: v${skill.version}, automation.enabled: ${skill.automation.enabled}, ` +
+    `preferredModel: ${skill.automation.preferredModel ?? "default"}`
+  );
+
   hooks.onStart?.(target);
   messages.push(`Started scanning ${skill.sources.length} sources.`);
   hooks.onMessage?.(messages[messages.length - 1] ?? "");
 
+  const fetchStartMs = Date.now();
   const fetchResults = await Promise.allSettled(
     skill.sources.map(async (source) => {
       const items = await fetchSignals(source);
       return { source, items };
     })
   );
+  const fetchElapsedMs = Date.now() - fetchStartMs;
 
+  let totalSignals = 0;
+  let failedSources = 0;
   for (let i = 0; i < skill.sources.length; i++) {
     const source = skill.sources[i]!;
     const result = fetchResults[i]!;
     const items = result.status === "fulfilled" ? result.value.items : [];
     if (result.status === "rejected") {
-      console.warn(`[refresh] fetchSignals failed for "${source.label}":`, result.reason);
+      failedSources++;
+      console.warn(`[refresh:tracked] Source fetch FAILED "${source.label}" (${source.kind}): ${result.reason}`);
     }
+    totalSignals += items.length;
 
     const completed: LoopUpdateSourceLog = {
       ...buildLoopUpdateSourceLog(source, "done"),
@@ -385,6 +415,11 @@ export async function runTrackedUserSkillUpdate(
     messages.push(`${completed.label}: ${completed.note}`);
     hooks.onMessage?.(messages[messages.length - 1] ?? "");
   }
+
+  console.info(
+    `[refresh:tracked] Source fetch complete for "${skill.title}" in ${(fetchElapsedMs / 1000).toFixed(1)}s – ` +
+    `${totalSignals} signals from ${skill.sources.length - failedSources}/${skill.sources.length} sources`
+  );
 
   messages.push("Agent is rewriting the skill body from the fetched source deltas.");
   hooks.onMessage?.(messages[messages.length - 1] ?? "");
@@ -485,6 +520,15 @@ export async function runTrackedUserSkillUpdate(
     searchesUsed: draft.searchesUsed > 0 ? draft.searchesUsed : undefined,
     addedSources: draft.addedSources.length > 0 ? draft.addedSources : undefined
   };
+
+  const totalElapsedMs = Date.now() - updateStartMs;
+  console.info(
+    `[refresh:tracked] DONE "${skill.title}" in ${(totalElapsedMs / 1000).toFixed(1)}s – ` +
+    `editor: ${draft.editorModel}, bodyChanged: ${draft.bodyChanged}, ` +
+    `v${skill.version} → ${afterRecord.versionLabel}, ` +
+    `searches: ${draft.searchesUsed}, newSources: ${draft.addedSources.length}, ` +
+    `steps: ${(draft.reasoningSteps?.length ?? 0)}`
+  );
 
   return {
     nextSkill,

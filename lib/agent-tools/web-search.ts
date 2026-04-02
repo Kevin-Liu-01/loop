@@ -66,18 +66,26 @@ export function buildWebSearchTool(budget: SearchBudget) {
     }),
     execute: async ({ query, recency }): Promise<WebSearchToolOutput> => {
       if (budget.used >= budget.max) {
+        console.warn(`[tool:web_search] Budget exhausted (${budget.max}/${budget.max}) – rejecting query: "${query}"`);
         return {
           error: `Search budget exhausted (${budget.max}/${budget.max} used). Work with what you have.`,
         };
       }
       budget.used++;
+      const searchIndex = budget.used;
+      console.info(`[tool:web_search] #${searchIndex}/${budget.max} query: "${query}" (recency: ${recency ?? "any"})`);
+      const startMs = Date.now();
 
       try {
         const results = await executeSearch(query, recency);
+        const elapsedMs = Date.now() - startMs;
+        console.info(`[tool:web_search] #${searchIndex} returned ${results.length} results in ${elapsedMs}ms – remaining: ${budget.max - budget.used}`);
         return { results, budgetRemaining: budget.max - budget.used };
       } catch (error) {
         budget.used--;
+        const elapsedMs = Date.now() - startMs;
         const message = error instanceof Error ? error.message : "Search failed";
+        console.error(`[tool:web_search] #${searchIndex} FAILED in ${elapsedMs}ms: ${message}`);
         return { error: `Web search failed: ${message}` };
       }
     },

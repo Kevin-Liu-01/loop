@@ -294,6 +294,7 @@ export async function runSkillEditorAgent(
   onStep?: (step: AgentReasoningStep) => void
 ): Promise<EditorAgentResult> {
   const generatedAt = new Date().toISOString();
+  const agentStartMs = Date.now();
 
   const searchBudgetMax = skill.automation.searchBudget ?? DEFAULT_SEARCH_BUDGET;
   const searchBudget: SearchBudget = { max: searchBudgetMax, used: 0 };
@@ -310,6 +311,12 @@ export async function runSkillEditorAgent(
     finalized: false
   };
 
+  console.info(
+    `[agent] BEGIN "${skill.title}" – model: ${modelLabel}, ` +
+    `signals: ${signals.length}, sources: ${sourceLogs.length}, ` +
+    `searchBudget: ${searchBudgetMax}, maxSteps: ${MAX_AGENT_STEPS}`
+  );
+
   const tools = {
     analyze_signals: buildAnalyzeSignalsTool(sourceLogs),
     read_current_skill: buildReadCurrentSkillTool(skill),
@@ -319,6 +326,9 @@ export async function runSkillEditorAgent(
     revise_skill: buildReviseSkillTool(skill, revisionState),
     finalize: buildFinalizeTool(revisionState)
   };
+
+  console.info(`[agent] Calling generateText for "${skill.title}"…`);
+  const generateStartMs = Date.now();
 
   const response = await generateText({
     model,
@@ -334,6 +344,18 @@ export async function runSkillEditorAgent(
     stopWhen: stepCountIs(MAX_AGENT_STEPS)
   });
 
+  const generateElapsedMs = Date.now() - generateStartMs;
+
+  const toolCallSummary = response.steps.flatMap((s) => s.toolCalls ?? [])
+    .reduce<Record<string, number>>((acc, tc) => { acc[tc.toolName] = (acc[tc.toolName] ?? 0) + 1; return acc; }, {});
+
+  console.info(
+    `[agent] generateText complete for "${skill.title}" in ${(generateElapsedMs / 1000).toFixed(1)}s – ` +
+    `steps: ${response.steps.length}, toolCalls: ${JSON.stringify(toolCallSummary)}, ` +
+    `searches: ${searchBudget.used}/${searchBudgetMax}, ` +
+    `revised: ${revisionState.revised}, finalized: ${revisionState.finalized}`
+  );
+
   const reasoningSteps = extractStepsFromResponse(response, skill);
 
   if (onStep) {
@@ -347,6 +369,12 @@ export async function runSkillEditorAgent(
   const searchesUsed = searchBudget.used;
 
   if (!revisionState.revised) {
+    const totalElapsedMs = Date.now() - agentStartMs;
+    console.warn(
+      `[agent] NO REVISION for "${skill.title}" after ${(totalElapsedMs / 1000).toFixed(1)}s – ` +
+      `agent did not call revise_skill. searches: ${searchesUsed}, ` +
+      `finalized: ${revisionState.finalized}, steps: ${reasoningSteps.length}`
+    );
     return {
       update: {
         generatedAt,
@@ -372,6 +400,13 @@ export async function runSkillEditorAgent(
   }
 
   const bodyChanged = revisionState.body.trim() !== skill.body.trim();
+  const totalElapsedMs = Date.now() - agentStartMs;
+  console.info(
+    `[agent] DONE "${skill.title}" in ${(totalElapsedMs / 1000).toFixed(1)}s – ` +
+    `bodyChanged: ${bodyChanged}, changedSections: [${revisionState.changedSections.join(", ")}], ` +
+    `bodyDelta: ${revisionState.body.length - skill.body.length} chars, ` +
+    `searches: ${searchesUsed}, addedSources: ${addedSources.length}`
+  );
 
   return {
     update: {

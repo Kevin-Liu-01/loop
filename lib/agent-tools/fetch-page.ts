@@ -65,7 +65,16 @@ export function buildFetchPageTool() {
       url: z.string().url().describe("Full URL to fetch — must be publicly accessible"),
     }),
     execute: async ({ url }): Promise<FetchPageToolOutput> => {
-      return fetchPageContent(url);
+      console.info(`[tool:fetch_page] Fetching: ${url}`);
+      const startMs = Date.now();
+      const result = await fetchPageContent(url);
+      const elapsedMs = Date.now() - startMs;
+      if ("error" in result) {
+        console.warn(`[tool:fetch_page] FAILED in ${elapsedMs}ms: ${result.error}`);
+      } else {
+        console.info(`[tool:fetch_page] OK in ${elapsedMs}ms – "${result.title}" (${result.contentLength} chars)`);
+      }
+      return result;
     },
   });
 }

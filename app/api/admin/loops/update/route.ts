@@ -398,6 +398,11 @@ export async function POST(request: Request) {
             }
           } catch (error) {
             const message = error instanceof Error ? error.message : "Manual loop update failed.";
+            const elapsedMs = Date.now() - new Date(startedAt).getTime();
+            console.error(
+              `[loops/update] Manual update FAILED for "${payload.data.slug}" after ${(elapsedMs / 1000).toFixed(1)}s: ${message}`,
+              error instanceof Error ? error.stack : ""
+            );
             try {
               await recordLoopRun({
                 id: randomUUID(),
