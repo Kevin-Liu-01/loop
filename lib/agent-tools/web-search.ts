@@ -5,7 +5,7 @@ import { SEARCH_MAX_RESULTS, SEARCH_MAX_TOKENS } from "@/lib/agent-tools/constan
 import type { SearchBudget, SearchRecency, WebSearchResult, WebSearchToolOutput } from "@/lib/agent-tools/types";
 
 function buildSearchModel() {
-  return gateway("openai/gpt-5-mini");
+  return gateway("openai/gpt-5.4-mini");
 }
 
 function extractSourceUrl(source: { sourceType: string; url?: string; id?: string }): string {

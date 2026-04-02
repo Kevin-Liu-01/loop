@@ -208,7 +208,7 @@ export function buildAgentContext(snapshot: LoopSnapshot, input: AgentRunInput):
   ].join("\n");
 }
 
-const GATEWAY_EDITOR_MODEL = process.env.LOOP_MODEL ?? "openai/gpt-5-mini";
+const GATEWAY_EDITOR_MODEL = process.env.LOOP_MODEL ?? "openai/gpt-5.4-mini";
 
 let _gatewayKeyWarnedOnce = false;
 
