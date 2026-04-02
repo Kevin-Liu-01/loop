@@ -64,7 +64,7 @@ function createInitialConfig(presets: AgentProviderPreset[]): StudioConfig {
     compatibleBaseUrl: preset?.baseURL ?? "",
     apiKeyEnvVar: preset?.apiKeyEnvVar ?? "",
     headersJson: "{}",
-    systemPrompt: "Be concrete. Use attached skills before improvising. When executable MCP tools are attached, prefer using them over guessing.",
+    systemPrompt: "You are a Loop agent. Use attached skill knowledge to inform your approach. When MCP tools are available, use them instead of guessing. Be concrete: produce code, commands, or structured output.",
     selectedSkillSlugs: [],
     selectedMcpIds: []
   };

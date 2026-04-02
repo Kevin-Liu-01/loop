@@ -693,7 +693,7 @@ export async function addTrackedSkillFromRecord(
     enabled: automationEnabled,
     cadence: automationEnabled ? "daily" : "manual",
     status: automationEnabled ? "active" : "paused",
-    prompt: `Refresh $${skill.slug} from the tracked sources. Capture only concrete changes, fold them into the skill, and stay terse.`,
+    prompt: `Refresh $${skill.slug}: search the web for recent developments, cross-reference with tracked sources, and update the skill with concrete changes. Prioritize new versions, deprecations, and revised best practices. Stay terse and operational.`,
     preferredHour: DEFAULT_PREFERRED_HOUR,
   };
 

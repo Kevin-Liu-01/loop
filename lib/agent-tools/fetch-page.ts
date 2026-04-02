@@ -59,10 +59,10 @@ export async function fetchPageContent(
 export function buildFetchPageTool() {
   return tool({
     description:
-      "Fetch and read the content of a specific URL. " +
-      "Use when web_search found a promising result and you need the full details from that page.",
+      "Fetch a URL and return its readable text content (HTML stripped, nav/footer removed). " +
+      "Use after web_search surfaces a promising link — read the full page to extract specific details like version numbers, API changes, code examples, or migration steps before citing them in the revision.",
     inputSchema: z.object({
-      url: z.string().url().describe("The URL to fetch and read"),
+      url: z.string().url().describe("Full URL to fetch — must be publicly accessible"),
     }),
     execute: async ({ url }): Promise<FetchPageToolOutput> => {
       return fetchPageContent(url);

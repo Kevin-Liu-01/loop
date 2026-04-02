@@ -3,9 +3,9 @@ import { generateText, type LanguageModel } from "ai";
 import { getGatewayEditorModel } from "@/lib/agents";
 
 const TITLE_SYSTEM_PROMPT = [
-  "Generate a short, descriptive title (3–8 words) for a chat conversation.",
-  "The title should capture the main topic or intent.",
-  "Return ONLY the title text — no quotes, no punctuation at the end, no explanation.",
+  "Generate a concise title (3–8 words) that captures the core topic or intent of this conversation.",
+  "Prefer specifics over generics: name the technology, task, or concept rather than saying 'help with code'.",
+  "Return ONLY the title — no quotes, no trailing punctuation, no explanation.",
 ].join(" ");
 
 /**

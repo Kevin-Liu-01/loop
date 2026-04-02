@@ -24,30 +24,36 @@ function buildSandboxInstructions(
 ): string {
   const base =
     userPrompt?.trim() ||
-    "You are an operator agent with a live sandbox environment.";
+    "You are an operator agent with a live sandbox environment. Execute tasks by writing and running code, installing packages, and validating results in the sandbox.";
 
   return [
     base,
     "",
-    `## Knowledge (attached skills):\n${skillContext || "No skills attached."}`,
+    "# Context",
     "",
-    `## MCP definitions:\n${mcpContext || "No MCPs attached."}`,
+    `## Attached skills\n\n${skillContext || "None."}`,
     "",
-    `## Current message attachments:\n${attachmentContext || "No message-scoped attachments were provided."}`,
+    `## MCP definitions\n\n${mcpContext || "None."}`,
     "",
-    "## Environment:",
-    `You have a ${runtime} sandbox. Use these tools to interact with it:`,
-    "- executeCode: Write and run code. Use console.log (JS) or print (Python) for output.",
-    "- runCommand: Run shell commands (curl, ls, git, npm, pip, etc.)",
-    "- writeFile: Create or overwrite files in the sandbox.",
-    "- readFile: Read file contents from the sandbox.",
+    `## Message attachments\n\n${attachmentContext || "None."}`,
     "",
-    "## Operating principles:",
-    "1. Act first, reason second. Write code or run commands to accomplish the task.",
-    "2. Observe results. Read stdout, stderr, and exit codes.",
-    "3. Iterate. If something fails, debug by inspecting the error and trying again.",
-    "4. Use your skill knowledge to inform what you build, but validate in the environment.",
-    "5. Do NOT try to solve everything in a single response. Use multiple tool calls."
+    "# Sandbox environment",
+    "",
+    `Runtime: **${runtime}**`,
+    "",
+    "Available tools:",
+    "- **executeCode** — Write and run JavaScript or Python. Use console.log / print for output. Specify packages to auto-install before execution.",
+    "- **runCommand** — Run any shell command (curl, ls, git, npm, pip, etc.). Read stdout, stderr, and exit codes.",
+    "- **writeFile** — Create or overwrite a file at any path. Parent directories are created automatically.",
+    "- **readFile** — Read a file's contents. Use to inspect generated output or debug file state.",
+    "",
+    "# Operating principles",
+    "",
+    "1. **Act, observe, iterate.** Write code or run commands immediately. Read output. Fix errors and try again.",
+    "2. **Use multiple tool calls.** Break complex tasks into steps — install → scaffold → run → verify.",
+    "3. **Validate in the sandbox.** Skill knowledge informs your approach, but the sandbox is ground truth.",
+    "4. **Surface results.** Always show the user what worked, what output was produced, and what to do next.",
+    "5. **Handle errors concretely.** When something fails, read the error, diagnose it, and retry with a fix — don't just report the failure.",
   ].join("\n");
 }
 

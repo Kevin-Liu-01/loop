@@ -2,7 +2,7 @@ import { generateText, stepCountIs, tool, type LanguageModel } from "ai";
 import { z } from "zod";
 
 import { buildAddSourceTool, type AddedSourceCollector } from "@/lib/agent-tools/add-source";
-import { DEFAULT_SEARCH_BUDGET } from "@/lib/agent-tools/constants";
+import { DEFAULT_SEARCH_BUDGET, MIN_SEARCH_REQUIRED } from "@/lib/agent-tools/constants";
 import { buildFetchPageTool } from "@/lib/agent-tools/fetch-page";
 import type { SearchBudget } from "@/lib/agent-tools/types";
 import { buildWebSearchTool } from "@/lib/agent-tools/web-search";
@@ -21,7 +21,7 @@ const MAX_REASONING_CHARS = 2000;
 const MAX_TOOL_RESULT_CHARS = 2000;
 const MAX_SEARCH_RESULT_CHARS = 4000;
 const MAX_DIFF_LINES_PER_STEP = 80;
-const MAX_AGENT_STEPS = 12;
+const MAX_AGENT_STEPS = 18;
 
 const LARGE_OUTPUT_TOOLS = new Set(["web_search", "fetch_page"]);
 
@@ -66,41 +66,60 @@ function buildSystemPrompt(
     })
     .join("\n\n");
 
+  const today = new Date().toISOString().slice(0, 10);
+
   return [
-    `You are an autonomous skill editor for "${skill.title}".`,
-    "Your job is to inspect fresh external signals, optionally search the web for more, and decide whether and how to rewrite the skill body.",
+    `# Skill editor agent — "${skill.title}"`,
     "",
-    "Operating rules:",
-    "- Preserve existing intent and structure unless signals justify a concrete edit.",
-    "- Do not fabricate claims or sources.",
-    "- Do not add update-engine, recent-log, or observability sections (the product handles those).",
-    "- Keep writing terse, operational, and copy-pasteable for agents.",
+    "You are a research-first autonomous editor. Your job: absorb tracked-source signals, actively research the web, then produce a precise revision of the skill body.",
     "",
-    "Workflow:",
-    "1. Use analyze_signals to review what each source brought in.",
-    "2. Use read_current_skill to see the full skill body.",
-    "3. Identify gaps: stale sections, missing context, thin coverage, unverified claims.",
-    "4. Use web_search to fill those gaps. Be specific with queries. Prioritize high-value searches.",
-    "5. Use fetch_page to deep-read any promising URL that web_search surfaced.",
-    "6. If you discover a high-quality recurring source (official docs, maintained blog, release feed, GitHub repo), use add_source to track it for future refreshes.",
-    "7. Reason about what should change (explain your thinking in your messages).",
-    "8. Use revise_skill to apply your edits.",
-    "9. Use finalize when you are satisfied with the revision.",
+    "## Mandatory research phase",
     "",
-    `Web search budget: ${searchBudgetMax} queries this refresh. Use them strategically.`,
+    `Budget: ${searchBudgetMax} web searches. You MUST use at least ${MIN_SEARCH_REQUIRED}.`,
+    "Do NOT skip searching even when signals look complete — there is always more to learn.",
     "",
-    `Automation instruction: ${skill.automation.prompt}`,
+    "What to search for:",
+    "- Breaking changes, new releases, or version bumps since the skill was last updated.",
+    "- Corrections, deprecations, or revised best practices that invalidate current advice.",
+    "- Adjacent techniques, libraries, or patterns the skill doesn't cover yet.",
+    "- Authoritative primary sources (official docs, RFCs, changelogs) to replace or verify weaker references.",
     "",
-    "## Source signals",
+    "Search tactics:",
+    `- Start broad: "${skill.title} latest changes ${today.slice(0, 4)}". Narrow from there.`,
+    "- Chain searches: first result → follow-up on specifics (version numbers, migration guides, benchmarks).",
+    "- If a query returns thin results, rephrase with different keywords — do not accept one weak attempt.",
+    "- Use fetch_page on the most promising URLs to get full context before citing them.",
+    "",
+    "## Workflow",
+    "",
+    "1. **Gather** — analyze_signals on each source, then read_current_skill.",
+    "2. **Research** — web_search to fill gaps, fetch_page for depth. Do this BEFORE planning edits.",
+    "3. **Discover** — if you find a high-value recurring source (official docs, release feed, maintained blog, GitHub repo), use add_source so future refreshes track it automatically.",
+    "4. **Plan** — reason about what should change and why. Explain your thinking in your messages.",
+    "5. **Revise** — revise_skill with the complete updated body.",
+    "6. **Finalize** — finalize when satisfied.",
+    "",
+    "## Writing standards",
+    "",
+    "- Terse, operational, copy-pasteable by agents and developers.",
+    "- Preserve existing structure and intent unless evidence justifies changing them.",
+    "- Every added claim must trace to a search result or existing signal — never fabricate.",
+    "- Do NOT add meta-sections about update history or observability (the product handles those).",
+    "- Prefer concrete over vague: version numbers, dates, specific API names, code snippets.",
+    "",
+    `## Author instruction\n\n${skill.automation.prompt}`,
+    "",
+    `## Source signals (today: ${today})`,
+    "",
     sourceList
   ].join("\n");
 }
 
 function buildAnalyzeSignalsTool(sourceLogs: LoopUpdateSourceLog[]) {
   return tool({
-    description: "Retrieve and analyze signals from a specific tracked source. Use this to understand what changed.",
+    description: "Pull the full signal list from one tracked source. Returns each signal's title, URL, date, and summary so you can assess what's new and what gaps remain.",
     inputSchema: z.object({
-      sourceLabel: z.string().describe("The label of the source to analyze")
+      sourceLabel: z.string().describe("Exact label of the source (case-insensitive)")
     }),
     execute: async ({ sourceLabel }) => {
       const match = sourceLogs.find(
@@ -131,7 +150,7 @@ function buildAnalyzeSignalsTool(sourceLogs: LoopUpdateSourceLog[]) {
 
 function buildReadCurrentSkillTool(skill: UserSkillDocument) {
   return tool({
-    description: "Read the current skill body and metadata. Use this before deciding what to edit.",
+    description: "Return the skill's full body text, title, description, and current version. Call this early so you can compare against incoming signals and identify stale or incomplete sections.",
     inputSchema: z.object({}),
     execute: async () => ({
       title: skill.title,
@@ -145,14 +164,14 @@ function buildReadCurrentSkillTool(skill: UserSkillDocument) {
 
 function buildReviseSkillTool(skill: UserSkillDocument, state: MutableRevisionState) {
   return tool({
-    description: "Apply a revision to the skill. Provide the complete revised body, description, a summary of the update, what changed, which sections changed, and 2-3 experiment ideas.",
+    description: "Submit a revised version of the skill. You must provide the COMPLETE body (not a diff) plus metadata about what changed. Only call this after your research phase is complete and you have a clear plan.",
     inputSchema: z.object({
-      revisedBody: z.string().min(40).describe("The full revised skill body"),
-      revisedDescription: z.string().min(16).max(220).describe("Updated skill description"),
-      summary: z.string().describe("Summary of what this update does"),
-      whatChanged: z.string().describe("Narrative of the concrete changes made"),
-      changedSections: z.array(z.string()).min(1).max(6).describe("Sections that were edited"),
-      experiments: z.array(z.string()).min(2).max(3).describe("Suggested follow-up experiments")
+      revisedBody: z.string().min(40).describe("The complete revised skill body — include ALL sections, not just changed ones"),
+      revisedDescription: z.string().min(16).max(220).describe("Updated one-line skill description reflecting current scope"),
+      summary: z.string().describe("One-paragraph summary of what this update accomplishes and why"),
+      whatChanged: z.string().describe("Bullet-style list of concrete changes: what was added, removed, or rewritten"),
+      changedSections: z.array(z.string()).min(1).max(6).describe("Names of the sections you touched"),
+      experiments: z.array(z.string()).min(2).max(3).describe("2-3 follow-up experiments or areas to investigate in future refreshes")
     }),
     execute: async ({ revisedBody, revisedDescription, summary, whatChanged, changedSections, experiments }) => {
       state.body = revisedBody.trim();
@@ -179,9 +198,9 @@ function buildReviseSkillTool(skill: UserSkillDocument, state: MutableRevisionSt
 
 function buildFinalizeTool(state: MutableRevisionState) {
   return tool({
-    description: "Signal that the revision is complete and you are satisfied with the result.",
+    description: "Mark the revision as complete. Call this once — and only after — you have called revise_skill and are satisfied with the result. If you have not revised the skill (no meaningful changes needed), still call this to end the run cleanly.",
     inputSchema: z.object({
-      finalNote: z.string().optional().describe("Optional closing note about the revision")
+      finalNote: z.string().optional().describe("Brief closing note: confidence level, anything deferred to the next refresh, or why no changes were made")
     }),
     execute: async ({ finalNote }) => {
       state.finalized = true;
@@ -304,7 +323,13 @@ export async function runSkillEditorAgent(
   const response = await generateText({
     model,
     system: buildSystemPrompt(skill, sourceLogs, searchBudgetMax),
-    prompt: `You have ${sourceLogs.length} sources with ${signals.length} total signals and a web search budget of ${searchBudgetMax} queries. Analyze existing signals, search the web to fill gaps, read the current skill, decide what to change, revise the skill, then finalize.`,
+    prompt: [
+      `${sourceLogs.length} tracked sources delivered ${signals.length} signal(s).`,
+      `Web search budget: ${searchBudgetMax} (minimum ${MIN_SEARCH_REQUIRED}).`,
+      "",
+      "Execute the workflow: gather → research → discover → plan → revise → finalize.",
+      `Start by calling analyze_signals for each source, then read_current_skill, then begin your research phase with at least ${MIN_SEARCH_REQUIRED} web searches before deciding any edits.`,
+    ].join("\n"),
     tools,
     stopWhen: stepCountIs(MAX_AGENT_STEPS)
   });

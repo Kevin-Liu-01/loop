@@ -49,9 +49,9 @@ import type {
 } from "@/lib/types";
 
 const SIGNAL_SCHEMA = z.object({
-  summary: z.string(),
-  whatChanged: z.string(),
-  experiments: z.array(z.string()).min(2).max(3)
+  summary: z.string().describe("2-3 sentence editorial summary of the most important shifts — what practitioners should know today"),
+  whatChanged: z.string().describe("Concrete paragraph: what specifically moved, with version numbers, dates, and named tools/libraries where applicable"),
+  experiments: z.array(z.string()).min(2).max(3).describe("2-3 actionable experiments a practitioner could try based on these signals")
 });
 
 type RefreshOptions = {
@@ -247,13 +247,20 @@ async function synthesizeBrief(slug: CategorySlug, title: string, items: DailySi
 
   try {
     const prompt = [
-      `You are building a terse editorial daily briefing for the ${title} category of a skills product.`,
-      "Summarize the concrete shifts only.",
-      "Return a crisp summary, one what-changed paragraph, and 2-3 experiments.",
+      `You are writing a terse daily briefing for the **${title}** category.`,
+      "",
+      "Rules:",
+      "- Focus on concrete, practitioner-relevant shifts: new releases, deprecations, API changes, benchmark results, security advisories.",
+      "- Drop noise: minor patch bumps, routine maintenance, speculative opinion pieces.",
+      "- Use specific names, version numbers, and dates — never vague language like 'various improvements'.",
+      "- The summary should read like a morning newsletter: scannable, opinionated, and immediately useful.",
+      "- Experiments should be actionable things a developer could try today, not abstract suggestions.",
+      "",
+      `## Signals (${items.length})`,
       "",
       ...items.map(
         (item, index) =>
-          `${index + 1}. ${item.title} | ${item.source} | ${item.publishedAt} | ${item.summary || "No summary"}`
+          `${index + 1}. **${item.title}** — ${item.source} (${item.publishedAt})\n   ${item.summary || "No summary available."}`
       )
     ].join("\n");
 

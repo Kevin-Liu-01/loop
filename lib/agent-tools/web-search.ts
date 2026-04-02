@@ -17,7 +17,7 @@ function extractSourceUrl(source: { sourceType: string; url?: string; id?: strin
 async function executeSearch(query: string, recency?: SearchRecency): Promise<WebSearchResult[]> {
   const result = await generateText({
     model: buildSearchModel(),
-    prompt: `Search the web for: ${query}\n\nReturn the most relevant and recent results. Focus on authoritative sources.`,
+    prompt: `Search: ${query}\n\nReturn the most relevant and recent results. Prioritize primary sources (official docs, changelogs, RFCs, maintainer posts) over aggregators and secondary commentary.`,
     tools: {
       perplexity_search: gateway.tools.perplexitySearch({
         maxResults: SEARCH_MAX_RESULTS,
@@ -54,15 +54,15 @@ async function executeSearch(query: string, recency?: SearchRecency): Promise<We
 export function buildWebSearchTool(budget: SearchBudget) {
   return tool({
     description:
-      "Search the web for current information about this skill's domain. " +
-      "Use when existing source signals are insufficient or you need to verify/expand on a topic. " +
-      "Be strategic — you have a limited search budget.",
+      "Search the web for live information. Returns a list of results with titles, URLs, and a synthesized summary. " +
+      "Use aggressively: search for recent changes, verify claims, find primary sources, discover adjacent topics. " +
+      "Chain multiple searches — start broad, then narrow on specifics. Budget is limited so make queries specific and targeted.",
     inputSchema: z.object({
-      query: z.string().min(3).max(200).describe("The search query"),
+      query: z.string().min(3).max(200).describe("Specific search query — include key terms, version numbers, or date ranges for better results"),
       recency: z
         .enum(["day", "week", "month", "year"])
         .optional()
-        .describe("Filter results by content recency"),
+        .describe("Filter by content age. Use 'week' or 'month' for fast-moving topics, omit for evergreen queries"),
     }),
     execute: async ({ query, recency }): Promise<WebSearchToolOutput> => {
       if (budget.used >= budget.max) {

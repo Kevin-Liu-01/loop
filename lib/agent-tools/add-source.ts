@@ -43,24 +43,23 @@ export function buildAddSourceTool(
 ) {
   return tool({
     description:
-      "Add a new source to this skill's tracked sources for future refreshes. " +
-      "Only add sources that are clearly high-quality and relevant: " +
-      "official docs, maintained blogs, release feeds, or GitHub repos. " +
-      `You can add up to ${MAX_ADDED_SOURCES_PER_RUN} sources per refresh.`,
+      "Permanently add a new tracked source so future refreshes automatically pull signals from it. " +
+      "Use when you discover a high-value recurring source during research: official docs, release feeds, changelogs, maintained blogs, or GitHub repos. " +
+      `Limit: ${MAX_ADDED_SOURCES_PER_RUN} new sources per refresh. Prefer quality over quantity — only add sources that will reliably produce useful signals over time.`,
     inputSchema: z.object({
-      label: z.string().min(3).max(80).describe("Human-readable name for this source"),
-      url: z.string().url().describe("The source URL (feed, docs page, or repo)"),
+      label: z.string().min(3).max(80).describe("Human-readable name, e.g. 'Next.js Changelog' or 'Tailwind CSS Blog'"),
+      url: z.string().url().describe("Stable feed or page URL that will continue producing content"),
       kind: z
         .enum(ALLOWED_SOURCE_KINDS as [string, ...string[]])
-        .describe("The type of source"),
+        .describe("Source type — use 'rss' or 'atom' for feeds, 'changelog' for release pages, 'docs' for doc pages, 'github' for repos"),
       tags: z
         .array(z.string())
         .min(1)
         .max(5)
-        .describe("Relevant topic tags for this source"),
+        .describe("Topic tags for categorization, e.g. ['react', 'server-components', 'rendering']"),
       rationale: z
         .string()
-        .describe("Why this source is valuable for this skill"),
+        .describe("One sentence: why this source will produce valuable ongoing signals for this skill"),
     }),
     execute: async ({ label, url, kind, tags, rationale }): Promise<AddSourceToolOutput> => {
       if (collector.sources.length >= MAX_ADDED_SOURCES_PER_RUN) {

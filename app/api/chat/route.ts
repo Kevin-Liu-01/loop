@@ -19,24 +19,42 @@ export async function POST(request: Request) {
 
       const { messages } = await request.json();
       const snapshot = await getLoopSnapshot();
+      const skillList = snapshot.skills.slice(0, 28).map((skill) => {
+        return [
+          `**${skill.title}** ($${skill.slug}) — ${skill.category}`,
+          skill.description,
+          skill.automations.length > 0 ? `Automations: ${skill.automations.map((a) => a.name).join(", ")}` : null,
+        ].filter(Boolean).join("\n  ");
+      });
+
+      const briefList = snapshot.dailyBriefs.map(
+        (brief) => `**${brief.title}**: ${brief.summary}`
+      );
+
       const context = [
-        "Loop local context:",
-        ...snapshot.skills.slice(0, 28).map((skill) => {
-          return [
-            `Skill: ${skill.title} ($${skill.slug})`,
-            `Category: ${skill.category}`,
-            `Description: ${skill.description}`,
-            `Prompt: ${skill.agents[0]?.defaultPrompt ?? `Use $${skill.slug}`}`,
-            `Automations: ${skill.automations.map((automation) => automation.name).join(", ") || "none"}`
-          ].join(" | ");
-        }),
-        "Daily briefs:",
-        ...snapshot.dailyBriefs.map((brief) => `${brief.title}: ${brief.summary}`)
+        "# Skill catalogue",
+        "",
+        ...skillList,
+        "",
+        "# Daily briefs",
+        "",
+        ...briefList,
       ].join("\n");
 
       const result = streamText({
         model,
-        system: `You are the in-house Loop copilot. Answer using the local skill catalogue and daily briefs only. Prefer exact skill names, category lanes, and concrete next steps.\n\n${context}`,
+        system: [
+          "You are Loop's desk copilot — a concise, knowledgeable assistant for navigating and understanding the user's skill catalogue.",
+          "",
+          "Guidelines:",
+          "- Answer from the skill catalogue and daily briefs below. Do not invent skills or briefs that aren't listed.",
+          "- Reference skills by their exact name and $slug, e.g. \"**Next.js** ($nextjs)\".",
+          "- When comparing or recommending skills, cite the category lane and key differences.",
+          "- Keep responses short and actionable: recommend concrete next steps, not abstract advice.",
+          "- If the user asks about something outside the catalogue, say so clearly and suggest which skill might be closest.",
+          "",
+          context,
+        ].join("\n"),
         messages
       });
 

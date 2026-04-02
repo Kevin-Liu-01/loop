@@ -167,7 +167,7 @@ async function discoverFromReadmeLinks(
               enabled: true,
               cadence: "weekly",
               status: "active",
-              prompt: `Refresh ${title} from upstream.`,
+              prompt: `Refresh ${title}: pull latest changes from the upstream source, search the web for recent developments, and update the skill with new information. Stay terse.`,
             },
             updates: [],
             iconUrl: githubAvatar(org),
@@ -277,7 +277,7 @@ async function discoverAndImportFromSource(
         enabled: true,
         cadence: "weekly",
         status: "active",
-        prompt: `Refresh ${title} from upstream source.`,
+        prompt: `Refresh ${title}: pull latest changes from the upstream source, search the web for recent developments, and update the skill with new information. Stay terse.`,
         preferredHour: DEFAULT_PREFERRED_HOUR,
       };
 

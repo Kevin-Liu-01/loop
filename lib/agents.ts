@@ -127,32 +127,37 @@ export function resolveLanguageModel(input: AgentRunInput): LanguageModel {
 
 export function serializeSkill(skill: SkillRecord): string {
   return [
-    `Skill: ${skill.title} ($${skill.slug})`,
-    `Version: ${skill.versionLabel}`,
-    `Category: ${skill.category}`,
-    `Origin: ${skill.origin}`,
-    `Description: ${skill.description}`,
-    `Prompt: ${skill.agents[0]?.defaultPrompt ?? `Use $${skill.slug}`}`,
-    `Body: ${skill.body.slice(0, 2400)}`
-  ].join("\n");
+    `### ${skill.title} ($${skill.slug})`,
+    "",
+    `- **Version**: ${skill.versionLabel}`,
+    `- **Category**: ${skill.category}`,
+    `- **Origin**: ${skill.origin}`,
+    `- **Description**: ${skill.description}`,
+    skill.agents[0]?.defaultPrompt ? `- **Default prompt**: ${skill.agents[0].defaultPrompt}` : null,
+    "",
+    "```",
+    skill.body.slice(0, 2400),
+    "```",
+  ].filter(Boolean).join("\n");
 }
 
 export function serializeMcp(mcp: ImportedMcpDocument): string {
   return [
-    `MCP: ${mcp.name}`,
-    `Version: ${mcp.versionLabel}`,
-    `Transport: ${mcp.transport}`,
-    `Manifest: ${mcp.manifestUrl}`,
-    mcp.docsUrl ? `Docs: ${mcp.docsUrl}` : null,
-    mcp.url ? `Endpoint: ${mcp.url}` : null,
-    mcp.command ? `Command: ${mcp.command} ${mcp.args.join(" ")}`.trim() : null,
-    mcp.installStrategy ? `Install: ${mcp.installStrategy}` : null,
-    mcp.authType ? `Auth: ${mcp.authType}` : null,
-    mcp.verificationStatus ? `Verification: ${mcp.verificationStatus}` : null,
-    mcp.sandboxSupported !== undefined ? `Sandbox supported: ${mcp.sandboxSupported}` : null,
-    mcp.envKeys.length > 0 ? `Env keys: ${mcp.envKeys.join(", ")}` : null,
-    mcp.sandboxNotes ? `Sandbox notes: ${mcp.sandboxNotes}` : null,
-    `Description: ${mcp.description}`
+    `### ${mcp.name} (v${mcp.versionLabel})`,
+    "",
+    `- **Transport**: ${mcp.transport}`,
+    `- **Manifest**: ${mcp.manifestUrl}`,
+    mcp.docsUrl ? `- **Docs**: ${mcp.docsUrl}` : null,
+    mcp.url ? `- **Endpoint**: ${mcp.url}` : null,
+    mcp.command ? `- **Command**: \`${mcp.command} ${mcp.args.join(" ")}\`` : null,
+    mcp.installStrategy ? `- **Install**: ${mcp.installStrategy}` : null,
+    mcp.authType ? `- **Auth**: ${mcp.authType}` : null,
+    mcp.verificationStatus ? `- **Verification**: ${mcp.verificationStatus}` : null,
+    mcp.sandboxSupported !== undefined ? `- **Sandbox**: ${mcp.sandboxSupported ? "supported" : "not supported"}` : null,
+    mcp.envKeys.length > 0 ? `- **Env keys**: ${mcp.envKeys.map((k) => `\`${k}\``).join(", ")}` : null,
+    mcp.sandboxNotes ? `- **Sandbox notes**: ${mcp.sandboxNotes}` : null,
+    "",
+    mcp.description,
   ]
     .filter(Boolean)
     .join("\n");
@@ -168,24 +173,39 @@ export function buildAgentContext(snapshot: LoopSnapshot, input: AgentRunInput):
       ? snapshot.mcps.filter((mcp) => input.selectedMcpIds?.includes(mcp.id))
       : [];
 
+  const defaultSystemPrompt = [
+    "You are a Loop agent — an autonomous operator that uses attached skills and MCP tools to accomplish tasks.",
+    "",
+    "Guidelines:",
+    "- Draw on attached skill knowledge to inform your approach, but validate against tool output and real data.",
+    "- When MCP tools are available, prefer using them over improvising or guessing.",
+    "- Be concrete: produce code, commands, or structured output — not vague plans.",
+    "- If you lack the information or tools to complete a task, say so clearly.",
+  ].join("\n");
+
   return [
-    input.systemPrompt?.trim() || "You are Loop's configurable agent runner. Use attached skills and MCP definitions precisely.",
+    input.systemPrompt?.trim() || defaultSystemPrompt,
     "",
-    `Agent name: ${input.agentName?.trim() || "Untitled agent"}`,
-    `Model: ${input.model}`,
-    `Provider: ${getPreset(input.providerId)?.label ?? input.providerId}`,
+    "---",
     "",
-    "Attached skills:",
-    ...(selectedSkills.length > 0 ? selectedSkills.map(serializeSkill) : ["No explicit skills attached."]),
+    `**Agent**: ${input.agentName?.trim() || "Untitled agent"} · **Model**: ${input.model} · **Provider**: ${getPreset(input.providerId)?.label ?? input.providerId}`,
     "",
-    "Attached MCP definitions:",
+    "# Attached skills",
+    "",
+    ...(selectedSkills.length > 0 ? selectedSkills.map(serializeSkill) : ["_No skills attached._"]),
+    "",
+    "# MCP definitions",
+    "",
     ...(selectedMcps.length > 0
       ? selectedMcps.map(serializeMcp)
-      : ["No MCPs attached."]),
+      : ["_No MCPs attached._"]),
     "",
-    "Daily briefs:",
-    ...snapshot.dailyBriefs.map((brief) => `${brief.title}: ${brief.summary}`)
-  ].join("\n\n");
+    "# Daily briefs",
+    "",
+    ...(snapshot.dailyBriefs.length > 0
+      ? snapshot.dailyBriefs.map((brief) => `- **${brief.title}**: ${brief.summary}`)
+      : ["_No briefs available._"]),
+  ].join("\n");
 }
 
 const GATEWAY_EDITOR_MODEL = process.env.LOOP_MODEL ?? "openai/gpt-5-mini";

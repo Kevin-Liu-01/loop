@@ -21,14 +21,15 @@ async function getStderr(result: Awaited<ReturnType<Sandbox["runCommand"]>>): Pr
 function buildExecuteCodeTool(sandbox: Sandbox) {
   return tool({
     description:
-      "Write and run code in the sandbox. Use console.log (JS) or print (Python) to output values.",
+      "Write and execute code in the sandbox. Output is captured from stdout (console.log for JS, print for Python). " +
+      "Specify packages to auto-install them before execution. Code runs in a fresh invocation each time — persist state via files if needed.",
     inputSchema: z.object({
-      code: z.string().describe("The code to execute"),
-      language: z.enum(["javascript", "python"]).describe("Language to run"),
+      code: z.string().describe("The code to execute. Use console.log (JS) or print (Python) to produce output visible in the result."),
+      language: z.enum(["javascript", "python"]).describe("Execution runtime"),
       packages: z
         .array(z.string())
         .optional()
-        .describe("Packages to install before running")
+        .describe("npm (JS) or pip (Python) packages to install before running, e.g. ['lodash'] or ['requests', 'beautifulsoup4']")
     }),
     execute: async ({ code, language, packages }) => {
       if (packages && packages.length > 0) {
@@ -67,13 +68,14 @@ function buildExecuteCodeTool(sandbox: Sandbox) {
 function buildRunCommandTool(sandbox: Sandbox) {
   return tool({
     description:
-      "Run a shell command in the sandbox. Use for curl, ls, git, npm, pip, etc.",
+      "Run a shell command in the sandbox and return stdout, stderr, and exit code. " +
+      "Use for system operations: curl for HTTP requests, ls/cat for file inspection, git for repos, npm/pip for package management.",
     inputSchema: z.object({
-      command: z.string().describe("The command to run"),
+      command: z.string().describe("The executable to run (e.g. 'curl', 'ls', 'git', 'npm')"),
       args: z
         .array(z.string())
         .optional()
-        .describe("Command arguments")
+        .describe("Arguments passed to the command, e.g. ['-s', 'https://api.example.com/data']")
     }),
     execute: async ({ command, args }) => {
       const result = await sandbox.runCommand({
@@ -92,10 +94,12 @@ function buildRunCommandTool(sandbox: Sandbox) {
 
 function buildWriteFileTool(sandbox: Sandbox) {
   return tool({
-    description: "Write content to a file in the sandbox filesystem.",
+    description:
+      "Create or overwrite a file in the sandbox. Parent directories are created automatically. " +
+      "Use to scaffold project files, write configs, save generated output, or prepare input for executeCode.",
     inputSchema: z.object({
-      path: z.string().describe("File path in the sandbox"),
-      content: z.string().describe("File content to write")
+      path: z.string().describe("Absolute or relative path in the sandbox, e.g. '/app/index.js' or 'output.json'"),
+      content: z.string().describe("Complete file content to write")
     }),
     execute: async ({ path, content }) => {
       const escaped = content.replace(/'/g, "'\\''");
@@ -116,9 +120,10 @@ function buildWriteFileTool(sandbox: Sandbox) {
 
 function buildReadFileTool(sandbox: Sandbox) {
   return tool({
-    description: "Read the contents of a file in the sandbox.",
+    description:
+      "Read a file's contents from the sandbox. Use to inspect generated output, verify writes, check configs, or debug file state.",
     inputSchema: z.object({
-      path: z.string().describe("File path to read")
+      path: z.string().describe("Path to the file to read")
     }),
     execute: async ({ path }) => {
       const result = await sandbox.runCommand({
