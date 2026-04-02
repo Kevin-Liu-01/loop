@@ -17,7 +17,7 @@ function SourceIcon({ src, size }: { src: string; size: number }) {
   const pad = Math.max(2, Math.round(size * 0.14));
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-black/10"
+      className="inline-flex shrink-0 items-center justify-center bg-white ring-1 ring-black/10"
       style={{ width: size, height: size }}
     >
       <img
@@ -64,7 +64,22 @@ type ApiResponse = {
   totalSkills: number;
 };
 
-export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } = {}) {
+function SectionHeader() {
+  return (
+    <div>
+      <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+        Discover
+      </span>
+      <h2 className="m-0 font-serif text-xl font-medium tracking-[-0.02em] text-ink">
+        External Skill Sources
+      </h2>
+    </div>
+  );
+}
+
+export function ExternalSkillSources({
+  onSuccess,
+}: { onSuccess?: () => void } = {}) {
   const router = useRouter();
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,11 +99,17 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
         const json = (await res.json()) as ApiResponse;
         setData(json);
         if (!json.sources || json.sources.length === 0) {
-          setError("No external sources returned. GitHub API rate limit may have been reached.");
+          setError(
+            "No external sources returned. GitHub API rate limit may have been reached.",
+          );
         }
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to fetch external sources");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch external sources",
+        );
       })
       .finally(() => setLoading(false));
   }, []);
@@ -157,19 +178,14 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
         }
       });
     },
-    [onSuccess, router, startTrackedOp]
+    [onSuccess, router, startTrackedOp],
   );
 
   if (loading) {
     return (
       <Panel className="grid gap-4 content-start">
         <PanelHead>
-          <div>
-            <span className="inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-              Discover
-            </span>
-            <h2>External Skill Sources</h2>
-          </div>
+          <SectionHeader />
         </PanelHead>
         <p className="text-sm text-ink-faint">Loading external sources...</p>
       </Panel>
@@ -180,19 +196,14 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
     return (
       <Panel className="grid gap-4 content-start">
         <PanelHead>
-          <div>
-            <span className="inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-              Discover
-            </span>
-            <h2>External Skill Sources</h2>
-          </div>
+          <SectionHeader />
         </PanelHead>
         {error ? (
           <p className="text-sm text-ink-soft">{error}</p>
         ) : (
           <p className="text-sm text-ink-faint">
-            No external skill sources available right now. GitHub API rate limits may apply
-            for unauthenticated requests.
+            No external skill sources available right now. GitHub API rate
+            limits may apply for unauthenticated requests.
           </p>
         )}
       </Panel>
@@ -202,20 +213,20 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
   return (
     <Panel className="grid gap-5 content-start">
       <PanelHead>
-        <div>
-          <span className="inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-            Discover
+        <SectionHeader />
+        <Tip
+          content="Total discovered skills across all external sources"
+          side="left"
+        >
+          <span>
+            <Badge color="green">{data.totalSkills} available</Badge>
           </span>
-          <h2>External Skill Sources</h2>
-        </div>
-        <Tip content="Total discovered skills across all external sources" side="left">
-          <span><Badge color="green">{data.totalSkills} available</Badge></span>
         </Tip>
       </PanelHead>
 
       <p className="text-sm text-ink-soft">
-        Import skills from Anthropic, OpenAI, and community repositories. Each skill becomes an
-        editable, auto-updating loop in your workspace.
+        Import skills from Anthropic, OpenAI, and community repositories. Each
+        skill becomes an editable, auto-updating loop in your workspace.
       </p>
 
       {message && <p className="text-sm text-ink-soft">{message}</p>}
@@ -223,23 +234,58 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
       <div className="grid gap-4">
         {data.sources.map((result) => (
           <details
-            className="group rounded-2xl border border-line bg-paper-3 open:bg-paper-2"
+            className="group border border-line bg-paper-3 open:bg-paper-2"
             key={result.source.id}
           >
             <summary className="flex cursor-pointer items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
               <SourceIcon size={28} src={result.source.iconUrl} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <strong className="text-sm font-semibold text-ink">{result.source.name}</strong>
-                  <Badge color="blue" size="sm">{result.count} skills</Badge>
-                  <Tip content={result.source.trustTier === "official" ? "Maintained by the vendor" : "Community-maintained source"} side="top">
-                    <span><Badge color={result.source.trustTier === "official" ? "orange" : "neutral"} size="sm">{formatTagLabel(result.source.trustTier)}</Badge></span>
+                  <strong className="text-sm font-semibold text-ink">
+                    {result.source.name}
+                  </strong>
+                  <Badge color="blue" size="sm">
+                    {result.count} skills
+                  </Badge>
+                  <Tip
+                    content={
+                      result.source.trustTier === "official"
+                        ? "Maintained by the vendor"
+                        : "Community-maintained source"
+                    }
+                    side="top"
+                  >
+                    <span>
+                      <Badge
+                        color={
+                          result.source.trustTier === "official"
+                            ? "orange"
+                            : "neutral"
+                        }
+                        size="sm"
+                      >
+                        {formatTagLabel(result.source.trustTier)}
+                      </Badge>
+                    </span>
                   </Tip>
-                  <Tip content={result.source.discoveryMode === "canonical" ? "Fixed set of known skill paths" : "Discovered via search heuristics"} side="top">
-                    <span><Badge color="indigo" size="sm">{formatTagLabel(result.source.discoveryMode)}</Badge></span>
+                  <Tip
+                    content={
+                      result.source.discoveryMode === "canonical"
+                        ? "Fixed set of known skill paths"
+                        : "Discovered via search heuristics"
+                    }
+                    side="top"
+                  >
+                    <span>
+                      <Badge color="indigo" size="sm">
+                        {formatTagLabel(result.source.discoveryMode)}
+                      </Badge>
+                    </span>
                   </Tip>
                 </div>
-                <p className="m-0 line-clamp-1 text-xs text-ink-faint">{result.source.description}</p>
+                <p className="m-0 line-clamp-1 text-xs text-ink-faint">
+                  {result.source.description}
+                </p>
               </div>
               <Tip content="Open repository homepage" side="left">
                 <a
@@ -268,18 +314,23 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
                 {result.skills.map((skill) => (
                   <div
                     className={cn(
-                      "flex items-center gap-3 rounded-xl border border-line bg-paper-3 px-3 py-2.5",
-                      importingSlug === skill.slug && "opacity-60"
+                      "flex items-center gap-3 border border-line bg-paper-3 px-3 py-2.5",
+                      importingSlug === skill.slug && "opacity-60",
                     )}
                     key={`${skill.sourceId}:${skill.path}`}
                   >
                     <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium text-ink">{skill.slug}</span>
+                      <span className="text-sm font-medium text-ink">
+                        {skill.slug}
+                      </span>
                       <p className="m-0 text-xs text-ink-faint">
                         {skill.sourceId} · {skill.path}
                       </p>
                     </div>
-                    <Tip content="Import skill and start tracking updates" side="left">
+                    <Tip
+                      content="Import skill and start tracking updates"
+                      side="left"
+                    >
                       <Button
                         disabled={isPending && importingSlug === skill.slug}
                         onClick={() => handleImport(skill, result.source)}
@@ -287,7 +338,9 @@ export function ExternalSkillSources({ onSuccess }: { onSuccess?: () => void } =
                         variant="ghost"
                       >
                         <DownloadIcon className="h-3.5 w-3.5" />
-                        {importingSlug === skill.slug ? "Importing..." : "Import"}
+                        {importingSlug === skill.slug
+                          ? "Importing..."
+                          : "Import"}
                       </Button>
                     </Tip>
                   </div>

@@ -6,6 +6,7 @@ import {
   PlusIcon,
   MessageIcon,
   TerminalIcon,
+  TrashIcon,
 } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { useAppTimezone } from "@/hooks/use-app-timezone";
@@ -25,6 +26,7 @@ type ConversationSummary = {
 type SandboxSidebarProps = {
   currentId: string | null;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
   onNew: () => void;
   version: number;
   className?: string;
@@ -33,6 +35,7 @@ type SandboxSidebarProps = {
 export function SandboxSidebar({
   currentId,
   onSelect,
+  onDelete,
   onNew,
   version,
   className,
@@ -149,6 +152,18 @@ export function SandboxSidebar({
                       <span>{formatRelativeDate(c.updatedAt, timeZone)}</span>
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    aria-label="Delete session"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-ink-faint/0 transition-colors group-hover:text-ink-faint hover:!text-danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(c.id);
+                    }}
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                  </button>
                 </button>
               );
             })}

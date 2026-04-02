@@ -821,7 +821,7 @@ html[data-theme="dark"] .diff-viewer__word--removed {
 .chat-bubble--assistant::before {
   content: "";
   position: absolute;
-  top: 10px;
+  top: 14px;
   left: -6px;
   width: 0;
   height: 0;
@@ -833,7 +833,7 @@ html[data-theme="dark"] .diff-viewer__word--removed {
 .chat-bubble--assistant::after {
   content: "";
   position: absolute;
-  top: 10px;
+  top: 14px;
   left: -5px;
   width: 0;
   height: 0;
@@ -850,7 +850,7 @@ html[data-theme="dark"] .diff-viewer__word--removed {
 .chat-bubble--user::before {
   content: "";
   position: absolute;
-  top: 10px;
+  top: 12px;
   right: -6px;
   width: 0;
   height: 0;

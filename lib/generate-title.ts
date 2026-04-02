@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateText, type LanguageModel } from "ai";
 
 import { getGatewayEditorModel } from "@/lib/agents";
 
@@ -11,11 +11,13 @@ const TITLE_SYSTEM_PROMPT = [
 /**
  * Generate a short conversation title from the first few messages.
  * Falls back to truncated first-user-message if the model is unavailable.
+ * When `externalModel` is supplied it takes priority over the gateway editor model.
  */
 export async function generateConversationTitle(
   messages: Array<{ role: string; content: string }>,
+  externalModel?: LanguageModel,
 ): Promise<string> {
-  const model = getGatewayEditorModel();
+  const model = externalModel ?? getGatewayEditorModel();
   if (!model) return fallbackTitle(messages);
 
   const transcript = messages

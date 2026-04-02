@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { resolveLanguageModel } from "@/lib/agents";
 import { authErrorResponse, getSessionUser } from "@/lib/auth";
 import { generateConversationTitle } from "@/lib/generate-title";
 import { withApiUsage } from "@/lib/usage-server";
@@ -14,6 +15,11 @@ const bodySchema = z.object({
     )
     .min(1)
     .max(10),
+  providerId: z.string().optional(),
+  model: z.string().optional(),
+  compatibleBaseUrl: z.string().optional(),
+  apiKeyEnvVar: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 export async function POST(request: Request) {
@@ -27,7 +33,23 @@ export async function POST(request: Request) {
         }
 
         const payload = bodySchema.parse(await request.json());
-        const title = await generateConversationTitle(payload.messages);
+
+        let externalModel;
+        if (payload.providerId && payload.model) {
+          try {
+            externalModel = resolveLanguageModel({
+              providerId: payload.providerId,
+              model: payload.model,
+              compatibleBaseUrl: payload.compatibleBaseUrl,
+              apiKeyEnvVar: payload.apiKeyEnvVar,
+              headers: payload.headers,
+            });
+          } catch {
+            /* fall through to gateway/fallback */
+          }
+        }
+
+        const title = await generateConversationTitle(payload.messages, externalModel);
 
         return Response.json({ ok: true, title });
       } catch (error) {

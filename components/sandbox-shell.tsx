@@ -174,8 +174,10 @@ export function SandboxShell({
 
   // ── Input ──
   const [input, setInput] = useState("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const userScrolledUpRef = useRef(false);
 
   // ── Refs for transport body ──
   const sandboxIdRef = useRef<string | null>(null);
@@ -321,8 +323,28 @@ export function SandboxShell({
 
   // ── Auto-scroll ──
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      userScrolledUpRef.current = distanceFromBottom > 80;
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (userScrolledUpRef.current) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const isStreaming = status === "streaming" || status === "submitted";
+    if (isStreaming) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, status]);
 
   // ── Auto-save when streaming completes ──
   const prevStatusRef = useRef(status);
@@ -343,6 +365,7 @@ export function SandboxShell({
   }, [status]);
 
   const titleGeneratedRef = useRef(false);
+  const generatedTitleRef = useRef<string | null>(null);
 
   function serializeMessages(
     msgs: typeof messages,
@@ -405,17 +428,21 @@ export function SandboxShell({
     const msgs = messagesRef.current;
     const serialized = serializeMessages(msgs);
 
-    const firstUserMsg = msgs.find((m) => m.role === "user");
-    const placeholderTitle = firstUserMsg
-      ? extractTextFromParts(
-          (firstUserMsg.parts ?? []) as Array<{
-            type?: string;
-            text?: string;
-          }>,
-        ).slice(0, 100)
-      : "Untitled session";
-
     const isFirstSave = !conversationIdRef.current;
+
+    const title =
+      generatedTitleRef.current ??
+      (() => {
+        const firstUserMsg = msgs.find((m) => m.role === "user");
+        return firstUserMsg
+          ? extractTextFromParts(
+              (firstUserMsg.parts ?? []) as Array<{
+                type?: string;
+                text?: string;
+              }>,
+            ).slice(0, 100)
+          : "Untitled session";
+      })();
 
     try {
       const res = await fetch("/api/conversations", {
@@ -424,7 +451,7 @@ export function SandboxShell({
         body: JSON.stringify({
           id: conversationIdRef.current,
           channel: "sandbox",
-          title: placeholderTitle,
+          title,
           messages: serialized,
           model: configRef.current.model,
           providerId: configRef.current.providerId,
@@ -450,6 +477,7 @@ export function SandboxShell({
     serialized: Array<{ role: string; content: string }>,
   ) {
     try {
+      const cfg = configRef.current;
       const titleRes = await fetch("/api/conversations/title", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -458,10 +486,15 @@ export function SandboxShell({
             role: m.role,
             content: m.content,
           })),
+          providerId: cfg.providerId,
+          model: cfg.model,
+          apiKeyEnvVar: cfg.apiKeyEnvVar || undefined,
         }),
       });
       const titleData = (await titleRes.json()) as { title?: string };
       if (!titleData.title) return;
+
+      generatedTitleRef.current = titleData.title;
 
       await fetch("/api/conversations", {
         method: "POST",
@@ -555,6 +588,7 @@ export function SandboxShell({
     const text = input.trim();
     if (!text) return;
     setInput("");
+    userScrolledUpRef.current = false;
 
     if (viewConvo) {
       setViewConvo(null);
@@ -608,7 +642,19 @@ export function SandboxShell({
     setConversationId(null);
     setChatKey(String(Date.now()));
     titleGeneratedRef.current = false;
+    generatedTitleRef.current = null;
     if (sandboxIdRef.current) stopSandbox();
+  }
+
+  async function handleDeleteConversation(id: string) {
+    try {
+      const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      if (id === conversationId) handleNewConversation();
+      setSidebarVersion((v) => v + 1);
+    } catch {
+      /* best effort */
+    }
   }
 
   // ── Config helpers ──
@@ -656,6 +702,7 @@ export function SandboxShell({
             currentId={conversationId}
             onNew={handleNewConversation}
             onSelect={handleSelectConversation}
+            onDelete={handleDeleteConversation}
             version={sidebarVersion}
           />
         </aside>
@@ -679,7 +726,7 @@ export function SandboxShell({
 
         {/* Messages (scroll) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+          <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {showEmptyHero ? (
               <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center sm:px-6 sm:py-12">
                 <div className="grid max-w-lg gap-6">
