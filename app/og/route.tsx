@@ -131,7 +131,7 @@ function OgCard({
         style={{
           position: "absolute",
           top: "40px",
-          right: "-120px",
+          right: "-200px",
           bottom: "40px",
           width: "820px",
           display: "flex",
