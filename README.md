@@ -1,6 +1,22 @@
-# Loop
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/loop-mark-light.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="public/brand/loop-mark.svg" />
+    <img src="public/brand/loop-mark.svg" alt="Loop" width="72" height="64" />
+  </picture>
+</p>
 
-Loop is a Next.js operator desk for self-updating agent skills.
+<h1 align="center">Loop</h1>
+
+<p align="center">
+  An operator desk for self-updating agent skills, built with Next.js.
+</p>
+
+<p align="center">
+  <a href="#product-model">Product model</a> · <a href="#architecture">Architecture</a> · <a href="#local-development">Local dev</a> · <a href="#deployment">Deploy</a>
+</p>
+
+---
 
 The name "Loop" was inspired by **Aryan Mahajan** — thanks for the spark.
 
@@ -310,6 +326,32 @@ Run all tests:
 ```bash
 pnpm test
 ```
+
+## Brand and OpenGraph
+
+### Logos
+
+| File | Variant |
+|------|---------|
+| `public/brand/loop-mark.svg` | Gear mark — dark chip (for light backgrounds) |
+| `public/brand/loop-mark-light.svg` | Gear mark — light chip (for dark backgrounds) |
+| `public/brand/loop-icon-accent.svg` | App icon — accent orange background with white gear |
+| `app/icon.svg` | Favicon — dark background with white gear |
+
+The mark is a golden-ratio gear with a detachable chip. The animated React version lives in `components/loop-logo.tsx` (spinning gear + floating chip on hover), with path data in `lib/loop-logo-paths.ts`.
+
+### OpenGraph images
+
+OG images are generated dynamically at `/og` via `next/og` (`app/og/route.tsx`). The route accepts optional `title`, `description`, and `category` query params. When none are provided it renders the default card.
+
+The card uses:
+
+- warm dark gradient background with radial orange glow
+- the gear icon as a header lockup
+- `Neue Montreal` (Book + Bold) loaded from local TTF files in `app/og/`
+- a product screenshot from `/images/og.png` bleeding off the right edge
+
+SEO metadata helpers (titles, descriptions, OG images, JSON-LD) are centralized in `lib/seo.ts`.
 
 ## Short version
 
