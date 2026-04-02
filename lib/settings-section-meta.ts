@@ -63,6 +63,30 @@ export const SETTINGS_SECTION_META: Record<SettingsNavId, SettingsSectionMeta> =
       },
     ],
   },
+  branding: {
+    heading: "Logos & brand",
+    lead:
+      "Download Loop brand assets for integrations, presentations, and social previews. All marks are provided in SVG for crisp rendering at any size.",
+    beforePrimary: [
+      {
+        title: "Usage guidelines",
+        body:
+          "Use the Loop mark and app icon as-is — don't recolor, rotate, distort, or add effects. Maintain clear space equal to at least the icon's inner padding on all sides. When placing the mark on a busy background, use the app icon variant with the dark container.",
+      },
+    ],
+    afterPrimary: [
+      {
+        title: "Open Graph image",
+        body:
+          "The OG image is generated dynamically at /og and accepts optional title, description, and category query parameters. The default version (no params) is used as the site-wide social preview. Right-click the preview to save a PNG snapshot.",
+      },
+      {
+        title: "Brand colors",
+        body:
+          "The accent orange (#E8650A) is the primary brand color and should be used sparingly for emphasis. The dark background (#0a0a09) and light foreground (#F5F5F5) form the core contrast pair. Avoid using the accent on light backgrounds without sufficient surrounding contrast.",
+      },
+    ],
+  },
   subscription: {
     heading: "Subscription & billing",
     lead:

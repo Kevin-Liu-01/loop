@@ -34,6 +34,7 @@ import {
   LogOut,
   MessageSquare,
   Package,
+  Palette,
   PanelLeft,
   PanelRight,
   PencilLine,
@@ -47,6 +48,7 @@ import {
   Send,
   Settings,
   Share2,
+  SlidersHorizontal,
   ShieldCheck,
   Sparkles,
   Square,
@@ -97,6 +99,7 @@ export const PencilIcon = wrapIcon(PencilLine);
 export const EditFileIcon = wrapIcon(FilePenLine);
 export const RefreshIcon = wrapIcon(RefreshCw);
 export const SettingsIcon = wrapIcon(Settings);
+export const SlidersIcon = wrapIcon(SlidersHorizontal);
 export const PlusIcon = wrapIcon(Plus);
 export const TerminalIcon = wrapIcon(Terminal);
 export const CodeIcon = wrapIcon(Code);
@@ -134,6 +137,7 @@ export const FolderIcon = wrapIcon(Folder);
 export const FolderOpenIcon = wrapIcon(FolderOpen);
 export const HardDriveIcon = wrapIcon(HardDrive);
 export const PackageIcon = wrapIcon(Package);
+export const PaletteIcon = wrapIcon(Palette);
 export const PanelRightIcon = wrapIcon(PanelRight);
 export const TimerIcon = wrapIcon(Timer);
 export const ChevronLeftIcon = wrapIcon(ChevronLeft);

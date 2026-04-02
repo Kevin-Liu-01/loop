@@ -461,7 +461,10 @@ export function SandboxShell({
       if (data.id && !conversationIdRef.current) {
         setConversationId(data.id);
       }
-      setSidebarVersion((v) => v + 1);
+
+      if (isFirstSave) {
+        setSidebarVersion((v) => v + 1);
+      }
 
       if (isFirstSave && data.id && !titleGeneratedRef.current) {
         titleGeneratedRef.current = true;
