@@ -92,6 +92,9 @@ export function buildLoopRunResult(run?: LoopRunRecord | null): LoopUpdateResult
     items: run.sources.flatMap((source) => source.items).slice(0, 4),
     changedSections: run.changedSections,
     bodyChanged: run.bodyChanged,
-    editorModel: run.editorModel
+    editorModel: run.editorModel,
+    reasoningSteps: run.reasoningSteps,
+    searchesUsed: run.searchesUsed,
+    addedSources: run.addedSources
   };
 }

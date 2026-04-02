@@ -1,6 +1,11 @@
 import { generateText, stepCountIs, tool, type LanguageModel } from "ai";
 import { z } from "zod";
 
+import { buildAddSourceTool, type AddedSourceCollector } from "@/lib/agent-tools/add-source";
+import { DEFAULT_SEARCH_BUDGET } from "@/lib/agent-tools/constants";
+import { buildFetchPageTool } from "@/lib/agent-tools/fetch-page";
+import type { SearchBudget } from "@/lib/agent-tools/types";
+import { buildWebSearchTool } from "@/lib/agent-tools/web-search";
 import { diffMultilineText } from "@/lib/text-diff";
 import type {
   AgentReasoningStep,
@@ -8,12 +13,17 @@ import type {
   DiffLine,
   LoopUpdateSourceLog,
   SkillUpdateEntry,
+  SourceDefinition,
   UserSkillDocument
 } from "@/lib/types";
 
 const MAX_REASONING_CHARS = 2000;
+const MAX_TOOL_RESULT_CHARS = 2000;
+const MAX_SEARCH_RESULT_CHARS = 4000;
 const MAX_DIFF_LINES_PER_STEP = 80;
-const MAX_AGENT_STEPS = 8;
+const MAX_AGENT_STEPS = 12;
+
+const LARGE_OUTPUT_TOOLS = new Set(["web_search", "fetch_page"]);
 
 export type SkillRevisionDraft = {
   update: SkillUpdateEntry;
@@ -22,6 +32,8 @@ export type SkillRevisionDraft = {
   bodyChanged: boolean;
   changedSections: string[];
   editorModel: string;
+  addedSources: SourceDefinition[];
+  searchesUsed: number;
 };
 
 type EditorAgentResult = SkillRevisionDraft & {
@@ -39,7 +51,11 @@ type MutableRevisionState = {
   finalized: boolean;
 };
 
-function buildSystemPrompt(skill: UserSkillDocument, sourceLogs: LoopUpdateSourceLog[]): string {
+function buildSystemPrompt(
+  skill: UserSkillDocument,
+  sourceLogs: LoopUpdateSourceLog[],
+  searchBudgetMax: number
+): string {
   const sourceList = sourceLogs
     .map((s) => {
       const items = s.items
@@ -52,7 +68,7 @@ function buildSystemPrompt(skill: UserSkillDocument, sourceLogs: LoopUpdateSourc
 
   return [
     `You are an autonomous skill editor for "${skill.title}".`,
-    "Your job is to inspect fresh external signals and decide whether and how to rewrite the skill body.",
+    "Your job is to inspect fresh external signals, optionally search the web for more, and decide whether and how to rewrite the skill body.",
     "",
     "Operating rules:",
     "- Preserve existing intent and structure unless signals justify a concrete edit.",
@@ -63,9 +79,15 @@ function buildSystemPrompt(skill: UserSkillDocument, sourceLogs: LoopUpdateSourc
     "Workflow:",
     "1. Use analyze_signals to review what each source brought in.",
     "2. Use read_current_skill to see the full skill body.",
-    "3. Reason about what should change (explain your thinking in your messages).",
-    "4. Use revise_skill to apply your edits.",
-    "5. Use finalize when you are satisfied with the revision.",
+    "3. Identify gaps: stale sections, missing context, thin coverage, unverified claims.",
+    "4. Use web_search to fill those gaps. Be specific with queries. Prioritize high-value searches.",
+    "5. Use fetch_page to deep-read any promising URL that web_search surfaced.",
+    "6. If you discover a high-quality recurring source (official docs, maintained blog, release feed, GitHub repo), use add_source to track it for future refreshes.",
+    "7. Reason about what should change (explain your thinking in your messages).",
+    "8. Use revise_skill to apply your edits.",
+    "9. Use finalize when you are satisfied with the revision.",
+    "",
+    `Web search budget: ${searchBudgetMax} queries this refresh. Use them strategically.`,
     "",
     `Automation instruction: ${skill.automation.prompt}`,
     "",
@@ -168,6 +190,19 @@ function buildFinalizeTool(state: MutableRevisionState) {
   });
 }
 
+function omitVerboseArgs(
+  args: Record<string, unknown>,
+  keys: string[]
+): Record<string, unknown> {
+  const filtered = { ...args };
+  for (const key of keys) {
+    if (key in filtered && typeof filtered[key] === "string") {
+      filtered[key] = `[${(filtered[key] as string).length} chars omitted]`;
+    }
+  }
+  return filtered;
+}
+
 function extractStepsFromResponse(response: { steps: any[] }, skill: UserSkillDocument): AgentReasoningStep[] {
   const steps: AgentReasoningStep[] = [];
   let stepIndex = 0;
@@ -199,18 +234,27 @@ function extractStepsFromResponse(response: { steps: any[] }, skill: UserSkillDo
       }
 
       const toolOutput = tr?.output;
+      const maxChars = LARGE_OUTPUT_TOOLS.has(tc.toolName)
+        ? MAX_SEARCH_RESULT_CHARS
+        : MAX_TOOL_RESULT_CHARS;
       const resultStr = toolOutput
         ? typeof toolOutput === "string"
-          ? toolOutput.slice(0, MAX_REASONING_CHARS)
-          : JSON.stringify(toolOutput).slice(0, MAX_REASONING_CHARS)
+          ? toolOutput.slice(0, maxChars)
+          : JSON.stringify(toolOutput).slice(0, maxChars)
         : undefined;
+
+      const logArgs = tc.toolName === "revise_skill"
+        ? omitVerboseArgs(toolInput, ["revisedBody"])
+        : tc.toolName === "fetch_page"
+          ? toolInput
+          : toolInput;
 
       steps.push({
         index: stepIndex++,
         reasoning: reasoning && !steps.some((s) => s.reasoning === reasoning) ? reasoning : "",
         toolCall: {
           name: tc.toolName,
-          args: toolInput
+          args: logArgs
         },
         toolResult: resultStr,
         diffLines,
@@ -232,6 +276,10 @@ export async function runSkillEditorAgent(
 ): Promise<EditorAgentResult> {
   const generatedAt = new Date().toISOString();
 
+  const searchBudgetMax = skill.automation.searchBudget ?? DEFAULT_SEARCH_BUDGET;
+  const searchBudget: SearchBudget = { max: searchBudgetMax, used: 0 };
+  const sourceCollector: AddedSourceCollector = { sources: [] };
+
   const revisionState: MutableRevisionState = {
     body: skill.body,
     description: skill.description,
@@ -246,14 +294,17 @@ export async function runSkillEditorAgent(
   const tools = {
     analyze_signals: buildAnalyzeSignalsTool(sourceLogs),
     read_current_skill: buildReadCurrentSkillTool(skill),
+    web_search: buildWebSearchTool(searchBudget),
+    fetch_page: buildFetchPageTool(),
+    add_source: buildAddSourceTool(skill.sources, skill.category, sourceCollector),
     revise_skill: buildReviseSkillTool(skill, revisionState),
     finalize: buildFinalizeTool(revisionState)
   };
 
   const response = await generateText({
     model,
-    system: buildSystemPrompt(skill, sourceLogs),
-    prompt: `You have ${sourceLogs.length} sources with ${signals.length} total signals. Analyze them, read the current skill, decide what to change, revise the skill, then finalize.`,
+    system: buildSystemPrompt(skill, sourceLogs, searchBudgetMax),
+    prompt: `You have ${sourceLogs.length} sources with ${signals.length} total signals and a web search budget of ${searchBudgetMax} queries. Analyze existing signals, search the web to fill gaps, read the current skill, decide what to change, revise the skill, then finalize.`,
     tools,
     stopWhen: stepCountIs(MAX_AGENT_STEPS)
   });
@@ -267,6 +318,8 @@ export async function runSkillEditorAgent(
   }
 
   const topItems = signals.slice(0, 4);
+  const addedSources = sourceCollector.sources;
+  const searchesUsed = searchBudget.used;
 
   if (!revisionState.revised) {
     return {
@@ -278,13 +331,17 @@ export async function runSkillEditorAgent(
         items: topItems,
         bodyChanged: false,
         changedSections: [],
-        editorModel: modelLabel
+        editorModel: modelLabel,
+        addedSources: addedSources.length > 0 ? addedSources : undefined,
+        searchesUsed: searchesUsed > 0 ? searchesUsed : undefined
       },
       nextBody: skill.body,
       nextDescription: skill.description,
       bodyChanged: false,
       changedSections: [],
       editorModel: modelLabel,
+      addedSources,
+      searchesUsed,
       reasoningSteps
     };
   }
@@ -302,13 +359,17 @@ export async function runSkillEditorAgent(
       items: topItems,
       bodyChanged,
       changedSections: revisionState.changedSections,
-      editorModel: modelLabel
+      editorModel: modelLabel,
+      addedSources: addedSources.length > 0 ? addedSources : undefined,
+      searchesUsed: searchesUsed > 0 ? searchesUsed : undefined
     },
     nextBody: revisionState.body,
     nextDescription: revisionState.description,
     bodyChanged,
     changedSections: revisionState.changedSections,
     editorModel: modelLabel,
+    addedSources,
+    searchesUsed,
     reasoningSteps
   };
 }

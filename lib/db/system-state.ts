@@ -37,7 +37,9 @@ export async function recordLoopRun(entry: LoopRunRecord): Promise<void> {
       sources: entry.sources,
       diff_lines: entry.diffLines,
       reasoning_steps: entry.reasoningSteps ?? null,
-      error_message: entry.errorMessage ?? null
+      error_message: entry.errorMessage ?? null,
+      searches_used: entry.searchesUsed ?? null,
+      added_sources: entry.addedSources ?? null
     } as never,
     { onConflict: "id" }
   );
@@ -62,31 +64,36 @@ export async function listLoopRuns(options?: {
   const { data, error } = await query;
   if (error) throw new Error(`listLoopRuns failed: ${error.message}`);
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    slug: row.skill_slug,
-    title: row.title,
-    origin: row.origin as LoopRunRecord["origin"],
-    trigger: row.trigger as LoopRunRecord["trigger"],
-    status: row.status as LoopRunRecord["status"],
-    startedAt: row.started_at,
-    finishedAt: row.finished_at,
-    previousVersionLabel: row.previous_version_label ?? undefined,
-    nextVersionLabel: row.next_version_label ?? undefined,
-    href: row.href ?? undefined,
-    summary: row.summary ?? undefined,
-    whatChanged: row.what_changed ?? undefined,
-    bodyChanged: row.body_changed ?? undefined,
-    changedSections: row.changed_sections,
-    editorModel: row.editor_model ?? undefined,
-    sourceCount: row.source_count,
-    signalCount: row.signal_count,
-    messages: row.messages,
-    sources: row.sources as LoopRunRecord["sources"],
-    diffLines: row.diff_lines as LoopRunRecord["diffLines"],
-    reasoningSteps: (row.reasoning_steps ?? undefined) as LoopRunRecord["reasoningSteps"],
-    errorMessage: row.error_message ?? undefined
-  }));
+  return (data ?? []).map((row) => {
+    const r = row as typeof row & { searches_used?: number | null; added_sources?: unknown };
+    return {
+      id: r.id,
+      slug: r.skill_slug,
+      title: r.title,
+      origin: r.origin as LoopRunRecord["origin"],
+      trigger: r.trigger as LoopRunRecord["trigger"],
+      status: r.status as LoopRunRecord["status"],
+      startedAt: r.started_at,
+      finishedAt: r.finished_at,
+      previousVersionLabel: r.previous_version_label ?? undefined,
+      nextVersionLabel: r.next_version_label ?? undefined,
+      href: r.href ?? undefined,
+      summary: r.summary ?? undefined,
+      whatChanged: r.what_changed ?? undefined,
+      bodyChanged: r.body_changed ?? undefined,
+      changedSections: r.changed_sections,
+      editorModel: r.editor_model ?? undefined,
+      sourceCount: r.source_count,
+      signalCount: r.signal_count,
+      messages: r.messages,
+      sources: r.sources as LoopRunRecord["sources"],
+      diffLines: r.diff_lines as LoopRunRecord["diffLines"],
+      reasoningSteps: (r.reasoning_steps ?? undefined) as LoopRunRecord["reasoningSteps"],
+      errorMessage: r.error_message ?? undefined,
+      searchesUsed: r.searches_used ?? undefined,
+      addedSources: (r.added_sources ?? undefined) as LoopRunRecord["addedSources"]
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

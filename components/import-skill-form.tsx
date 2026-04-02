@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { DownloadIcon, LinkIcon } from "@/components/frontier-icons";
+import { DownloadIcon, LinkIcon, TriangleAlertIcon } from "@/components/frontier-icons";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldLabel, textFieldBase } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
@@ -118,8 +119,22 @@ export function ImportSkillForm({
           </div>
         </div>
 
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
-        {message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+        {error ? (
+          <div className="flex items-start gap-2 border border-danger/25 bg-danger/[0.04] p-3">
+            <TriangleAlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" />
+            <p className="m-0 text-sm text-danger">{error}</p>
+          </div>
+        ) : null}
+
+        {isPending && (
+          <div className="grid gap-2">
+            <ProgressBar rounded={false} size="md" status="active" />
+            <p className="m-0 text-xs text-ink-faint">
+              {message ?? "Importing skill..."}
+            </p>
+          </div>
+        )}
+        {!isPending && message ? <p className="m-0 text-sm text-ink-soft">{message}</p> : null}
 
         <div className="flex flex-wrap gap-3">
           <Button disabled={isPending || !url.trim()} type="submit">

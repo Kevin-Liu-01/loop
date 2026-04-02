@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { DiffViewer } from "@/components/diff-viewer";
 import { AutomationIcon, ClockIcon, CpuIcon, SearchIcon, SparkIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
+import { RunMetadataBar } from "@/components/ui/run-metadata-bar";
 import {
   Dialog,
   DialogContent,
@@ -41,10 +42,7 @@ type RunLogModalProps = {
   error: string | null;
 };
 
-const statBox = "grid gap-1 border border-line bg-paper-3 p-3";
-const statLabel = "text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-soft";
-const statValue = "text-sm font-semibold tracking-[-0.03em]";
-const sectionLabel = "text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-soft";
+const SECTION_LABEL = "text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-soft";
 
 function formatDuration(startedAt: string, finishedAt: string): string {
   const ms = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
@@ -52,70 +50,27 @@ function formatDuration(startedAt: string, finishedAt: string): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
+const TOOL_DISPLAY_NAMES: Record<string, string> = {
+  analyze_signals: "Analyze signals",
+  read_current_skill: "Read skill",
+  web_search: "Web search",
+  fetch_page: "Fetch page",
+  add_source: "Discover source",
+  revise_skill: "Revise skill",
+  finalize: "Finalize",
+};
+
 function toolDisplayName(name: string): string {
-  return name.replace(/_/g, " ");
+  return TOOL_DISPLAY_NAMES[name] ?? name.replace(/_/g, " ");
 }
 
-function MetadataBar({
-  trigger,
-  editorModel,
-  startedAt,
-  finishedAt,
-  status,
-  sourceLogs,
-}: {
-  trigger: string;
-  editorModel: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  status: "success" | "error" | "running";
-  sourceLogs: LoopUpdateSourceLog[];
-}) {
-  const totalSignals = sourceLogs.reduce((acc, s) => acc + s.itemCount, 0);
-  const sourcesDone = sourceLogs.filter((s) => s.status === "done").length;
-
-  return (
-    <div className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3 xl:grid-cols-6">
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>trigger</small>
-        <strong className={statValue}>{trigger}</strong>
-      </div>
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>editor</small>
-        <strong className={cn(statValue, "truncate")}>{editorModel ?? "pending"}</strong>
-      </div>
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>duration</small>
-        <strong className={statValue}>
-          {startedAt && finishedAt ? formatDuration(startedAt, finishedAt) : "running..."}
-        </strong>
-      </div>
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>status</small>
-        <strong
-          className={cn(
-            statValue,
-            status === "error" && "text-danger",
-            status === "running" && "text-warning",
-            status === "success" && "text-success"
-          )}
-        >
-          {status}
-        </strong>
-      </div>
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>sources</small>
-        <strong className={statValue}>
-          {sourcesDone}/{sourceLogs.length} complete
-        </strong>
-      </div>
-      <div className="grid gap-1 bg-paper-3 p-3">
-        <small className={statLabel}>signals</small>
-        <strong className={statValue}>{totalSignals} captured</strong>
-      </div>
-    </div>
-  );
-}
+const TOOL_DOT_COLORS: Record<string, string> = {
+  web_search: "bg-sky-500",
+  fetch_page: "bg-indigo-500",
+  add_source: "bg-emerald-500",
+  revise_skill: "bg-accent",
+  finalize: "bg-success",
+};
 
 function StepTimeline({
   steps,
@@ -130,12 +85,14 @@ function StepTimeline({
 }) {
   return (
     <nav className="grid gap-0">
-      <h3 className={cn(sectionLabel, "mb-2")}>Agent steps</h3>
+      <h3 className={cn(SECTION_LABEL, "mb-2")}>Agent steps</h3>
       <div className="grid gap-0">
         {steps.map((step) => {
           const isCurrent = step.index === selectedIndex;
           const hasDiff = step.diffLines && step.diffLines.length > 0;
           const isLatestLive = isLive && step.index === steps.length - 1;
+          const toolName = step.toolCall?.name;
+          const dotColor = toolName ? TOOL_DOT_COLORS[toolName] ?? "bg-ink-muted" : "bg-ink-muted";
 
           return (
             <button
@@ -149,22 +106,33 @@ function StepTimeline({
               onClick={() => onSelect(step.index)}
               type="button"
             >
-              <span
-                className={cn(
-                  "flex h-5 w-5 shrink-0 items-center justify-center border text-[0.6rem] font-bold",
-                  isCurrent
-                    ? "border-accent bg-accent text-white"
-                    : "border-line bg-paper-3 text-ink-muted",
-                  isLatestLive && "animate-pulse"
-                )}
-              >
-                {step.index + 1}
+              <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                <span
+                  className={cn(
+                    "absolute inset-0 rounded-full opacity-20 transition-colors",
+                    isCurrent ? dotColor : "bg-transparent"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "relative flex h-5 w-5 items-center justify-center border text-[0.6rem] font-bold",
+                    isCurrent
+                      ? "border-accent bg-accent text-white"
+                      : "border-line bg-paper-3 text-ink-muted",
+                    isLatestLive && "animate-pulse"
+                  )}
+                >
+                  {step.index + 1}
+                </span>
               </span>
-              <span className="min-w-0 truncate">
+              <span className="min-w-0 flex-1 truncate">
                 {step.toolCall ? toolDisplayName(step.toolCall.name) : "Reasoning"}
               </span>
+              {toolName && (
+                <span className={cn("ml-auto h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} />
+              )}
               {hasDiff ? (
-                <span className="ml-auto flex h-2 w-2 shrink-0 rounded-full bg-success" />
+                <span className="h-2 w-2 shrink-0 rounded-full bg-success" />
               ) : null}
             </button>
           );
@@ -240,7 +208,7 @@ function StepDetail({ step, timeZone }: { step: AgentReasoningStep; timeZone: st
 
       {step.reasoning ? (
         <div className="border border-line bg-paper-3 p-4">
-          <h4 className={cn(sectionLabel, "mb-2")}>Agent reasoning</h4>
+          <h4 className={cn(SECTION_LABEL, "mb-2")}>Agent reasoning</h4>
           <p className="m-0 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
             {step.reasoning}
           </p>
@@ -249,7 +217,7 @@ function StepDetail({ step, timeZone }: { step: AgentReasoningStep; timeZone: st
 
       {step.toolCall ? (
         <div className="border border-line bg-paper-3 p-4">
-          <h4 className={cn(sectionLabel, "mb-2")}>Tool call</h4>
+          <h4 className={cn(SECTION_LABEL, "mb-2")}>Tool call</h4>
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
               <Badge color="indigo">{step.toolCall.name}</Badge>
@@ -271,7 +239,7 @@ function StepDetail({ step, timeZone }: { step: AgentReasoningStep; timeZone: st
 
       {step.toolResult ? (
         <div className="border border-line bg-paper-3 p-4">
-          <h4 className={cn(sectionLabel, "mb-2")}>Tool result</h4>
+          <h4 className={cn(SECTION_LABEL, "mb-2")}>Tool result</h4>
           <pre className="max-h-40 overflow-auto bg-paper p-3 font-mono text-xs text-ink-soft">
             {step.toolResult}
           </pre>
@@ -289,7 +257,7 @@ function LegacyStepView({ messages, diffLines }: { messages: string[]; diffLines
   return (
     <div className="grid gap-4">
       <div>
-        <h4 className={cn(sectionLabel, "mb-2")}>Agent steps</h4>
+        <h4 className={cn(SECTION_LABEL, "mb-2")}>Agent steps</h4>
         <div className="grid gap-0">
           {messages.map((message, index) => (
             <article
@@ -383,13 +351,16 @@ export function RunLogModal({
         <ScrollArea className="min-h-0 flex-1">
         <div className="px-6 py-5">
         <div className="grid gap-6">
-          <MetadataBar
+          <RunMetadataBar
+            addedSourceCount={result?.addedSources?.length}
             editorModel={editorModel}
             finishedAt={finishedAt}
+            searchesUsed={result?.searchesUsed}
             sourceLogs={sourceLogs}
             startedAt={startedAt}
             status={status}
             trigger={trigger}
+            variant="full"
           />
 
           <Tabs className="grid gap-4" defaultValue="steps">

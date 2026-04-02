@@ -7,7 +7,9 @@ import { ExternalLinkIcon } from "lucide-react";
 import { DownloadIcon } from "@/components/frontier-icons";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton, SkeletonLine } from "@/components/ui/skeleton";
 import { useTrackedOperation } from "@/hooks/use-tracked-operation";
 import { Tip } from "@/components/ui/tip";
 import { formatTagLabel } from "@/lib/tag-utils";
@@ -187,7 +189,23 @@ export function ExternalSkillSources({
         <PanelHead>
           <SectionHeader />
         </PanelHead>
-        <p className="text-sm text-ink-faint">Loading external sources...</p>
+        <div className="grid gap-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div className="grid gap-3 border border-line bg-paper-3 p-4" key={i}>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-7 w-7 shrink-0" />
+                <div className="min-w-0 flex-1 grid gap-1.5">
+                  <SkeletonLine className="w-1/3" />
+                  <SkeletonLine className="w-2/3 h-2" />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </Panel>
     );
   }
@@ -343,6 +361,11 @@ export function ExternalSkillSources({
                           : "Import"}
                       </Button>
                     </Tip>
+                    {importingSlug === skill.slug && (
+                      <div className="col-span-full">
+                        <ProgressBar rounded={false} size="sm" status="active" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

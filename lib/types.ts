@@ -242,6 +242,8 @@ export type SkillAutomationState = {
   preferredHour?: number;
   /** 0 = Sunday, 1 = Monday, … 6 = Saturday. Only used when cadence is "weekly". */
   preferredDay?: number;
+  /** Max web searches the editor agent may perform per refresh (default 5). */
+  searchBudget?: number;
 };
 
 export type SkillUpdateEntry = {
@@ -253,6 +255,10 @@ export type SkillUpdateEntry = {
   bodyChanged?: boolean;
   changedSections?: string[];
   editorModel?: string;
+  /** Sources the editor agent discovered and auto-added during this refresh. */
+  addedSources?: SourceDefinition[];
+  /** Number of web searches the agent performed in this refresh. */
+  searchesUsed?: number;
 };
 
 export type LoopUpdateTarget = {
@@ -338,6 +344,8 @@ export type LoopUpdateResult = {
   bodyChanged?: boolean;
   editorModel?: string;
   reasoningSteps?: AgentReasoningStep[];
+  searchesUsed?: number;
+  addedSources?: SourceDefinition[];
 };
 
 export type LoopRunRecord = {
@@ -364,6 +372,10 @@ export type LoopRunRecord = {
   diffLines: DiffLine[];
   reasoningSteps?: AgentReasoningStep[];
   errorMessage?: string;
+  /** Number of web searches the agent performed in this loop run. */
+  searchesUsed?: number;
+  /** Sources the agent discovered and auto-added during this loop run. */
+  addedSources?: SourceDefinition[];
 };
 
 export type LoopUpdateStreamEvent =

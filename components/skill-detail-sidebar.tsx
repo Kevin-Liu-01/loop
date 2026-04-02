@@ -1,5 +1,5 @@
 import { DiffViewer } from "@/components/diff-viewer";
-import { RefreshIcon, SearchIcon, SparkIcon } from "@/components/frontier-icons";
+import { LinkIcon, PlusIcon, RefreshIcon, SearchIcon, SparkIcon } from "@/components/frontier-icons";
 import { OpenRunLogButton } from "@/components/open-run-log-button";
 import { SidebarAutomationsPanel } from "@/components/sidebar-automations-panel";
 import { SkillInstallPanel } from "@/components/skill-install-panel";
@@ -266,7 +266,7 @@ function LatestRefreshPanel({
             </div>
           )}
 
-          {latestRun && (latestRun.sourceCount > 0 || latestRun.signalCount > 0) && (
+          {latestRun && (latestRun.sourceCount > 0 || latestRun.signalCount > 0 || latestRun.searchesUsed || latestRun.addedSources?.length) && (
             <div className="flex flex-wrap gap-1.5">
               {latestRun.sourceCount > 0 && (
                 <span className="inline-flex items-center gap-1.5 border border-accent/20 bg-accent/6 px-2 py-0.5 text-[0.6875rem] font-medium text-accent">
@@ -278,6 +278,18 @@ function LatestRefreshPanel({
                 <span className="inline-flex items-center gap-1.5 border border-accent/20 bg-accent/6 px-2 py-0.5 text-[0.6875rem] font-medium text-accent">
                   <SparkIcon className="h-3 w-3" />
                   {latestRun.signalCount} signals found
+                </span>
+              )}
+              {(latestRun.searchesUsed ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1.5 border border-sky-500/20 bg-sky-500/6 px-2 py-0.5 text-[0.6875rem] font-medium text-sky-600 dark:text-sky-400">
+                  <LinkIcon className="h-3 w-3" />
+                  {latestRun.searchesUsed} web search{latestRun.searchesUsed === 1 ? "" : "es"}
+                </span>
+              )}
+              {(latestRun.addedSources?.length ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1.5 border border-emerald-500/20 bg-emerald-500/6 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-600 dark:text-emerald-400">
+                  <PlusIcon className="h-3 w-3" />
+                  {latestRun.addedSources!.length} source{latestRun.addedSources!.length === 1 ? "" : "s"} discovered
                 </span>
               )}
             </div>

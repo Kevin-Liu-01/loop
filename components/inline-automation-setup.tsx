@@ -7,8 +7,9 @@ import { AutomationIcon, SparkIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, textFieldBase, textFieldArea } from "@/components/ui/field";
-import { Select } from "@/components/ui/select";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { CADENCE_ALL_OPTIONS, STATUS_OPTIONS } from "@/lib/automation-constants";
 import type { UserSkillCadence } from "@/lib/types";
@@ -118,14 +119,23 @@ export function InlineAutomationSetup({
 
         {error && <p className="m-0 text-sm font-medium text-danger">{error}</p>}
 
+        {isPending && (
+          <div className="grid gap-1">
+            <ProgressBar rounded={false} size="sm" status="active" />
+            <span className="text-xs text-ink-faint">Setting up automation...</span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           <Button disabled={isPending} onClick={handleCreate} size="sm" type="button">
             <SparkIcon className="h-3.5 w-3.5" />
             {isPending ? "Creating\u2026" : "Create automation"}
           </Button>
-          <span className="text-xs text-ink-faint">
-            You can edit the schedule and prompt later.
-          </span>
+          {!isPending && (
+            <span className="text-xs text-ink-faint">
+              You can edit the schedule and prompt later.
+            </span>
+          )}
         </div>
       </div>
     </Panel>

@@ -21,11 +21,13 @@ import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { LinkButton } from "@/components/ui/link-button";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { RunMetadataBar } from "@/components/ui/run-metadata-bar";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Tip } from "@/components/ui/tip";
 import { useAppTimezone } from "@/hooks/use-app-timezone";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { buildLoopRunResult } from "@/lib/loop-updates";
 import { countMonthlyRuns, formatNextRun } from "@/lib/schedule";
 import type {
   AutomationSummary,
@@ -112,61 +114,6 @@ function formatTriggerLabel(trigger: LoopRunRecord["trigger"]): string {
   }
 }
 
-function formatDuration(startedAt: string, finishedAt: string): string {
-  const ms = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-}
-
-const statBox = "grid gap-1 rounded-none border border-line bg-paper-3 p-4";
-const statLabel = "text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft";
-const statValue = "text-sm font-semibold tracking-[-0.03em]";
-
-function RunMetadataBar({
-  trigger,
-  editorModel,
-  startedAt,
-  finishedAt,
-  status,
-}: {
-  trigger: string;
-  editorModel: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  status: "success" | "error" | "running";
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div className={statBox}>
-        <small className={statLabel}>trigger</small>
-        <strong className={statValue}>{trigger}</strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>editor</small>
-        <strong className={statValue}>{editorModel ?? "pending"}</strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>duration</small>
-        <strong className={statValue}>
-          {startedAt && finishedAt ? formatDuration(startedAt, finishedAt) : "–"}
-        </strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>status</small>
-        <strong
-          className={cn(
-            statValue,
-            status === "error" && "text-danger",
-            status === "running" && "text-warning",
-          )}
-        >
-          {status}
-        </strong>
-      </div>
-    </div>
-  );
-}
-
 function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
   const statusColor =
     source.status === "done" ? "bg-success" :
@@ -211,7 +158,7 @@ function StepLog({ messages }: { messages: string[] }) {
           className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 border-t border-line py-3 first:border-t-0 first:pt-0"
           key={`${message}-${index}`}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-none border border-line bg-paper-3 text-ink-soft [&>svg]:h-3.5 [&>svg]:w-3.5">
+          <div className="flex h-8 w-8 items-center justify-center border border-line bg-paper-3 text-ink-soft [&>svg]:h-3.5 [&>svg]:w-3.5">
             <AutomationIcon />
           </div>
           <div className="grid gap-0.5 pt-1">
@@ -269,6 +216,7 @@ export function SkillActivitySection({
   const runEditorModel = latestRun?.editorModel ?? null;
   const runStatus: "success" | "error" | "running" =
     runError ? "error" : latestRun?.status ?? "success";
+  const runResult = useMemo(() => buildLoopRunResult(latestRun), [latestRun]);
   const latestOutcomeLabel = latestRun
     ? latestRun.status === "error"
       ? "Needs attention"
@@ -434,11 +382,14 @@ export function SkillActivitySection({
             </PanelHead>
 
             <RunMetadataBar
+              addedSourceCount={latestRun?.addedSources?.length}
               editorModel={runEditorModel}
               finishedAt={latestRun?.finishedAt ?? null}
+              searchesUsed={latestRun?.searchesUsed}
               startedAt={latestRun?.startedAt ?? null}
               status={runStatus}
               trigger={runTrigger}
+              variant="compact"
             />
 
             {runError ? <p className="m-0 text-sm text-danger">{runError}</p> : null}
@@ -509,7 +460,7 @@ export function SkillActivitySection({
         onClose={() => setModalOpen(false)}
         open={modalOpen}
         reasoningSteps={runReasoningSteps}
-        result={null}
+        result={runResult}
         sourceLogs={runSourceLogs}
         startedAt={latestRun?.startedAt ?? null}
         status={runStatus}

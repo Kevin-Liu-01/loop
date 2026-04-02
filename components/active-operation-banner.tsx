@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useActiveOperations } from "@/components/active-operations-provider";
 import { AutomationIcon, RefreshIcon, ArrowRightIcon, CheckIcon, XIcon } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { StepIndicatorCompact } from "@/components/ui/step-indicator";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { computeElapsedLabel, isTerminalStatus } from "@/lib/active-operations";
@@ -54,27 +56,10 @@ function statusBadge(op: ActiveOperation): { color: "blue" | "green" | "orange" 
   }
 }
 
-function ProgressBar({ progress, status }: { progress: number; status: ActiveOperation["status"] }) {
-  const isDone = status === "done";
-  const isError = status === "error";
-  const isActive = !isTerminalStatus(status);
-
-  return (
-    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-line/60">
-      <div
-        className={cn(
-          "absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out",
-          isDone && "bg-success",
-          isError && "bg-danger",
-          isActive && "bg-accent operation-progress-shimmer"
-        )}
-        style={{ width: `${Math.max(isActive ? 4 : 0, progress)}%` }}
-      />
-      {isActive && progress === 0 && (
-        <div className="absolute inset-0 operation-indeterminate-bar bg-accent/60 rounded-full" />
-      )}
-    </div>
-  );
+function toProgressBarStatus(status: ActiveOperation["status"]): "active" | "done" | "error" {
+  if (status === "done") return "done";
+  if (status === "error") return "error";
+  return "active";
 }
 
 function ElapsedTimer({ startedAt }: { startedAt: number }) {
@@ -164,7 +149,18 @@ function OperationRow({ op }: { op: ActiveOperation }) {
         )}
       </div>
 
-      <ProgressBar progress={op.progress} status={op.status} />
+      {op.totalSteps > 1 && (
+        <StepIndicatorCompact
+          className="px-1"
+          completed={op.completedSteps}
+          hasError={isError}
+          total={op.totalSteps}
+        />
+      )}
+      <ProgressBar
+        progress={op.progress || undefined}
+        status={toProgressBarStatus(op.status)}
+      />
 
       {isError && op.errorMessage && (
         <p className="m-0 text-xs text-danger">{op.errorMessage}</p>

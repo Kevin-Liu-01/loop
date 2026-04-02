@@ -1,20 +1,31 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { DiffViewer } from "@/components/diff-viewer";
-import { AutomationIcon, RefreshIcon } from "@/components/frontier-icons";
+import {
+  AutomationIcon,
+  CheckIcon,
+  CpuIcon,
+  RefreshIcon,
+  SearchIcon,
+  TriangleAlertIcon,
+} from "@/components/frontier-icons";
 import { RunLogModal } from "@/components/run-log-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { Panel, PanelHead } from "@/components/ui/panel";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { RunMetadataBar } from "@/components/ui/run-metadata-bar";
+import { StepIndicatorCompact } from "@/components/ui/step-indicator";
 import { useAppTimezone } from "@/hooks/use-app-timezone";
 import { useTrackedLoopUpdate } from "@/hooks/use-tracked-loop-update";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { buildLoopRunResult } from "@/lib/loop-updates";
 import { formatNextRun } from "@/lib/schedule";
 import { applySourceUpdate } from "@/lib/stream-loop-update";
 import type {
@@ -36,10 +47,11 @@ type SkillUpdateRunnerProps = {
   canManage?: boolean;
 };
 
-const statBox = "grid gap-1 rounded-2xl border border-line bg-paper-3 p-4";
-const statLabel = "text-xs font-medium uppercase tracking-[0.08em] text-ink-soft";
-const statValue = "text-sm font-semibold tracking-[-0.03em]";
-const panelTitleClass = "m-0 text-lg font-semibold tracking-tight text-ink";
+const STAT_BOX = "grid gap-1 rounded-2xl border border-line bg-paper-3 p-4";
+const STAT_LABEL = "text-xs font-medium uppercase tracking-[0.08em] text-ink-soft";
+const STAT_VALUE = "text-sm font-semibold tracking-[-0.03em]";
+const PANEL_TITLE = "m-0 text-lg font-semibold tracking-tight text-ink";
+const SECTION_LABEL = "mb-2 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft";
 
 function formatTriggerLabel(trigger: LoopRunRecord["trigger"]): string {
   switch (trigger) {
@@ -54,22 +66,34 @@ function formatTriggerLabel(trigger: LoopRunRecord["trigger"]): string {
   }
 }
 
-function formatDuration(startedAt: string, finishedAt: string): string {
-  const ms = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
+type StepMessageKind = "source" | "reasoning" | "done" | "error" | "generic";
+
+function classifyMessage(message: string): StepMessageKind {
+  const lower = message.toLowerCase();
+  if (lower.includes("error") || lower.includes("failed")) return "error";
+  if (lower.includes("is live") || lower.includes("finished") || lower.includes("no material diff")) return "done";
+  if (lower.includes("source") || lower.includes("scanning") || lower.includes("queued")) return "source";
+  if (lower.includes("agent") || lower.includes("reasoning") || lower.includes("started agent")) return "reasoning";
+  return "generic";
 }
 
-function sourceStatusIcon(status: string): string {
-  switch (status) {
+function StepIcon({ kind, isLast, isLive }: { kind: StepMessageKind; isLast: boolean; isLive: boolean }) {
+  const baseClass = "h-3.5 w-3.5";
+  const wrapClass = cn(
+    "flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-paper-3 text-ink-soft [&>svg]:h-3.5 [&>svg]:w-3.5",
+    isLast && isLive && "animate-pulse"
+  );
+  switch (kind) {
+    case "source":
+      return <div className={wrapClass}><SearchIcon className={baseClass} /></div>;
+    case "reasoning":
+      return <div className={wrapClass}><CpuIcon className={baseClass} /></div>;
     case "done":
-      return "done";
-    case "running":
-      return "running";
+      return <div className={cn(wrapClass, "border-success/30 bg-success/10 text-success")}><CheckIcon className={baseClass} /></div>;
     case "error":
-      return "error";
+      return <div className={cn(wrapClass, "border-danger/30 bg-danger/10 text-danger")}><TriangleAlertIcon className={baseClass} /></div>;
     default:
-      return "pending";
+      return <div className={wrapClass}><AutomationIcon className={baseClass} /></div>;
   }
 }
 
@@ -89,8 +113,13 @@ function buildPendingSourcesFromTarget(loop: LoopUpdateTarget): LoopUpdateSource
   }));
 }
 
+const SOURCE_DOT_CLASSES: Record<string, string> = {
+  done: "bg-success",
+  running: "animate-pulse bg-warning",
+  error: "bg-danger",
+};
+
 function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
-  const icon = sourceStatusIcon(source.status);
   const metadata = [
     source.mode ? source.mode.replace(/-/g, " ") : null,
     source.trust ? source.trust.replace(/-/g, " ") : null,
@@ -104,10 +133,7 @@ function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
           <span
             className={cn(
               "flex h-2.5 w-2.5 shrink-0 rounded-full",
-              icon === "done" && "bg-success",
-              icon === "running" && "animate-pulse bg-warning",
-              icon === "error" && "bg-danger",
-              icon === "pending" && "bg-line-strong"
+              SOURCE_DOT_CLASSES[source.status] ?? "bg-line-strong"
             )}
           />
         </Tip>
@@ -154,75 +180,33 @@ function SourceCard({ source }: { source: LoopUpdateSourceLog }) {
   );
 }
 
-function RunMetadataBar({
-  trigger,
-  editorModel,
-  startedAt,
-  finishedAt,
-  status
-}: {
-  trigger: string;
-  editorModel: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  status: "success" | "error" | "running";
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div className={statBox}>
-        <small className={statLabel}>trigger</small>
-        <strong className={statValue}>{trigger}</strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>editor</small>
-        <strong className={statValue}>{editorModel ?? "pending"}</strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>duration</small>
-        <strong className={statValue}>
-          {startedAt && finishedAt ? formatDuration(startedAt, finishedAt) : "running..."}
-        </strong>
-      </div>
-      <div className={statBox}>
-        <small className={statLabel}>status</small>
-        <strong
-          className={cn(
-            statValue,
-            status === "error" && "text-danger",
-            status === "running" && "text-warning"
-          )}
-        >
-          {status}
-        </strong>
-      </div>
-    </div>
-  );
-}
-
 function StepLog({ messages, isLive }: { messages: string[]; isLive: boolean }) {
   if (messages.length === 0) return null;
 
   return (
     <div className="grid gap-0">
-      {messages.map((message, index) => (
-        <article
-          className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 border-t border-line py-3 first:border-t-0 first:pt-0"
-          key={`${message}-${index}`}
-        >
-          <div
-            className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-paper-3 text-ink-soft [&>svg]:h-3.5 [&>svg]:w-3.5",
-              isLive && index === messages.length - 1 && "animate-pulse"
-            )}
+      {messages.map((message, index) => {
+        const kind = classifyMessage(message);
+        const isLast = index === messages.length - 1;
+        return (
+          <article
+            className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 border-t border-line py-3 first:border-t-0 first:pt-0"
+            key={`${message}-${index}`}
           >
-            <AutomationIcon />
-          </div>
-          <div className="grid gap-0.5 pt-1">
-            <span className="text-xs font-medium text-ink-faint">Step {index + 1}</span>
-            <span className="text-sm text-ink-soft">{message}</span>
-          </div>
-        </article>
-      ))}
+            <StepIcon isLast={isLast} isLive={isLive} kind={kind} />
+            <div className="grid gap-0.5 pt-1">
+              <span className="text-xs font-medium text-ink-faint">Step {index + 1}</span>
+              <span className={cn(
+                "text-sm text-ink-soft",
+                kind === "error" && "text-danger",
+                kind === "done" && "text-success"
+              )}>
+                {message}
+              </span>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -247,6 +231,11 @@ export function SkillUpdateRunner({
   const [modalOpen, setModalOpen] = useState(false);
 
   const hasLiveState = messages.length > 0 || result !== null || error !== null;
+  const historicalResult = useMemo(() => buildLoopRunResult(latestRun), [latestRun]);
+  const sourcesDoneCount = useMemo(
+    () => (hasLiveState ? sourceLogs : latestRun?.sources ?? []).filter((s) => s.status === "done").length,
+    [hasLiveState, sourceLogs, latestRun]
+  );
 
   const visibleMessages = hasLiveState ? messages : latestRun?.messages ?? [];
   const visibleSourceLogs = hasLiveState ? sourceLogs : latestRun?.sources ?? [];
@@ -372,7 +361,7 @@ export function SkillUpdateRunner({
                 <AutomationIcon className={cn(isRunning && "animate-spin")} />
               </div>
               <div>
-                <h2 className={panelTitleClass}>{buttonLabel}</h2>
+                <h2 className={PANEL_TITLE}>{buttonLabel}</h2>
                 <p className="m-0 max-w-[56ch] text-sm leading-relaxed text-ink-soft">
                   {!canManage
                     ? "Only the skill owner can trigger manual refreshes. You can still inspect the trace and latest diff."
@@ -397,29 +386,29 @@ export function SkillUpdateRunner({
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Tip content="Number of tracked URLs the agent scans" side="bottom">
-            <div className={statBox}>
-              <small className={statLabel}>sources</small>
-              <strong className={statValue}>{sourceCount}</strong>
+            <div className={STAT_BOX}>
+              <small className={STAT_LABEL}>sources</small>
+              <strong className={STAT_VALUE}>{sourceCount}</strong>
             </div>
           </Tip>
           <Tip content="How often the automation runs" side="bottom">
-            <div className={statBox}>
-              <small className={statLabel}>cadence</small>
-              <strong className={statValue}>{scheduleLabel}</strong>
+            <div className={STAT_BOX}>
+              <small className={STAT_LABEL}>cadence</small>
+              <strong className={STAT_VALUE}>{scheduleLabel}</strong>
             </div>
           </Tip>
           <Tip content="When the next scheduled run fires" side="bottom">
-            <div className={statBox}>
-              <small className={statLabel}>next run</small>
-              <strong className={statValue}>{nextRunLabel}</strong>
+            <div className={STAT_BOX}>
+              <small className={STAT_LABEL}>next run</small>
+              <strong className={STAT_VALUE}>{nextRunLabel}</strong>
             </div>
           </Tip>
           <Tip content="Outcome of the most recent run" side="bottom">
-            <div className={statBox}>
-              <small className={statLabel}>latest</small>
+            <div className={STAT_BOX}>
+              <small className={STAT_LABEL}>latest</small>
               <strong
                 className={cn(
-                  statValue,
+                  STAT_VALUE,
                   visibleStatus === "error" && "text-danger"
                 )}
               >
@@ -432,9 +421,37 @@ export function SkillUpdateRunner({
 
       {(visibleMessages.length > 0 || visibleSourceLogs.length > 0) ? (
         <Panel compact className="overflow-hidden">
+          {isRunning && (
+            <ProgressBar
+              className="-mx-6 -mt-6 mb-4"
+              progress={sourcesDoneCount > 0 ? Math.round((sourcesDoneCount / Math.max(visibleSourceLogs.length, 1)) * 100) : undefined}
+              rounded={false}
+              size="sm"
+              status="active"
+            />
+          )}
+          {!isRunning && visibleStatus === "success" && (
+            <ProgressBar
+              className="-mx-6 -mt-6 mb-4"
+              progress={100}
+              rounded={false}
+              size="sm"
+              status="done"
+            />
+          )}
+          {!isRunning && visibleStatus === "error" && (
+            <ProgressBar
+              className="-mx-6 -mt-6 mb-4"
+              progress={100}
+              rounded={false}
+              size="sm"
+              status="error"
+            />
+          )}
+
           <PanelHead>
             <div>
-              <h2 className={panelTitleClass}>Refresh trace</h2>
+              <h2 className={PANEL_TITLE}>Refresh trace</h2>
               <p className="m-0 text-sm text-ink-soft">
                 Live reasoning, source results, and the diff that landed.
               </p>
@@ -461,15 +478,20 @@ export function SkillUpdateRunner({
           </PanelHead>
 
           <RunMetadataBar
+            addedSourceCount={result?.addedSources?.length ?? latestRun?.addedSources?.length}
             editorModel={visibleEditorModel}
             finishedAt={visibleFinishedAt}
+            searchesUsed={result?.searchesUsed ?? latestRun?.searchesUsed}
             startedAt={visibleStartedAt}
             status={visibleStatus}
             trigger={visibleTrigger}
           />
 
           {visibleError ? (
-            <p className="m-0 text-sm text-danger">{visibleError}</p>
+            <div className="flex items-start gap-2 border border-danger/25 bg-danger/[0.04] p-3">
+              <TriangleAlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" />
+              <p className="m-0 text-sm text-danger">{visibleError}</p>
+            </div>
           ) : null}
 
           {result ? (
@@ -488,19 +510,27 @@ export function SkillUpdateRunner({
             </div>
           ) : null}
 
+          {isRunning && visibleSourceLogs.length > 1 && (
+            <div className="flex items-center gap-3">
+              <StepIndicatorCompact
+                completed={sourcesDoneCount}
+                total={visibleSourceLogs.length}
+              />
+              <span className="text-xs tabular-nums text-ink-faint">
+                {sourcesDoneCount}/{visibleSourceLogs.length} sources
+              </span>
+            </div>
+          )}
+
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div>
-              <span className="mb-2 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-                Agent steps
-              </span>
+              <span className={SECTION_LABEL}>Agent steps</span>
               <StepLog isLive={isRunning} messages={visibleMessages} />
             </div>
 
             {visibleSourceLogs.length > 0 ? (
               <div>
-                <span className="mb-2 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-                  Sources
-                </span>
+                <span className={SECTION_LABEL}>Sources</span>
                 <div className="grid gap-2">
                   {visibleSourceLogs.map((source) => (
                     <SourceCard key={source.id} source={source} />
@@ -542,7 +572,7 @@ export function SkillUpdateRunner({
         onClose={() => setModalOpen(false)}
         open={modalOpen}
         reasoningSteps={visibleReasoningSteps}
-        result={result}
+        result={result ?? historicalResult}
         sourceLogs={visibleSourceLogs}
         startedAt={visibleStartedAt}
         status={visibleStatus}

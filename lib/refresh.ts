@@ -44,6 +44,7 @@ import type {
   LoopUpdateSourceLog,
   LoopUpdateTarget,
   SkillUpdateEntry,
+  SourceDefinition,
   UserSkillDocument
 } from "@/lib/types";
 
@@ -71,6 +72,8 @@ type SkillRevisionDraft = {
   bodyChanged: boolean;
   changedSections: string[];
   editorModel: string;
+  addedSources: SourceDefinition[];
+  searchesUsed: number;
 };
 
 type UserSkillRefreshHooks = {
@@ -192,6 +195,17 @@ function sortSignals(items: DailySignal[]): DailySignal[] {
     .sort((left, right) => +new Date(right.publishedAt) - +new Date(left.publishedAt));
 }
 
+function mergeDiscoveredSources(existing: SourceDefinition[], discovered: SourceDefinition[]): SourceDefinition[] {
+  if (discovered.length === 0) return existing;
+
+  const existingUrls = new Set(existing.map((s) => s.url.replace(/\/+$/, "").toLowerCase()));
+  const newSources = discovered.filter(
+    (s) => !existingUrls.has(s.url.replace(/\/+$/, "").toLowerCase())
+  );
+
+  return [...existing, ...newSources];
+}
+
 export function buildFailedLoopRun(
   skill: Pick<UserSkillDocument, "slug" | "title" | "sources" | "version">,
   trigger: LoopRunRecord["trigger"],
@@ -296,6 +310,8 @@ export async function synthesizeSkillUpdate(
     bodyChanged: fallbackBodyChanged,
     changedSections: fallbackEdit.changedSections,
     editorModel: "heuristic-fallback",
+    addedSources: [],
+    searchesUsed: 0,
     reasoningSteps: []
   };
 
@@ -369,6 +385,17 @@ export async function runTrackedUserSkillUpdate(
   const flattened = sortSignals(sourceLogs.flatMap((entry) => entry.items));
   const draft = await synthesizeSkillUpdate(skill, flattened, sourceLogs, hooks.onReasoningStep, skill.automation.preferredModel);
   const nextUpdatedAt = draft.update.generatedAt;
+
+  const mergedSources = mergeDiscoveredSources(skill.sources, draft.addedSources);
+  if (draft.addedSources.length > 0) {
+    messages.push(`Agent discovered ${draft.addedSources.length} new source(s): ${draft.addedSources.map((s) => s.label).join(", ")}.`);
+    hooks.onMessage?.(messages[messages.length - 1] ?? "");
+  }
+  if (draft.searchesUsed > 0) {
+    messages.push(`Agent used ${draft.searchesUsed} web search(es).`);
+    hooks.onMessage?.(messages[messages.length - 1] ?? "");
+  }
+
   const nextSkill = createNextUserSkillVersion(
     skill,
     {
@@ -379,7 +406,7 @@ export async function runTrackedUserSkillUpdate(
       ownerName: skill.ownerName,
       tags: skill.tags,
       visibility: skill.visibility,
-      sources: skill.sources,
+      sources: mergedSources,
       automation: {
         ...skill.automation,
         lastRunAt: nextUpdatedAt
@@ -410,7 +437,9 @@ export async function runTrackedUserSkillUpdate(
     changedSections: draft.changedSections,
     bodyChanged: draft.bodyChanged,
     editorModel: draft.editorModel,
-    reasoningSteps: draft.reasoningSteps
+    reasoningSteps: draft.reasoningSteps,
+    searchesUsed: draft.searchesUsed > 0 ? draft.searchesUsed : undefined,
+    addedSources: draft.addedSources.length > 0 ? draft.addedSources : undefined
   };
 
   messages.push(
@@ -437,7 +466,7 @@ export async function runTrackedUserSkillUpdate(
     bodyChanged: draft.bodyChanged,
     changedSections: draft.changedSections,
     editorModel: draft.editorModel,
-    sourceCount: sourceLogs.length,
+    sourceCount: mergedSources.length,
     signalCount: flattened.length,
     messages,
     sources: sourceLogs.map((source) => ({
@@ -445,7 +474,9 @@ export async function runTrackedUserSkillUpdate(
       items: source.items.slice(0, 3)
     })),
     diffLines: diffLines.slice(0, 120),
-    reasoningSteps: draft.reasoningSteps.slice(0, 20)
+    reasoningSteps: draft.reasoningSteps.slice(0, 20),
+    searchesUsed: draft.searchesUsed > 0 ? draft.searchesUsed : undefined,
+    addedSources: draft.addedSources.length > 0 ? draft.addedSources : undefined
   };
 
   return {
