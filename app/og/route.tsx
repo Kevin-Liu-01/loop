@@ -25,6 +25,10 @@ const neueMontBold = fetch(
   new URL("./NeueMontreal-Bold.ttf", import.meta.url),
 ).then((res) => res.arrayBuffer());
 
+const editorialSerif = fetch(
+  new URL("./EditorialNew-Regular.ttf", import.meta.url),
+).then((res) => res.arrayBuffer());
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const title = searchParams.get("title") || SEO_DEFAULT_TITLE;
@@ -35,10 +39,11 @@ export async function GET(request: NextRequest) {
   const origin = new URL(request.url).origin;
   const screenshotUrl = `${origin}${SCREENSHOT_PATH}`;
 
-  const [bookFont, mediumFont, boldFont] = await Promise.all([
+  const [bookFont, mediumFont, boldFont, serifFont] = await Promise.all([
     neueMontBook,
     neueMontMedium,
     neueMontBold,
+    editorialSerif,
   ]);
 
   return new ImageResponse(
@@ -57,6 +62,7 @@ export async function GET(request: NextRequest) {
         { name: "Neue Montreal", data: bookFont, style: "normal", weight: 400 },
         { name: "Neue Montreal", data: mediumFont, style: "normal", weight: 500 },
         { name: "Neue Montreal", data: boldFont, style: "normal", weight: 700 },
+        { name: "Editorial New", data: serifFont, style: "normal", weight: 400 },
       ],
       headers: {
         "Cache-Control":
@@ -166,11 +172,11 @@ function OgCard({
             <GearIcon />
             <span
               style={{
-                fontSize: 15,
-                fontWeight: 700,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "rgba(255, 255, 255, 0.50)",
+                fontFamily: "Editorial New",
+                fontSize: 20,
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                color: "rgba(255, 255, 255, 0.55)",
               }}
             >
               {SITE_NAME}
@@ -205,10 +211,11 @@ function OgCard({
 
             <h1
               style={{
+                fontFamily: "Editorial New",
                 fontSize: titleSize,
-                fontWeight: 700,
-                lineHeight: 1.1,
-                letterSpacing: "-0.035em",
+                fontWeight: 400,
+                lineHeight: 1.12,
+                letterSpacing: "-0.025em",
                 margin: 0,
                 color: "#f5f5f5",
               }}
