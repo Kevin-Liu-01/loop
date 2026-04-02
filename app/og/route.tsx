@@ -13,6 +13,14 @@ export const runtime = "edge";
 
 const SCREENSHOT_PATH = "/images/og.png";
 
+const interRegular = fetch(
+  new URL("./Inter-Regular.ttf", import.meta.url),
+).then((res) => res.arrayBuffer());
+
+const interBold = fetch(new URL("./Inter-Bold.ttf", import.meta.url)).then(
+  (res) => res.arrayBuffer(),
+);
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const title = searchParams.get("title") || SEO_DEFAULT_TITLE;
@@ -22,6 +30,8 @@ export async function GET(request: NextRequest) {
 
   const origin = new URL(request.url).origin;
   const screenshotUrl = `${origin}${SCREENSHOT_PATH}`;
+
+  const [regularFont, boldFont] = await Promise.all([interRegular, interBold]);
 
   return new ImageResponse(
     (
@@ -35,6 +45,10 @@ export async function GET(request: NextRequest) {
     {
       width: OG_WIDTH,
       height: OG_HEIGHT,
+      fonts: [
+        { name: "Inter", data: regularFont, style: "normal", weight: 400 },
+        { name: "Inter", data: boldFont, style: "normal", weight: 700 },
+      ],
       headers: {
         "Cache-Control":
           "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
@@ -70,34 +84,36 @@ function OgCard({
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        background: "#050505",
+        background:
+          "linear-gradient(145deg, #0a0a09 0%, #1a0f0a 35%, #3d1f10 70%, #4a2618 100%)",
+        fontFamily: "Inter",
       }}
     >
       {/* Warm radial glow from bottom-left */}
       <div
         style={{
           position: "absolute",
-          bottom: "-120px",
-          left: "-80px",
+          bottom: "-100px",
+          left: "-60px",
           width: "700px",
           height: "500px",
           borderRadius: "50%",
           background:
-            "radial-gradient(ellipse at center, rgba(232, 101, 10, 0.10) 0%, transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(232, 101, 10, 0.18) 0%, transparent 65%)",
         }}
       />
 
-      {/* Glow behind screenshot area */}
+      {/* Orange glow from top-right */}
       <div
         style={{
           position: "absolute",
-          top: "40px",
-          right: "40px",
-          width: "560px",
-          height: "400px",
-          borderRadius: "20px",
+          top: "-140px",
+          right: "-40px",
+          width: "600px",
+          height: "500px",
+          borderRadius: "50%",
           background:
-            "radial-gradient(ellipse at center, rgba(232, 101, 10, 0.06) 0%, transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(232, 101, 10, 0.10) 0%, transparent 65%)",
         }}
       />
 
@@ -110,7 +126,7 @@ function OgCard({
           width: "4px",
           height: "100%",
           background:
-            "linear-gradient(to bottom, #e8650a 0%, rgba(232, 101, 10, 0.3) 60%, transparent 100%)",
+            "linear-gradient(to bottom, #e8650a 0%, rgba(232, 101, 10, 0.4) 60%, transparent 100%)",
         }}
       />
 
@@ -142,10 +158,10 @@ function OgCard({
             <span
               style={{
                 fontSize: 15,
-                fontWeight: 600,
+                fontWeight: 700,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "rgba(255, 255, 255, 0.40)",
+                color: "rgba(255, 255, 255, 0.50)",
               }}
             >
               {SITE_NAME}
@@ -182,10 +198,10 @@ function OgCard({
               style={{
                 fontSize: titleSize,
                 fontWeight: 700,
-                lineHeight: 1.08,
+                lineHeight: 1.1,
                 letterSpacing: "-0.035em",
                 margin: 0,
-                color: "#f0f0f0",
+                color: "#f5f5f5",
               }}
             >
               {displayTitle}
@@ -194,8 +210,9 @@ function OgCard({
             <p
               style={{
                 fontSize: 18,
+                fontWeight: 400,
                 lineHeight: 1.55,
-                color: "rgba(255, 255, 255, 0.38)",
+                color: "rgba(255, 255, 255, 0.50)",
                 margin: 0,
               }}
             >
@@ -214,45 +231,22 @@ function OgCard({
             <span
               style={{
                 fontSize: 14,
-                fontWeight: 500,
+                fontWeight: 400,
                 letterSpacing: "0.03em",
-                color: "rgba(255, 255, 255, 0.22)",
+                color: "rgba(255, 255, 255, 0.28)",
               }}
             >
               loooooop.vercel.app
             </span>
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
+                width: 48,
+                height: 4,
+                borderRadius: 2,
+                background:
+                  "linear-gradient(90deg, #e8650a, rgba(232, 101, 10, 0.25))",
               }}
-            >
-              <div
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: "#e8650a",
-                }}
-              />
-              <div
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: "rgba(232, 101, 10, 0.5)",
-                }}
-              />
-              <div
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: "rgba(232, 101, 10, 0.2)",
-                }}
-              />
-            </div>
+            />
           </div>
         </div>
 
@@ -272,7 +266,7 @@ function OgCard({
               position: "relative",
               borderRadius: "12px",
               overflow: "hidden",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
+              border: "1px solid rgba(255, 255, 255, 0.10)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
