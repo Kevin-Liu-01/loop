@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
 
 const SITE_NAME = "Loop";
-const DEFAULT_TITLE = "Loop – Skills that never go stale";
+const DEFAULT_TITLE = "Loop | Skills that never go stale";
 const DEFAULT_DESCRIPTION =
   "Loop turns your agent playbooks, updates, and source scans into a living operator desk that stays current.";
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const STATIC_OG_IMAGE_PATH = "/og.png";
+const STATIC_OG_IMAGE_PATH = "/og";
 
 export const SOCIAL_BOT_RE =
   /Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Applebot|Pinterestbot/i;
@@ -68,7 +68,7 @@ function resolvePageMeta(pathname: string): PageMeta {
       title: `FAQ · ${SITE_NAME}`,
       description: DEFAULT_DESCRIPTION,
       ogImagePath: STATIC_OG_IMAGE_PATH,
-      ogImageAlt: `${SITE_NAME} - operator desk for self-updating agent skills`,
+      ogImageAlt: `${SITE_NAME} | operator desk for self-updating agent skills`,
       ogType: "website",
       canonicalPath: "/faq",
     };
@@ -78,7 +78,7 @@ function resolvePageMeta(pathname: string): PageMeta {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     ogImagePath: STATIC_OG_IMAGE_PATH,
-    ogImageAlt: `${SITE_NAME} - operator desk for self-updating agent skills`,
+    ogImageAlt: `${SITE_NAME} | operator desk for self-updating agent skills`,
     ogType: "website",
     canonicalPath: "/",
   };

@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   transpilePackages: ["@chenglou/pretext"],
   htmlLimitedBots: SOCIAL_AND_SEO_BOTS,
+  async rewrites() {
+    return [
+      { source: "/og.png", destination: "/og" },
+    ];
+  },
 };
 
 export default nextConfig;

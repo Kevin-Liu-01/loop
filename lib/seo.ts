@@ -6,7 +6,7 @@ import type { ImportedMcpDocument, SkillRecord } from "@/lib/types";
 
 export const SITE_NAME = "Loop";
 
-export const SEO_DEFAULT_TITLE = "Loop – Skills that never go stale";
+export const SEO_DEFAULT_TITLE = "Loop | Skills that never go stale";
 
 export const SEO_DEFAULT_DESCRIPTION =
   "Loop turns your agent playbooks, updates, and source scans into a living operator desk that stays current.";
@@ -14,7 +14,7 @@ export const SEO_DEFAULT_DESCRIPTION =
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
 
-export const DEFAULT_OG_IMAGE_PATH = "/og.png";
+export const DEFAULT_OG_IMAGE_PATH = "/og";
 export const LOGO_ICON_PATH = "/icon.svg";
 
 /**
@@ -72,7 +72,7 @@ export function buildDefaultOpenGraphImages(): NonNullable<Metadata["openGraph"]
       type: "image/png",
       width: OG_WIDTH,
       height: OG_HEIGHT,
-      alt: `${SITE_NAME} – operator desk for self-updating agent skills`,
+      alt: `${SITE_NAME} | operator desk for self-updating agent skills`,
     },
   ];
 }
