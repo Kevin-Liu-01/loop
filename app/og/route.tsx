@@ -1,3 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
@@ -9,21 +13,14 @@ import {
   SITE_NAME,
 } from "@/lib/seo";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const SCREENSHOT_PATH = "/images/og.png";
 
-const neueMontBook = fetch(
-  new URL("./NeueMontreal-Book.ttf", import.meta.url),
-).then((res) => res.arrayBuffer());
+const fontDir = dirname(fileURLToPath(import.meta.url));
 
-const neueMontMedium = fetch(
-  new URL("./NeueMontreal-Medium.ttf", import.meta.url),
-).then((res) => res.arrayBuffer());
-
-const neueMontBold = fetch(
-  new URL("./NeueMontreal-Bold.ttf", import.meta.url),
-).then((res) => res.arrayBuffer());
+const neueMontBook = readFile(join(fontDir, "NeueMontreal-Book.ttf"));
+const neueMontBold = readFile(join(fontDir, "NeueMontreal-Bold.ttf"));
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -35,9 +32,8 @@ export async function GET(request: NextRequest) {
   const origin = new URL(request.url).origin;
   const screenshotUrl = `${origin}${SCREENSHOT_PATH}`;
 
-  const [bookFont, mediumFont, boldFont] = await Promise.all([
+  const [bookFont, boldFont] = await Promise.all([
     neueMontBook,
-    neueMontMedium,
     neueMontBold,
   ]);
 
@@ -55,7 +51,6 @@ export async function GET(request: NextRequest) {
       height: OG_HEIGHT,
       fonts: [
         { name: "Neue Montreal", data: bookFont, style: "normal", weight: 400 },
-        { name: "Neue Montreal", data: mediumFont, style: "normal", weight: 500 },
         { name: "Neue Montreal", data: boldFont, style: "normal", weight: 700 },
       ],
       headers: {
@@ -131,7 +126,7 @@ function OgCard({
         style={{
           position: "absolute",
           top: "40px",
-          right: "-200px",
+          right: "-400px",
           bottom: "40px",
           width: "820px",
           display: "flex",
@@ -159,7 +154,7 @@ function OgCard({
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "48px 0 48px 56px",
-          width: "520px",
+          width: "720px",
           flexShrink: 0,
           position: "relative",
         }}
