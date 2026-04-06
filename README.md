@@ -1,4 +1,10 @@
 <p align="center">
+  <a href="https://loooooop.vercel.app">
+    <img src="https://loooooop.vercel.app/og" alt="Loop — Skills that never go stale" width="720" />
+  </a>
+</p>
+
+<p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="public/brand/loop-mark-light.svg" />
     <source media="(prefers-color-scheme: light)" srcset="public/brand/loop-mark.svg" />
@@ -131,7 +137,7 @@ Settings pages provide:
 
 Routes: `/sandbox`, `/agents`
 
-The Sandbox provisions a secure Vercel Sandbox session. You choose a provider/model, attach skills, and chat with the agent. Supports code execution in Node.js and Python runtimes.
+The Sandbox provisions a secure Vercel Sandbox session. The Agent Studio lets you choose a provider and model (Vercel AI Gateway, OpenAI, OpenRouter, Groq, Together AI, or Ollama), attach skills and MCP servers, review assembled context including daily briefs, and chat with the agent. Supports code execution in Node.js and Python runtimes.
 
 ## How the refresh engine works
 
@@ -140,17 +146,19 @@ The refresh pipeline is the center of the product.
 1. Load tracked skill documents from Supabase
 2. Decide which skills are due for refresh (check `automation.enabled`, `cadence`, `lastRunAt`)
 3. Fetch signals from each skill's source watchlist
-4. Synthesize a revision draft via the configured AI model
-5. Rewrite the skill body if sources justify it
+4. Run a research-first agent that analyzes signals, then searches the web via Firecrawl (up to 4 searches per run) and fetches full page content as clean markdown
+5. The agent revises the skill body based on evidence from both tracked sources and live web research
 6. Save a new version (immutable — never mutates the old one)
 7. Persist run logs, summaries, diffs, and source results
 8. Record the run outcome
 
-The agent does not "search the entire web." It scans the specific sources attached to each tracked skill. If you want broader coverage, add better sources.
+The agent has a dynamic step budget computed from the number of sources and search budget, with 5 steps reserved for the revision phase so research never crowds out the actual skill update.
 
 Relevant files:
 
 - `lib/refresh.ts` — the main refresh pipeline
+- `lib/skill-editor-agent.ts` — the research-first agent (step budget, tool wiring, system prompt)
+- `lib/agent-tools/` — agent tools: `web-search.ts`, `fetch-page.ts`, `firecrawl.ts`, `add-source.ts`
 - `lib/source-signals.ts` — signal fetching from sources
 - `lib/loop-updates.ts` — update normalization
 - `lib/text-diff.ts` — before/after diffing
@@ -225,10 +233,13 @@ SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 LOOP_MODEL=gpt-5-mini
 AI_GATEWAY_API_KEY=
+FIRECRAWL_API_KEY=
 OPENROUTER_API_KEY=
 GROQ_API_KEY=
 TOGETHER_API_KEY=
 ```
+
+`AI_GATEWAY_API_KEY` is required for automations (routes through Vercel AI Gateway). `FIRECRAWL_API_KEY` powers web search and page scraping during agent runs. Without it, `fetch_page` falls back to plain HTTP.
 
 ### Billing (Stripe)
 
@@ -304,7 +315,7 @@ For a production deploy:
 2. Set `CRON_SECRET` for the daily refresh cron
 3. Configure Supabase env vars (URL, anon key, service role key)
 4. Configure Clerk env vars (publishable key, secret key)
-5. Configure AI keys for refresh and agent runs
+5. Configure `AI_GATEWAY_API_KEY` for automations and `FIRECRAWL_API_KEY` for web research
 6. Configure Stripe keys if billing is enabled
 7. The cron schedule is in `vercel.json`
 
@@ -355,4 +366,4 @@ SEO metadata helpers (titles, descriptions, OG images, JSON-LD) are centralized 
 
 ## Short version
 
-Loop scans skills, lets you track or import them, refreshes them from watched sources, saves every refresh as a versioned revision, records the run, and exposes the whole thing in one operational UI — backed entirely by Supabase.
+Loop scans skills, lets you track or import them, refreshes them from watched sources and live web research via Firecrawl, saves every refresh as a versioned revision, records the run, and exposes the whole thing in one operational UI — backed entirely by Supabase.
