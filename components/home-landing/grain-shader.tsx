@@ -65,14 +65,12 @@ function getThemeLight(): number {
 export function GrainShader({ className }: GrainShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
-  const rafRef = useRef<number>(0);
   const programRef = useRef<Program | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.innerWidth < 768;
     const dpr = isMobile ? Math.min(window.devicePixelRatio, 1) : Math.min(window.devicePixelRatio, 1.5);
 
@@ -106,6 +104,7 @@ export function GrainShader({ className }: GrainShaderProps) {
       const h = container.clientHeight;
       renderer.setSize(w, h);
       program.uniforms.uResolution.value = [w * dpr, h * dpr];
+      renderer.render({ scene: mesh });
     }
 
     resize();
@@ -118,24 +117,14 @@ export function GrainShader({ className }: GrainShaderProps) {
       const cg = val === 1.0 ? 0.96 : 0.031;
       const cb = val === 1.0 ? 0.96 : 0.039;
       gl.clearColor(cr, cg, cb, 1);
+      renderer.render({ scene: mesh });
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-    if (reducedMotion) {
-      program.uniforms.uTime.value = 0;
-      renderer.render({ scene: mesh });
-    } else {
-      let startTime = performance.now();
-      function animate(now: number) {
-        program.uniforms.uTime.value = (now - startTime) * 0.001;
-        renderer.render({ scene: mesh });
-        rafRef.current = requestAnimationFrame(animate);
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    }
+    program.uniforms.uTime.value = 0;
+    renderer.render({ scene: mesh });
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
       observer.disconnect();
       window.removeEventListener("resize", resize);
       if (container.contains(gl.canvas)) {
