@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +22,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { Pagination, paginate } from "@/components/ui/pagination";
 import { PageShell } from "@/components/ui/page-shell";
 import {
   DropdownMenu,
@@ -138,6 +139,8 @@ function filterMcps(mcps: ImportedMcpDocument[], query: string, tagFilter: strin
     });
 }
 
+const SKILLS_PER_PAGE = 30;
+
 export function HomeShell({ automations, categories, mcps = [], recentImports = [], skills, loopRuns, usageOverview }: HomeShellProps) {
   const router = useRouter();
   const [tab, setTab] = useState<HomeTab>("skills");
@@ -145,6 +148,9 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [mcpTagFilter, setMcpTagFilter] = useState("all");
   const deferredQuery = useDeferredValue(query);
+  const [skillPage, setSkillPage] = useState(1);
+  const [mcpPage, setMcpPage] = useState(1);
+  const listAnchorRef = useRef<HTMLDivElement>(null);
   const [editTarget, setEditTarget] = useState<AutomationSummary | null>(null);
 
   const automationBySkillSlug = useMemo(() => {
@@ -181,8 +187,20 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
   function switchTab(next: HomeTab) {
     setTab(next);
     setQuery("");
+    setSkillPage(1);
+    setMcpPage(1);
     if (next === "skills") setMcpTagFilter("all");
     else setCategoryFilter("all");
+  }
+
+  function handleSkillPageChange(page: number) {
+    setSkillPage(page);
+    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleMcpPageChange(page: number) {
+    setMcpPage(page);
+    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   const filtered = useMemo(
@@ -193,6 +211,31 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
   const filteredMcps = useMemo(
     () => filterMcps(mcps, deferredQuery, mcpTagFilter),
     [mcps, deferredQuery, mcpTagFilter]
+  );
+
+  const prevFilteredLen = useRef(filtered.length);
+  const prevMcpLen = useRef(filteredMcps.length);
+  useEffect(() => {
+    if (filtered.length !== prevFilteredLen.current) {
+      setSkillPage(1);
+      prevFilteredLen.current = filtered.length;
+    }
+  }, [filtered.length]);
+  useEffect(() => {
+    if (filteredMcps.length !== prevMcpLen.current) {
+      setMcpPage(1);
+      prevMcpLen.current = filteredMcps.length;
+    }
+  }, [filteredMcps.length]);
+
+  const paginatedSkills = useMemo(
+    () => paginate(filtered, skillPage, SKILLS_PER_PAGE),
+    [filtered, skillPage]
+  );
+
+  const paginatedMcps = useMemo(
+    () => paginate(filteredMcps, mcpPage, SKILLS_PER_PAGE),
+    [filteredMcps, mcpPage]
   );
 
   const mcpTagCounts = useMemo(() => {
@@ -227,8 +270,8 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
 
   const skillsList = (
     <div className="grid gap-0">
-      {filtered.length > 0 ? (
-        filtered.map((skill) => {
+      {paginatedSkills.length > 0 ? (
+        paginatedSkills.map((skill) => {
           const freshness = computeFreshness(skill, loopRuns);
 
           return (
@@ -325,13 +368,19 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
       ) : (
         <EmptyCard icon={<SearchIcon className="h-6 w-6" />}>No skills match your search.</EmptyCard>
       )}
+      <Pagination
+        currentPage={skillPage}
+        onPageChange={handleSkillPageChange}
+        pageSize={SKILLS_PER_PAGE}
+        totalItems={filtered.length}
+      />
     </div>
   );
 
   const mcpsList = (
     <div className="grid gap-0">
-      {filteredMcps.length > 0 ? (
-        filteredMcps.map((mcp) => {
+      {paginatedMcps.length > 0 ? (
+        paginatedMcps.map((mcp) => {
           const isRunnable = supportsSandboxMcp(mcp);
           const sandboxHref = `/sandbox?mcp=${encodeURIComponent(mcp.slug ?? mcp.name)}`;
           const mcpHref = buildMcpVersionHref(mcp.name, mcp.version);
@@ -414,11 +463,17 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
       ) : (
         <EmptyCard icon={<PlugIcon className="h-6 w-6" />}>No MCPs match your search.</EmptyCard>
       )}
+      <Pagination
+        currentPage={mcpPage}
+        onPageChange={handleMcpPageChange}
+        pageSize={SKILLS_PER_PAGE}
+        totalItems={filteredMcps.length}
+      />
     </div>
   );
 
   const skillsFilters = (
-    <div className="grid gap-3">
+    <div ref={listAnchorRef} className="grid gap-3">
       <label className="relative block">
         <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-faint" />
         <input
@@ -448,6 +503,11 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
 
       <div className="text-[0.6875rem] font-medium tabular-nums tracking-wide text-ink-faint">
         {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+        {filtered.length > SKILLS_PER_PAGE && (
+          <span className="ml-1 text-ink-faint/60">
+            · page {skillPage} of {Math.ceil(filtered.length / SKILLS_PER_PAGE)}
+          </span>
+        )}
       </div>
 
       {skillsList}
@@ -484,6 +544,11 @@ export function HomeShell({ automations, categories, mcps = [], recentImports = 
 
       <div className="text-[0.6875rem] font-medium tabular-nums tracking-wide text-ink-faint">
         {filteredMcps.length} result{filteredMcps.length !== 1 ? "s" : ""}
+        {filteredMcps.length > SKILLS_PER_PAGE && (
+          <span className="ml-1 text-ink-faint/60">
+            · page {mcpPage} of {Math.ceil(filteredMcps.length / SKILLS_PER_PAGE)}
+          </span>
+        )}
       </div>
 
       {mcpsList}
