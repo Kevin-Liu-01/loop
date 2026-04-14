@@ -16,6 +16,7 @@ import {
   PackageIcon,
   ZapIcon,
 } from "@/components/frontier-icons";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 
@@ -195,7 +196,7 @@ function StatusIndicator({
   }
   return (
     <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
-      <span className="inline-block h-3 w-3 animate-spin border-[1.5px] border-accent/20 border-t-accent" />
+      <BrailleSpinner className="text-xs text-accent" />
     </span>
   );
 }

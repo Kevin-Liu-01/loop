@@ -12,6 +12,7 @@ import {
   XIcon,
 } from "@/components/frontier-icons";
 import { Badge } from "@/components/ui/badge";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StepIndicatorCompact } from "@/components/ui/step-indicator";
 import { Tip } from "@/components/ui/tip";
@@ -145,11 +146,10 @@ function OperationRow({ op }: { op: ActiveOperation }) {
             <CheckIcon className="h-3.5 w-3.5 text-success" />
           ) : isError ? (
             <XIcon className="h-3.5 w-3.5 text-danger" />
+          ) : isActive ? (
+            <BrailleSpinner className="text-sm" />
           ) : (
-            <KindIcon
-              className={cn("h-3.5 w-3.5", isActive && "animate-spin")}
-              kind={op.kind}
-            />
+            <KindIcon className="h-3.5 w-3.5" kind={op.kind} />
           )}
         </span>
 

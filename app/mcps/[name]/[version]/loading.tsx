@@ -1,19 +1,19 @@
 import { AppGridShell } from "@/components/app-grid-shell";
 import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { PageShell } from "@/components/ui/page-shell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/cn";
 import { pageInsetPadX } from "@/lib/ui-layout";
 
-/** Home route loading shell only (`app/(main)`); keeps unknown URLs from inheriting this Suspense UI. */
-export default function Loading() {
+export default function McpDetailLoading() {
   return (
     <AppGridShell
       header={
         <div className="flex min-h-[52px] items-center gap-3 px-4 py-2.5 max-md:px-3">
-          <div className="skeleton h-8 w-8 !rounded-none" />
-          <div className="skeleton h-4 w-14 !rounded-none" />
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-4 w-14" />
           <div className="flex-1" />
-          <div className="skeleton h-8 w-24 !rounded-none max-sm:w-9" />
+          <Skeleton className="h-8 w-24 max-sm:w-9" />
         </div>
       }
     >
@@ -24,18 +24,22 @@ export default function Loading() {
             pageInsetPadX
           )}
         >
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10" />
+            <div className="grid gap-1.5">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-3 w-64" />
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 text-ink-muted">
             <BrailleSpinner className="text-sm" />
           </div>
-          <section className="grid grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)] gap-5 max-lg:grid-cols-1">
-            <div className="skeleton skeleton--tall" />
-            <div className="skeleton skeleton--panel" />
-          </section>
-          <section className="grid grid-cols-3 gap-3 max-lg:grid-cols-1">
-            <div className="skeleton skeleton--card" />
-            <div className="skeleton skeleton--card" />
-            <div className="skeleton skeleton--card" />
-          </section>
+
+          <div className="grid gap-4">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
         </div>
       </PageShell>
     </AppGridShell>

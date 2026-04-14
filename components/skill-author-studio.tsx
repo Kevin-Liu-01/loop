@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, Loader2Icon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -14,6 +14,7 @@ import {
 } from "@/components/frontier-icons";
 import { SkillAuthorBadge } from "@/components/skill-author-badge";
 import { Badge } from "@/components/ui/badge";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Button } from "@/components/ui/button";
 import {
   FieldGroup,
@@ -55,7 +56,7 @@ function FeedbackBar({ variant, children }: FeedbackBarProps) {
   };
   const icons = {
     error: <TriangleAlertIcon className="h-3.5 w-3.5 shrink-0" />,
-    progress: <Loader2Icon className="h-3.5 w-3.5 shrink-0 animate-spin" />,
+    progress: <BrailleSpinner className="shrink-0 text-sm" />,
     success: <CheckIcon className="h-3.5 w-3.5 shrink-0" />,
   };
   return (

@@ -14,6 +14,7 @@ import {
 } from "@/components/frontier-icons";
 import { RunLogModal } from "@/components/run-log-modal";
 import { Badge } from "@/components/ui/badge";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { Panel, PanelHead } from "@/components/ui/panel";
@@ -466,7 +467,11 @@ export function SkillUpdateRunner({
           <PanelHead className="items-start">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-paper-3/90 text-ink-soft [&>svg]:h-4 [&>svg]:w-4 dark:bg-paper-2/50">
-                <AutomationIcon className={cn(isRunning && "animate-spin")} />
+                {isRunning ? (
+                  <BrailleSpinner className="text-base" />
+                ) : (
+                  <AutomationIcon />
+                )}
               </div>
               <div>
                 <h2 className={PANEL_TITLE}>{buttonLabel}</h2>

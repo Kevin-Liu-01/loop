@@ -24,6 +24,7 @@ import { InlineAutomationSetup } from "@/components/inline-automation-setup";
 import { RunLogModal } from "@/components/run-log-modal";
 import { TrackSkillButton } from "@/components/track-skill-button";
 import { Badge } from "@/components/ui/badge";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Button } from "@/components/ui/button";
 import { EmptyCard } from "@/components/ui/empty-card";
 import { LinkButton } from "@/components/ui/link-button";
@@ -491,12 +492,11 @@ export function SkillActivitySection({
                       size="sm"
                       type="button"
                     >
-                      <RefreshIcon
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          isRunning && "animate-spin"
-                        )}
-                      />
+                      {isRunning ? (
+                        <BrailleSpinner className="text-sm" />
+                      ) : (
+                        <RefreshIcon className="h-3.5 w-3.5" />
+                      )}
                       {isRunning ? "Running..." : "Run update now"}
                     </Button>
                   ) : null}
@@ -720,9 +720,11 @@ export function SkillActivitySection({
                 size="sm"
                 type="button"
               >
-                <RefreshIcon
-                  className={cn("h-3.5 w-3.5", isRunning && "animate-spin")}
-                />
+                {isRunning ? (
+                  <BrailleSpinner className="text-sm" />
+                ) : (
+                  <RefreshIcon className="h-3.5 w-3.5" />
+                )}
                 {isRunning ? "Running..." : "Run first update"}
               </Button>
             ) : (

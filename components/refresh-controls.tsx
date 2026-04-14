@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { CheckIcon, RefreshIcon } from "@/components/frontier-icons";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Button } from "@/components/ui/button";
 import { useAppTimezone } from "@/hooks/use-app-timezone";
 import { cn } from "@/lib/cn";
@@ -88,13 +89,10 @@ export function RefreshControls() {
           >
             {result ? (
               <CheckIcon className="h-4.5 w-4.5 text-success" />
+            ) : isPending ? (
+              <BrailleSpinner className="text-base text-ink-soft" />
             ) : (
-              <RefreshIcon
-                className={cn(
-                  "h-4.5 w-4.5 text-ink-soft",
-                  isPending && "animate-spin"
-                )}
-              />
+              <RefreshIcon className="h-4.5 w-4.5 text-ink-soft" />
             )}
           </span>
           <div>
@@ -120,9 +118,11 @@ export function RefreshControls() {
           type="button"
           size="sm"
         >
-          <RefreshIcon
-            className={cn("h-3.5 w-3.5", isPending && "animate-spin")}
-          />
+          {isPending ? (
+            <BrailleSpinner className="text-sm" />
+          ) : (
+            <RefreshIcon className="h-3.5 w-3.5" />
+          )}
           {isPending ? "Running..." : "Run full refresh"}
         </Button>
       </div>

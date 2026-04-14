@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
 
 import { ActiveOperationsProvider } from "@/components/active-operations-provider";
 import { CommandPalette } from "@/components/command-palette";
@@ -56,13 +57,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const serverTimeZone = await getUsageTimeZoneFromCookie();
-
+async function DeferredGlobals() {
   let paletteItems: {
     label: string;
     href: string;
@@ -114,6 +109,21 @@ export default async function RootLayout({
   }
 
   return (
+    <>
+      <CommandPalette items={paletteItems} />
+      <NewSkillModal categories={snapshotCategories} />
+    </>
+  );
+}
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const serverTimeZone = await getUsageTimeZoneFromCookie();
+
+  return (
     <ClerkProvider appearance={clerkAppearance} ui={ui}>
       <html lang="en" suppressHydrationWarning>
         <body suppressHydrationWarning>
@@ -127,8 +137,9 @@ export default async function RootLayout({
             <TimezoneProvider serverTimeZone={serverTimeZone}>
               <TooltipProvider delayDuration={300}>
                 <ActiveOperationsProvider>
-                  <CommandPalette items={paletteItems} />
-                  <NewSkillModal categories={snapshotCategories} />
+                  <Suspense>
+                    <DeferredGlobals />
+                  </Suspense>
                   {children}
                 </ActiveOperationsProvider>
               </TooltipProvider>

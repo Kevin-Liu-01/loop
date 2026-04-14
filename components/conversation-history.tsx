@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { ClockIcon, MessageIcon } from "@/components/frontier-icons";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { Tip } from "@/components/ui/tip";
 import { useAppTimezone } from "@/hooks/use-app-timezone";
@@ -72,7 +73,7 @@ export function ConversationHistory({
         <ScrollArea className="mt-3 max-h-[280px]">
           <div className="grid gap-1.5">
             {isLoading ? (
-              <span className="text-xs text-ink-faint">Loading...</span>
+              <BrailleSpinner className="text-xs text-ink-faint" />
             ) : conversations.length === 0 ? (
               <span className="text-xs text-ink-faint">
                 No saved conversations yet.

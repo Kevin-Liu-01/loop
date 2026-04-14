@@ -15,6 +15,7 @@ import { PackagesTab } from "@/components/sandbox-inspector/packages-tab";
 import { ProcessesTab } from "@/components/sandbox-inspector/processes-tab";
 import { ResourcesTab } from "@/components/sandbox-inspector/resources-tab";
 import { StatusTab } from "@/components/sandbox-inspector/status-tab";
+import { BrailleSpinner } from "@/components/ui/braille-spinner";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/cn";
 import type { SandboxInspectResponse } from "@/lib/sandbox-inspect-types";
@@ -105,9 +106,11 @@ export function SandboxInspector({
             type="button"
             aria-label="Refresh inspector"
           >
-            <RefreshIcon
-              className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
-            />
+            {isLoading ? (
+              <BrailleSpinner className="text-sm" />
+            ) : (
+              <RefreshIcon className="h-3.5 w-3.5" />
+            )}
           </button>
         </Tip>
       </div>
